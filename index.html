@@ -670,6 +670,13 @@ a.save.wa-go svg{width:20px;height:20px}
 .cre-hook.on .cre-chk{background:var(--green,#1f8a5b);color:#fff;box-shadow:none}
 .go2.ok{color:var(--green,#1f8a5b)}
 .wk-nav{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:10px}
+.ftile{background:var(--paper);border-radius:14px;box-shadow:0 0 0 1px var(--line) inset;padding:10px 12px 11px;min-width:0}
+.ftile span{display:block;font-size:13px;font-weight:700;color:var(--ink-2)}
+.ftile b{display:block;font-size:20px;font-weight:800;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ftile.bad b{color:var(--red)}
+.f2-acts{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 4px}
+.f2-acts .btn2{flex:1 1 auto}
+.btn3.danger{color:var(--red)}
 </style>
 </head>
 <body>
@@ -1246,7 +1253,7 @@ a.save.wa-go svg{width:20px;height:20px}
     // Si están escribiendo en el buscador de Agendar, solo se actualiza la lista (no se pierde lo escrito)
     if (state.view==='agendar' && document.activeElement && document.activeElement.id==='aq' && $('agList')){ renderAg(); renderNav(); return; }
     var v = ({hoy:viewHoy, manana:viewManana, semana:viewSemana, resumen:viewResumen, falta:viewFalta, tareas:viewTareas, agendar:viewAgendar, agenda:viewAgenda,
-      reporte:function(){ return viewReporte(false); }, reportes:function(){ return viewReporte(true); }, finanzas:viewFinanzas, guiones:viewGuiones})[state.view]();
+      reporte:function(){ return viewReporte(false); }, reportes:function(){ return viewReporte(true); }, finanzas:viewFin2, guiones:viewGuiones})[state.view]();
     $('ttl').innerHTML = '<h1>'+v.h1+'</h1><p>'+v.p+'</p>';
     $('headExtra').innerHTML = v.extra || '';
     $('offline').classList.toggle('on', state.offline);
@@ -1284,6 +1291,7 @@ a.save.wa-go svg{width:20px;height:20px}
     if (sh.type==='interna') state.draft={ tipo:null, a:null, nota:'', hecho:null };
     if (sh.type==='marca') state.draft={ destino:null, nota:'', dup:null };
     if (sh.type==='guion') state.draft={};
+    if (sh.type==='fin2') state.draft=f2Draft(sh);
     if (sh.type==='yo' && !state.login) state.login={};
     if (sh.type==='ficha' || sh.type==='lead') state.fichaUI={};
     renderSheet();
@@ -1294,7 +1302,7 @@ a.save.wa-go svg{width:20px;height:20px}
   function renderSheet(){
     if (!state.sheet) return;
     var y=$('sheet').scrollTop;
-    var ty=state.sheet.type, html = ({lead:sheetLead, bloq:sheetBloq, pegar:sheetPegar, nuevo:sheetNuevo, escribir:sheetEscribir, agendar:sheetAgendar, derivar:sheetDerivar, ficha:sheetFicha, yo:sheetYo, manual:sheetManual, dup:sheetDup, fin:sheetFin, interna:sheetInterna, marca:sheetMarca, guion:sheetGuion})[ty]();
+    var ty=state.sheet.type, html = ({lead:sheetLead, bloq:sheetBloq, pegar:sheetPegar, nuevo:sheetNuevo, escribir:sheetEscribir, agendar:sheetAgendar, derivar:sheetDerivar, ficha:sheetFicha, yo:sheetYo, manual:sheetManual, dup:sheetDup, fin:sheetFin, interna:sheetInterna, marca:sheetMarca, guion:sheetGuion, fin2:sheetFin2})[ty]();
     if (html===null){ closeSheet(); return; }
     $('sheet').innerHTML = html; $('sheet').scrollTop=y;
   }
@@ -2190,7 +2198,7 @@ a.save.wa-go svg{width:20px;height:20px}
       .catch(function(e){ if (!bg && gen===(state.finGen||0)) state.fin[key]={error:(e&&e.message)||'No se pudo cargar.'}; })
       .then(function(){ delete state.finBusy[key]; if (enFinanzas() && finKey()===key) render(); });
   }
-  function precargarFin(){ if (!(state.data && state.data.finAcceso)) return; if (!state.finSem) state.finSem=mondayOf(nowBA().date); loadFin(null, true); }
+  function precargarFin(){ if (!(state.data && state.data.finAcceso)) return; f2Load(false); return; if (!state.finSem) state.finSem=mondayOf(nowBA().date); loadFin(null, true); }
   function equipoBtn(){ return (state.me && state.me.rol==='admin') ? '<button class="fin-eq" data-equipo><span>Equipo y PINs<small>Quién tiene PIN y resetear el de alguien</small></span>'+I.chev+'</button>' : ''; }
   function viewFinanzas(){
     if (!state.finSem) state.finSem=mondayOf(nowBA().date);
@@ -2373,7 +2381,7 @@ a.save.wa-go svg{width:20px;height:20px}
   }
   function repModoSeg(){ var m=state.repModo||'control'; return '<div class="seg2" role="tablist"><button data-repmodo="control" class="'+(m==='control'?'on':'')+'" role="tab" aria-selected="'+(m==='control')+'">Control semanal</button><button data-repmodo="resumen" class="'+(m==='resumen'?'on':'')+'" role="tab" aria-selected="'+(m==='resumen')+'">Resumen agenda</button>'+(state.data && state.data.finAcceso ? '<button data-repmodo="finanzas" class="'+(m==='finanzas'?'on':'')+'" role="tab" aria-selected="'+(m==='finanzas')+'">Finanzas</button>' : '')+'</div>'; }
   function viewReporte(ctrl){
-    if (ctrl && state.repModo==='finanzas'){ if (!(state.data && state.data.finAcceso)) state.repModo='control'; else { var vf=viewFinanzas(); vf.h1='Reportes'; vf.extra=repModoSeg()+vf.extra; return vf; } }
+    if (ctrl && state.repModo==='finanzas'){ if (!(state.data && state.data.finAcceso)) state.repModo='control'; else { var vf=viewFin2(); vf.h1='Reportes'; vf.extra=repModoSeg()+vf.extra; return vf; } }
     if (ctrl && state.repModo==='resumen'){ var vr=viewResumen(); vr.h1='Reportes'; vr.extra=repModoSeg()+(vr.extra||''); vr.body=equipoBtn()+vr.body; return vr; }
     if (!state.repSem) state.repSem=repDefault();
     var key=repKey(ctrl), d=(state.repCache||{})[key], lun=state.repSem, dom=addDays(lun,6), m0=mondayOf(nowBA().date);
@@ -3202,6 +3210,132 @@ a.save.wa-go svg{width:20px;height:20px}
     if (t.hasAttribute('data-crehook')){ var n=+t.getAttribute('data-crehook'), H=state.draft.hooks||(state.draft.hooks=[]), i=H.indexOf(n); if (i===-1) H.push(n); else H.splice(i,1); renderSheet(); return; }
     if (t.hasAttribute('data-cresave')){ creGuardar(t.getAttribute('data-cresave')==='1'); return; }
   });
+
+  /* ---------- Finanzas: escribe en la planilla contable de cada rama ---------- */
+  var F2_RAMA={ART:'ART', LABORAL:'Laboral', TRANSITO:'Tránsito'};
+  function f2Mes(){ if (!state.f2Mes) state.f2Mes=nowBA().date.slice(0,7); return state.f2Mes; }
+  function f2MoverMes(n){ var p=f2Mes().split('-'), y=+p[0], m=+p[1]-1+n; y+=Math.floor(m/12); m=((m%12)+12)%12; state.f2Mes=y+'-'+pad2(m+1); }
+  function f2Rama(){ var rs=(state.data && state.data.finRamas)||[]; if (!state.f2Rama || rs.indexOf(state.f2Rama)===-1) state.f2Rama=rs[0]||'ART'; return state.f2Rama; }
+  function f2Key(){ return f2Rama()+'|'+f2Mes(); }
+  function f2Data(){ return (state.f2||{})[f2Key()]; }
+  function f2Load(fresco){
+    var k=f2Key(), C=state.f2||(state.f2={}); if (C[k] && C[k].cargando) return;
+    var prev=C[k] && !C[k].error && !C[k].cargando ? C[k] : (C[k] && C[k].prev) || null;
+    C[k]={cargando:true, prev:prev};
+    var pm=f2Mes(), pr=f2Rama();
+    call('getFin2', {rama:pr, mes:pm, fresco:!!fresco}).then(function(d){ C[pr+'|'+pm]=d; if (enFinanzas()) render(); if (state.sheet && state.sheet.type==='fin2') renderSheet(); })
+      .catch(function(e){ C[pr+'|'+pm]={error:(e&&e.message)||'No se pudieron cargar las finanzas.', prev:prev}; if (enFinanzas()) render(); });
+  }
+  function f2Base(){ var d=f2Data(); if (!d) return null; if (d.cargando || d.error) return d.prev || null; return d; }
+  function f2Alias(n, ops){ var al=((f2Base()||{}).alias||{})[n]||[], c=[n].concat(al); for (var i=0;i<c.length;i++) if ((ops||[]).indexOf(c[i])!==-1) return c[i]; return ''; }
+  function f2Esmio(v){ var me=state.me&&state.me.nombre; if (!me || !v) return false; return v===me || (((f2Base()||{}).alias||{})[me]||[]).indexOf(v)!==-1; }
+  function f2Fila(t, icon, tit, sub, monto, attr){
+    return '<li><button '+attr+'><span class="w"><b>'+icon+' '+esc(tit)+'</b><span>'+esc(sub)+'</span></span><span class="go2 num">'+esc(monto)+'</span></button></li>';
+  }
+  function viewFin2(){
+    var p=f2Mes().split('-'), rs=(state.data && state.data.finRamas)||[], r=f2Rama(), d=f2Data();
+    if (!d) { f2Load(state.finFresco); state.finFresco=false; d=f2Data(); }
+    var nav='<div class="wk-nav"><button class="chip" data-f2mes="-1" aria-label="Mes anterior">‹</button><b>'+MESES_L[+p[1]-1]+' '+p[0]+'</b><button class="chip" data-f2mes="1" aria-label="Mes siguiente">›</button></div>';
+    var chips=rs.length>1 ? '<div class="chips" role="group" aria-label="Rama">'+rs.map(function(x){ return '<button class="chip'+(x===r?' on':'')+'" data-f2rama="'+x+'">'+F2_RAMA[x]+'</button>'; }).join('')+'</div>' : '';
+    var b=f2Base();
+    var titulo={ h1:'Finanzas', p:F2_RAMA[r]+' · '+MESES_L[+p[1]-1].toLowerCase()+' '+p[0], extra:nav+chips };
+    if (!b){ titulo.body = d && d.error ? emptyBox('No se pudieron cargar', esc(d.error), '<button class="btn3" data-f2retry>Reintentar</button>') : '<div class="skel"></div><div class="skel"></div>'; return titulo; }
+    var R=b.resumen||{}, body='';
+    if (d && d.cargando) body+='<p class="hint" style="text-align:center">Actualizando…</p>';
+    if (d && d.error) body+='<div class="warn">'+esc(d.error)+'</div>';
+    body+='<div class="fin-tabs"><div class="ftile"><span>Cobrado</span><b class="num">'+plata(R.cobrado)+'</b></div><div class="ftile"><span>Gastos ('+F2_RAMA[r]+')</span><b class="num">'+plata(R.gastado)+'</b></div>'+
+      (b.tieneAcuerdos ? '<div class="ftile"><span>Esperado este mes</span><b class="num">'+plata(R.esperado)+'</b></div><div class="ftile'+(R.atrasado>0?' bad':'')+'"><span>Atrasado</span><b class="num">'+plata(R.atrasado)+'</b></div>' : '')+'</div>';
+    var F=b.forms||{};
+    body+='<div class="f2-acts">'+(F.cobro?'<button class="btn2" data-f2nuevo="cobro">＋ Cobro</button>':'')+(F.gasto?'<button class="btn2" data-f2nuevo="gasto">＋ Gasto</button>':'')+(F.acuerdo?'<button class="btn2" data-f2nuevo="acuerdo">＋ '+esc(b.acuerdoNombre)+'</button>':'')+'</div>';
+    if (b.tieneAcuerdos){
+      var solo=!!state.f2Mios, xs=(b.porCobrar||[]).filter(function(x){ return !solo || f2Esmio(x.cobra); });
+      body+='<h2 class="sec-t">Por cobrar <span class="cnt num">'+xs.length+'</span><button class="lk" data-f2mios>'+(solo?'Ver todos':'Solo los míos')+'</button></h2><p class="sec-sub">Cuotas de este mes según '+(r==='ART'?'las homologaciones':'los acuerdos')+', y lo atrasado. Tocá uno para cargar lo que entró.</p>';
+      body+= xs.length ? '<ul class="todo">'+xs.map(function(x,i){ return f2Fila('pc','💵', x.caso, [x.estado, x.cobra?'cobra '+x.cobra:'', x.atrasado>0?'atrasado '+plata(x.atrasado):''].filter(Boolean).join(' · '), x.cuota>0?plata(x.cuota):plata(x.debido), 'data-f2cobrar="'+i+'"'); }).join('')+'</ul>' : emptyBox('Nada por cobrar este mes', solo?'Con el filtro de los tuyos.':'');
+    }
+    if (b.tieneClientes){
+      body+='<h2 class="sec-t">Clientes del mes <span class="cnt num">'+(b.clientes||[]).length+'</span>'+(F.cliente?'<button class="lk" data-f2nuevo="cliente">＋ Cargar</button>':'')+'</h2><p class="sec-sub">Los que firmaron entran solos desde la agenda. Tocá uno para completar '+(r==='ART'?'la lesión':'el detalle')+'.</p>';
+      body+=(b.clientes||[]).length ? '<ul class="todo">'+b.clientes.map(function(c){ return f2Fila('cl','👤', c.nombre, [shortDate(c.fecha), c.atiende, c.tipo, c.lesion].filter(Boolean).join(' · '), c.lesion?'':'Completar', 'data-f2edit="cliente|'+c.fila+'"'); }).join('')+'</ul>' : emptyBox('Todavía no hay clientes este mes');
+    } else if ((b.firmados||[]).length){
+      body+='<h2 class="sec-t">Firmaron este mes <span class="cnt num">'+b.firmados.length+'</span></h2><p class="sec-sub">Según la planilla de leads.</p><ul class="todo">'+b.firmados.map(function(c){ return '<li><span class="w" style="padding:10px 4px;display:block"><b>👤 '+esc(c.nombre)+'</b><span>'+esc([shortDate(c.fecha), c.atendio].filter(Boolean).join(' · '))+'</span></span></li>'; }).join('')+'</ul>';
+    }
+    body+='<h2 class="sec-t">Cobros <span class="cnt num">'+(b.cobros||[]).length+'</span></h2>';
+    body+=(b.cobros||[]).length ? '<ul class="todo">'+b.cobros.map(function(c){ return f2Fila('co','💰', c.caso, [shortDate(c.fecha), c.paga, c.entro?'entró a '+c.entro:'', c.detalle].filter(Boolean).join(' · '), plata(c.monto), 'data-f2edit="cobro|'+c.fila+'"'); }).join('')+'</ul>' : emptyBox('Sin cobros cargados este mes');
+    body+='<h2 class="sec-t">Gastos <span class="cnt num">'+(b.gastos||[]).length+'</span></h2>';
+    body+=(b.gastos||[]).length ? '<ul class="todo">'+b.gastos.map(function(g){ return f2Fila('ga','💸', g.categoria||'Gasto', [shortDate(g.fecha), g.pago?'pagó '+g.pago:'', g.reparto && g.propio!==g.monto ? g.reparto+' (total '+plata(g.monto)+')' : '', g.detalle].filter(Boolean).join(' · '), plata(g.propio), 'data-f2edit="gasto|'+g.fila+'"'); }).join('')+'</ul>' : emptyBox('Sin gastos cargados este mes');
+    body+='<p class="hint" style="text-align:center;margin-top:14px">Todo se guarda en la planilla contable de '+F2_RAMA[r]+' (copia de prueba).</p>';
+    titulo.body=body; return titulo;
+  }
+  function f2Campos(tipo){ var b=f2Base(); return ((b&&b.forms)||{})[tipo]||[]; }
+  function f2Draft(sh){
+    var b=f2Base()||{}, v={}, hoy=nowBA().date;
+    f2Campos(sh.tipo).forEach(function(c){
+      if (c.tipo==='fecha') v[c.k]=hoy;
+      if (c.quien) v[c.k]=f2Alias(state.me&&state.me.nombre, c.ops)||'';
+      if (c.k==='reparto') v[c.k]=(c.ops||[])[0]||'';
+      if (c.k==='cuotas') v[c.k]='1';
+      if (c.k==='mes1') v[c.k]=(c.ops||[])[+hoy.slice(5,7)-1]||'';
+    });
+    var src=null;
+    if (sh.fila){ var lista={cobro:b.cobros, gasto:b.gastos, cliente:b.clientes}[sh.tipo]||[]; src=lista.filter(function(x){ return x.fila===sh.fila; })[0]||null; }
+    if (src) Object.keys(src).forEach(function(k){ if (k!=='fila' && src[k]!=='' && src[k]!=null) v[k]=String(src[k]); });
+    if (sh.pre) Object.keys(sh.pre).forEach(function(k){ v[k]=sh.pre[k]; });
+    return { v:v, borrar:false, dup:null };
+  }
+  function f2Titulo(sh){ var b=f2Base()||{}; return ({cobro:'Cargar cobro', gasto:'Cargar gasto', acuerdo:'Cargar '+(b.acuerdoNombre||'acuerdo').toLowerCase(), cliente:'Cliente'})[sh.tipo]+(sh.fila && sh.tipo!=='cliente'?' (corregir)':''); }
+  function sheetFin2(){
+    var sh=state.sheet, d=state.draft||(state.draft=f2Draft(sh)), cs=f2Campos(sh.tipo), r=f2Rama();
+    var html='<div class="grab"></div><div class="sh-head"><div class="sh-who"><h2>'+esc(f2Titulo(sh))+'</h2><div class="mt"><span class="rama r-'+ramaKey(r)+'">'+F2_RAMA[r]+'</span></div></div><button class="close" data-close aria-label="Cerrar">'+I.x+'</button></div>';
+    if (!cs.length) return html+'<div class="note">Cargando…</div>';
+    if (d.dup) html+='<div class="warn">Ya hay '+(r==='ART'?'una homologación':'un acuerdo')+' con el nombre "'+esc(d.dup.caso)+'". Si es otro caso, cambiá el nombre; si es el mismo, corregilo en la planilla.</div><button class="btn3" data-f2forzar>Es otro caso: cargar igual</button>';
+    cs.forEach(function(c,i){
+      var val=d.v[c.k]==null?'':d.v[c.k], id='f2c'+i, lab='<label for="'+id+'">'+esc(c.label)+(c.req?'':' <small>(opcional)</small>')+'</label>';
+      if (c.tipo==='opcion' && (c.ops||[]).length && (c.ops||[]).length<=6){
+        html+='<div class="field"><span class="lbl">'+esc(c.label)+(c.req?'':' <small>(opcional)</small>')+'</span><div class="pick">'+c.ops.map(function(o){ var on=val===o; return '<button class="'+(on?'on':'')+'" data-f2pick="'+c.k+'|'+esc(o)+'" aria-pressed="'+on+'">'+esc(o)+'</button>'; }).join('')+'</div></div>';
+      } else if (c.tipo==='opcion'){
+        html+='<div class="field">'+lab+'<select class="inp" id="'+id+'" data-f2k="'+c.k+'"><option value="">Elegí…</option>'+(c.ops||[]).map(function(o){ return '<option'+(o===val?' selected':'')+'>'+esc(o)+'</option>'; }).join('')+'</select></div>';
+      } else {
+        var ty=c.tipo==='fecha'?'date':(c.tipo==='numero'?'number':'text'), im=c.tipo==='monto'?' inputmode="decimal"':'', dl=(c.tipo==='caso' || (c.sug||[]).length) ? ' list="dl'+id+'"' : '';
+        html+='<div class="field">'+lab+'<input class="inp" id="'+id+'" type="'+ty+'"'+im+dl+' data-f2k="'+c.k+'" autocomplete="off" value="'+esc(val)+'">'+
+          (c.tipo==='monto'?'<p class="hint" id="'+id+'h" style="margin:4px 2px 0">'+esc(montoTxt(val))+'</p>':'')+
+          (dl?'<datalist id="dl'+id+'">'+((c.ops||c.sug||[]).slice(0,300)).map(function(o){ return '<option value="'+esc(o)+'">'; }).join('')+'</datalist>':'')+'</div>';
+      }
+    });
+    if (sh.tipo==='gasto' && d.v.reparto && !/100%|^Solo/.test(d.v.reparto)) html+='<p class="hint">El gasto compartido se anota también en las planillas de las otras ramas, cada una con su parte.</p>';
+    html+='<div class="save-wrap"><button class="save" data-f2save>Guardar</button>';
+    if (sh.fila && (sh.tipo==='cobro' || sh.tipo==='gasto')) html+= d.borrar ? '<button class="btn3 danger" data-f2borrar="2">Sí, borrar esta fila de la planilla</button>' : '<button class="link" data-f2borrar="1">Borrar</button>';
+    html+='</div>';
+    return html;
+  }
+  function f2Guardar(opts){
+    var sh=state.sheet, d=state.draft, cs=f2Campos(sh.tipo); opts=opts||{};
+    if (!opts.borrar){ for (var i=0;i<cs.length;i++){ var c=cs[i]; if (c.req && !String(d.v[c.k]||'').trim()){ toast('Completá '+c.label.toLowerCase()+'.', true); return; } } }
+    busySheet(true, opts.borrar?'Borrando…':'Guardando…');
+    call('saveFin2', {rama:f2Rama(), tipo:sh.tipo, datos:d.v, fila:sh.fila||0, borrar:!!opts.borrar, forzar:!!opts.forzar}).then(function(r){
+      if (r && r.duplicado){ d.dup=r.duplicado; renderSheet(); return; }
+      closeSheet(); toast(opts.borrar?'Borrado de la planilla':('✔ Guardado en la planilla'+(r && r.ramas && r.ramas.length>1?' de '+r.ramas.map(function(x){ return F2_RAMA[x]; }).join(', '):''))); state.f2={}; f2Load(true); render();
+    }).catch(function(e){ renderSheet(); toast((e&&e.message)||'No se pudo guardar.', true); });
+  }
+  document.addEventListener('click', function(ev){
+    var t=ev.target.closest('[data-f2mes],[data-f2rama],[data-f2retry],[data-f2nuevo],[data-f2edit],[data-f2cobrar],[data-f2mios],[data-f2pick],[data-f2save],[data-f2borrar],[data-f2forzar]'); if (!t) return;
+    if (t.hasAttribute('data-f2mes')){ f2MoverMes(+t.getAttribute('data-f2mes')); render(); return; }
+    if (t.hasAttribute('data-f2rama')){ state.f2Rama=t.getAttribute('data-f2rama'); render(); return; }
+    if (t.hasAttribute('data-f2retry')){ f2Load(true); render(); return; }
+    if (t.hasAttribute('data-f2mios')){ state.f2Mios=!state.f2Mios; render(); return; }
+    if (t.hasAttribute('data-f2nuevo')){ openSheet({type:'fin2', tipo:t.getAttribute('data-f2nuevo')}); return; }
+    if (t.hasAttribute('data-f2edit')){ var q=t.getAttribute('data-f2edit').split('|'); openSheet({type:'fin2', tipo:q[0], fila:+q[1]}); return; }
+    if (t.hasAttribute('data-f2cobrar')){ var b=f2Base(), x=((b&&b.porCobrar)||[])[+t.getAttribute('data-f2cobrar')]; if (!x) return; openSheet({type:'fin2', tipo:'cobro', pre:{caso:x.caso, monto:String(x.cuota>0?x.cuota:x.debido)}}); return; }
+    if (!state.sheet || state.sheet.type!=='fin2') return;
+    if (t.hasAttribute('data-f2pick')){ var pk=t.getAttribute('data-f2pick').split('|'), k=pk.shift(); state.draft.v[k]=pk.join('|'); renderSheet(); return; }
+    if (t.hasAttribute('data-f2save')){ f2Guardar(); return; }
+    if (t.hasAttribute('data-f2forzar')){ f2Guardar({forzar:true}); return; }
+    if (t.hasAttribute('data-f2borrar')){ if (t.getAttribute('data-f2borrar')==='1'){ state.draft.borrar=true; renderSheet(); } else f2Guardar({borrar:true}); return; }
+  });
+  function f2Input(ev){
+    var k=ev.target.getAttribute && ev.target.getAttribute('data-f2k'); if (!k || !state.draft || !state.sheet || state.sheet.type!=='fin2') return;
+    state.draft.v[k]=ev.target.value; var h=$(ev.target.id+'h'); if (h) h.textContent=montoTxt(ev.target.value);
+  }
+  document.addEventListener('input', f2Input); document.addEventListener('change', f2Input);
+  $('btnRefresh').addEventListener('click', function(){ if (enFinanzas()){ state.f2={}; state.finFresco=true; render(); } });
 
   load(false);
   (function(){ // Disponibilidad: tocar marca o desmarca media hora; mantener apretado y deslizar pinta varias (en la compu, arrastrar)
