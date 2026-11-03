@@ -3181,7 +3181,7 @@ a.save.wa-go svg{width:20px;height:20px}
 })();
 </script>
 <script>
-if ('serviceWorker' in navigator) { window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); }); }
+if ('serviceWorker' in navigator) { var swHabia=!!navigator.serviceWorker.controller, swRec=false; navigator.serviceWorker.addEventListener('controllerchange', function(){ if (!swHabia || swRec) return; swRec=true; location.reload(); }); window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').then(function(r){ document.addEventListener('visibilitychange', function(){ if (!document.hidden) r.update().catch(function(){}); }); }).catch(function(){}); }); }
 </script>
 </body>
 </html>
