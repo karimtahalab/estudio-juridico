@@ -647,6 +647,21 @@ textarea:focus,.inp:focus,select:focus{outline:none;box-shadow:0 0 0 2.5px var(-
   .spin-dot{width:8px;height:8px;border-radius:50%;background:var(--blue);flex:none;animation:pulseDot 1s ease-in-out infinite alternate}
   @keyframes pulseDot{from{opacity:.25}to{opacity:1}}
   .seg2 button{white-space:nowrap;padding:0 4px;font-size:13px}
+.int-ban{background:var(--paper);border-radius:14px;padding:12px 14px;margin:0 0 12px;box-shadow:0 0 0 1.5px #0B8B8B inset}
+.int-ban>b{display:block;font-size:14.5px;margin-bottom:6px}
+.int-it{display:flex;flex-direction:column;align-items:flex-start;width:100%;text-align:left;padding:9px 0;border-top:1px solid var(--line);gap:2px}
+.int-it small{color:var(--ink-3);font-size:13px}
+.int-ask{box-shadow:0 0 0 1.5px #0B8B8B inset;border-radius:14px;padding:10px 12px}
+.int-ask textarea{margin-top:8px}
+.int-ops{margin-top:10px}
+.int-open{color:#0B8B8B}
+.ok-box{display:flex;flex-direction:column;gap:4px;margin:14px 2px;padding:12px 14px;border-radius:14px;background:var(--paper);box-shadow:0 0 0 1px var(--line) inset}
+.ok-box span{color:var(--ink-3);font-size:14px}
+a.save.wa-go{display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none}
+a.save.wa-go svg{width:20px;height:20px}
+.seg.marca{margin-bottom:-4px}
+.seg.marca button.on.mk-transito{background:#0B8B8B;color:#fff}
+.campo-pick button{flex:1 1 auto}
 </style>
 </head>
 <body>
@@ -817,11 +832,19 @@ textarea:focus,.inp:focus,select:focus{outline:none;box-shadow:0 0 0 2.5px var(-
   function ramaKey(r){ r=normTxt(r); return r.indexOf('trans')===0?'transito':(r==='laboral'?'laboral':'art'); }
   function ramaLabel(r){ var k=ramaKey(r); return k==='transito'?'Tránsito':(k==='laboral'?'Laboral':'ART'); }
   function plural(n,a,b){ return n+' '+(n===1?a:b); }
-  function personas(){ return (state.data.abogadas||[]).slice(); }
+  /* Marcas: Reclamá (ART y Laboral) y Derecho en Tránsito (aparte). Quien ve las dos elige cuál mirar en la agenda. */
+  var VISTAS_AGENDA={agenda:1, hoy:1, manana:1, semana:1, falta:1};
+  function marcaDe(r){ return ramaKey(r)==='transito' ? 'transito' : 'reclama'; }
+  function marcasVisibles(){ var a=P().agenda||['ART','LABORAL','TRANSITO'], m=[]; a.forEach(function(r){ var k=marcaDe(r); if (m.indexOf(k)===-1) m.push(k); }); return m; }
+  function marcaAg(){ var ms=marcasVisibles(); if (ms.length<2) return 'todas'; var x=state.marca||store('marca')||'reclama'; return (x==='todas' || ms.indexOf(x)!==-1) ? x : ms[0]; }
+  function filtraMarca(){ return marcaAg()!=='todas' && !!VISTAS_AGENDA[state.view]; }
+  function personaEnMarca(a, m){ var R=(state.data && state.data.ramasPorPersona)||{}; return !R[a] || R[a].some(function(r){ return marcaDe(r)===m; }); }
+  function personas(){ var xs=(state.data.abogadas||[]).slice(); if (!filtraMarca()) return xs; var m=marcaAg(); return xs.filter(function(a){ return personaEnMarca(a, m); }); }
   function inScope(nombre){ return !state.abog || state.abog==='Todas' || (nombre||'Sin asignar')===state.abog; }
-  function leads(){ return state.data.leads.filter(function(l){ return inScope(l.abogada); }); }
+  function marcaOk(l){ return !filtraMarca() || marcaDe(l.rama)===marcaAg(); }
+  function leads(){ return state.data.leads.filter(function(l){ return inScope(l.abogada) && marcaOk(l); }); }
   function onDate(d){ return leads().filter(function(l){ return l.fecha===d; }); }
-  function bloqueos(d){ return (state.data.bloqueos||[]).filter(function(b){ return (!d || b.fecha===d) && inScope(b.abogada); }); }
+  function bloqueos(d){ var m=filtraMarca()?marcaAg():null; return (state.data.bloqueos||[]).filter(function(b){ return (!d || b.fecha===d) && inScope(b.abogada) && (!m || personaEnMarca(b.abogada, m)); }); }
   function bqStart(b){ return b.todoDia ? '00:00' : (b.desde||'00:00'); }
   function orderPeople(names){
     var base = personas();
@@ -905,7 +928,7 @@ textarea:focus,.inp:focus,select:focus{outline:none;box-shadow:0 0 0 2.5px var(-
     var t=$('toast'), pos=state.sheet?' top':''; t.textContent=msg; t.className='toast on'+(err?' err':'')+pos;
     clearTimeout(toast._t); toast._t=setTimeout(function(){ t.className='toast'+(err?' err':'')+pos; }, 2800);
   }
-  function findLead(id){ if (id===NUEVO_ID) return state.nuevoLead||null; var L=state.data.leads; for (var i=0;i<L.length;i++) if (L[i].id===id) return L[i]; var P=state.data.porAgendar||[]; for (var j=0;j<P.length;j++) if (P[j].id===id) return P[j]; var O=state.otras||{}; for (var k in O){ var xs=(O[k]&&O[k].leads)||[]; for (var m=0;m<xs.length;m++) if (xs[m].id===id) return xs[m]; } var B=(state.busq&&state.busq.leads)||[]; for (var n=0;n<B.length;n++) if (B[n].id===id) return B[n]; return null; }
+  function findLead(id){ if (id===NUEVO_ID) return state.nuevoLead||null; var L=state.data.leads; for (var i=0;i<L.length;i++) if (L[i].id===id) return L[i]; var P=state.data.porAgendar||[]; for (var j=0;j<P.length;j++) if (P[j].id===id) return P[j]; var O=state.otras||{}; for (var k in O){ var xs=(O[k]&&O[k].leads)||[]; for (var m=0;m<xs.length;m++) if (xs[m].id===id) return xs[m]; } var B=(state.busq&&state.busq.leads)||[]; for (var n=0;n<B.length;n++) if (B[n].id===id) return B[n]; var M=state.data.paraMi||[]; for (var q=0;q<M.length;q++) if (M[q].id===id) return M[q]; return null; }
   function agendada(id){ var L=state.data.leads; for (var i=0;i<L.length;i++) if (L[i].id===id) return true; return false; }
   function findBloq(id){ var B=state.data.bloqueos||[]; for (var i=0;i<B.length;i++) if (B[i].id===id) return B[i]; return null; }
   function replaceLead(nl){ if (!nl) return; var P=state.data.porAgendar||[]; for (var j=0;j<P.length;j++) if (P[j].id===nl.id){ P.splice(j,1); break; } var L=state.data.leads; for (var i=0;i<L.length;i++) if (L[i].id===nl.id){ L[i]=nl; return; } L.push(nl); }
@@ -923,7 +946,7 @@ textarea:focus,.inp:focus,select:focus{outline:none;box-shadow:0 0 0 2.5px var(-
     o = o || {};
     var s = statusOf(l), st = ST[s];
     var reag = (l.fase==='Reagenda' && isPend(s)) ? '<span class="reag">↻ Reagendado</span>' : '';
-    var cta = needsResult(l) ? '<button class="it-cta" data-result="'+esc(l.id)+'">'+I.pen+'Cargar resultado</button>' : '';
+    var cta = (needsResult(l) && !l.parcial) ? '<button class="it-cta" data-result="'+esc(l.id)+'">'+I.pen+'Cargar resultado</button>' : '';
     return '<li class="it s-'+s+'">'+
       '<button class="it-main" data-open="'+esc(l.id)+'" aria-label="Abrir ficha de '+esc(l.nombre)+'">'+
         '<span class="tm num">'+(o.showDate?'<small>'+shortDate(l.fecha)+'</small>':'')+esc(l.hora||'--:--')+'</span>'+
@@ -932,10 +955,10 @@ textarea:focus,.inp:focus,select:focus{outline:none;box-shadow:0 0 0 2.5px var(-
           confPills(l)+
         '</span>'+
       '</button>'+
-      '<span class="it-acts">'+
+      (l.parcial ? '<span class="it-acts"></span>' : '<span class="it-acts">'+
         '<a class="ib" href="'+telHref(l.tel)+'" target="_top" aria-label="Llamar a '+esc(l.nombre)+'">'+I.call+'</a>'+
         '<a class="ib wa" href="'+waHref(l.tel)+'" target="_blank" rel="noopener" aria-label="WhatsApp a '+esc(l.nombre)+'">'+I.chat+'</a>'+
-      '</span>'+
+      '</span>')+
       (l.resumen?'<button class="it-rs" data-open="'+esc(l.id)+'" tabindex="-1" aria-hidden="true">'+esc(previewOf(l.resumen))+'</button>':'')+
       cta+
     '</li>';
@@ -1006,9 +1029,14 @@ textarea:focus,.inp:focus,select:focus{outline:none;box-shadow:0 0 0 2.5px var(-
     if (cur==='todas') return items;
     return items.filter(function(l){ return cur==='sinconf' ? (SINCONF.indexOf(statusOf(l))!==-1 && !needsResult(l)) : chipCat(l)===cur; });
   }
+  function segMarca(){
+    if (marcasVisibles().length<2 || !VISTAS_AGENDA[state.view]) return '';
+    var m=marcaAg(), o=[['reclama','Reclamá'],['transito','Derecho en Tránsito'],['todas','Las dos']];
+    return '<div class="seg marca" role="tablist" aria-label="Marca">'+o.map(function(x){ return '<button class="'+(m===x[0]?'on':'')+' mk-'+x[0]+'" data-marca="'+x[0]+'" role="tab" aria-selected="'+(m===x[0])+'">'+x[1]+'</button>'; }).join('')+'</div>';
+  }
   function seg(){
     var opts = ['Todas'].concat(personas());
-    return '<div class="seg" role="tablist" aria-label="Quién atiende">'+opts.map(function(a){
+    return segMarca()+'<div class="seg" role="tablist" aria-label="Quién atiende">'+opts.map(function(a){
       return '<button class="'+(state.abog===a?'on':'')+'" data-abog="'+esc(a)+'" role="tab" aria-selected="'+(state.abog===a)+'">'+esc(a)+'</button>';
     }).join('')+'</div>';
   }
@@ -1213,7 +1241,7 @@ textarea:focus,.inp:focus,select:focus{outline:none;box-shadow:0 0 0 2.5px var(-
     $('ttl').innerHTML = '<h1>'+v.h1+'</h1><p>'+v.p+'</p>';
     $('headExtra').innerHTML = v.extra || '';
     $('offline').classList.toggle('on', state.offline);
-    $('main').innerHTML = pinBanner() + dupBanner() + v.body + '<div class="foot">'+(state.snapT?'Mostrando lo guardado a las '+state.snapT+'. Actualizando…':'Actualizado a las '+nowBA().hm)+(state.me?'. Usás la app como '+esc(state.me.nombre)+' ('+({abogada:'parte de abogadas', intaker:'parte de intakers', admin:'administración'}[state.me.rol]||state.me.rol)+')'+' <button data-yocambiar>Cambiar</button>':'')+'</div>';
+    $('main').innerHTML = pinBanner() + dupBanner() + internasBanner() + v.body + '<div class="foot">'+(state.snapT?'Mostrando lo guardado a las '+state.snapT+'. Actualizando…':'Actualizado a las '+nowBA().hm)+(state.me?'. Usás la app como '+esc(state.me.nombre)+' ('+({abogada:'parte de abogadas', intaker:'parte de intakers', admin:'administración'}[state.me.rol]||state.me.rol)+')'+' <button data-yocambiar>Cambiar</button>':'')+'</div>';
     alignRs();
     renderNav();
     // En modo prueba, arriba a la derecha se ve quién está usando la app y se toca para cambiar de persona o rol
@@ -1244,6 +1272,8 @@ textarea:focus,.inp:focus,select:focus{outline:none;box-shadow:0 0 0 2.5px var(-
     if (sh.type==='agendar'){ var la=findLead(sh.id); if (!la) return; var dias=diasAgenda(); state.draft={ fecha:(la.fecha && la.fecha>=nowBA().date)?la.fecha:(dias.indexOf(nextHabil(nowBA().date))!==-1?nextHabil(nowBA().date):dias[0]), abogada:null, hora:null }; }
     if (sh.type==='yo') state.draft={};
     if (sh.type==='derivar') state.draft={ dv:null, hora:null };
+    if (sh.type==='interna') state.draft={ tipo:null, a:null, nota:'', hecho:null };
+    if (sh.type==='marca') state.draft={ destino:null, nota:'', dup:null };
     if (sh.type==='yo' && !state.login) state.login={};
     if (sh.type==='ficha' || sh.type==='lead') state.fichaUI={};
     renderSheet();
@@ -1254,7 +1284,7 @@ textarea:focus,.inp:focus,select:focus{outline:none;box-shadow:0 0 0 2.5px var(-
   function renderSheet(){
     if (!state.sheet) return;
     var y=$('sheet').scrollTop;
-    var ty=state.sheet.type, html = ({lead:sheetLead, bloq:sheetBloq, pegar:sheetPegar, nuevo:sheetNuevo, escribir:sheetEscribir, agendar:sheetAgendar, derivar:sheetDerivar, ficha:sheetFicha, yo:sheetYo, manual:sheetManual, dup:sheetDup, fin:sheetFin})[ty]();
+    var ty=state.sheet.type, html = ({lead:sheetLead, bloq:sheetBloq, pegar:sheetPegar, nuevo:sheetNuevo, escribir:sheetEscribir, agendar:sheetAgendar, derivar:sheetDerivar, ficha:sheetFicha, yo:sheetYo, manual:sheetManual, dup:sheetDup, fin:sheetFin, interna:sheetInterna, marca:sheetMarca})[ty]();
     if (html===null){ closeSheet(); return; }
     $('sheet').innerHTML = html; $('sheet').scrollTop=y;
   }
@@ -1267,12 +1297,19 @@ textarea:focus,.inp:focus,select:focus{outline:none;box-shadow:0 0 0 2.5px var(-
   function sheetLead(){
     var l=findLead(state.sheet.id); if (!l) return null;
     var s=statusOf(l), today=nowBA().date, d=state.draft;
+    if (l.parcial){
+      return head(esc(l.hora||'--:--'), l.fecha===today?'Hoy':shortDate(l.fecha), esc(l.nombre),
+        '<div class="mt"><span class="rama r-'+ramaKey(l.rama)+'">'+ramaLabel(l.rama)+'</span>'+(l.abogada?'<span class="cp">Con '+esc(l.abogada)+'</span>':'')+'</div>'+
+        '<div class="mt s-'+s+'"><span class="st">'+ST[s].i+' '+ST[s].l+'</span></div>')+
+        '<div class="note" style="margin-top:14px">Es una consulta de '+esc(l.abogada||'otra persona')+'. Los datos del cliente los ve quien la atiende.</div>';
+    }
     var html = head(esc(l.hora||'--:--'), l.fecha===today?'Hoy':shortDate(l.fecha), esc(l.nombre),
       '<div class="mt"><span class="rama r-'+ramaKey(l.rama)+'">'+ramaLabel(l.rama)+'</span>'+(l.abogada?'<span class="cp">Con '+esc(l.abogada)+'</span>':'')+'</div>'+
       '<div class="mt s-'+s+'"><span class="st">'+ST[s].i+' '+ST[s].l+'</span></div>');
     html += '<div class="big-acts"><a href="'+telHref(l.tel)+'" target="_top">'+I.call+'Llamar</a><a class="wa" href="'+waHref(l.tel)+'" target="_blank" rel="noopener">'+I.chat+'WhatsApp</a></div>';
     if (puede('agendar') && (isPend(s) || needsResult(l) || s==='reagenda' || s==='novino')) html += '<button class="btn3" data-agendar="'+esc(l.id)+'">'+I.cal+'Reagendar</button>';
     if (puedeDerivar(l)) html += '<button class="btn3" data-derivar="'+esc(l.id)+'">'+I.swap+'Derivar a otra abogada</button>';
+    html += internasBlk(l);
     var fu=state.fichaUI||(state.fichaUI={});
     html += '<div class="fi-acts dos"><button data-fimodo="nota" class="'+(fu.modo==='nota'?'on':'')+'">＋ Nota</button><button data-fimodo="datos" class="'+(fu.modo==='datos'?'on':'')+'">Corregir datos</button></div>'+fichaPanel(l, fu);
     var dvi=derivDe(l); if (dvi) html += '<p class="hint" style="margin:8px 2px 0">↪ Derivada de '+esc(dvi.de)+' a '+esc(dvi.a)+' el '+esc(dvi.cuando)+(dvi.h0 && dvi.h1 ? ', de las '+esc(dvi.h0)+' a las '+esc(dvi.h1) : '')+(dvi.por && dvi.por!==dvi.de ? ' (la pasó '+esc(dvi.por)+')' : '')+'.</p>';
@@ -1601,8 +1638,11 @@ textarea:focus,.inp:focus,select:focus{outline:none;box-shadow:0 0 0 2.5px var(-
     return equipoBy(store('yo')) || equipoBy(u.name) || null;
   }
   function rol(){ return state.me ? state.me.rol : 'admin'; }
-  function puede(acc){ var r=rol(); if (acc==='confirmar') return r==='intaker' || r==='admin'; return true; } // agendar: todos, con todas
-  function navList(){ var l=NAV_ROL[rol()] || NAV_ROL.admin; if (rol()!=='admin' && state.data && state.data.finAcceso && l.indexOf('finanzas')===-1) l=l.concat(['finanzas']); return l; }
+  // Lo que puede hacer cada persona viene del servidor (state.data.permisos)
+  function P(){ return (state.data && state.data.permisos) || {}; }
+  function conPermisos(){ return !!(state.data && state.data.permisos); }
+  function puede(acc){ var r=rol(); if (acc==='confirmar') return r==='intaker' || r==='admin'; if (acc==='agendar') return conPermisos() ? !!P().agendar : true; return true; }
+  function navList(){ var l=(NAV_ROL[rol()] || NAV_ROL.admin).slice(); if (conPermisos() && !P().agendar) l=l.filter(function(v){ return v!=='agendar'; }); if (rol()!=='admin' && state.data && state.data.finAcceso && l.indexOf('finanzas')===-1) l=l.concat(['finanzas']); return l; }
   function renderNav(){
     var list=navList(), nav=$('nav'), btns=nav.querySelectorAll('button[data-view]');
     nav.style.gridTemplateColumns='repeat('+list.length+',1fr)'; nav.classList.toggle('six', list.length>5);
@@ -1756,7 +1796,9 @@ textarea:focus,.inp:focus,select:focus{outline:none;box-shadow:0 0 0 2.5px var(-
   function tareasUrgentes(){ if (!puede('confirmar')) return 0; var t=tareasDe(), lim=nextHabil(nowBA().date); return t.hoy.length+t.previa.length+t.sinRes.filter(function(l){ return l.fecha<=lim; }).length; }
   /* ---------- Agendar (intakers): leads por agendar con buscador y filtros ---------- */
   var AG_FASES=[{k:'sin',l:'Sin clasificar'},{k:'A',l:'A'},{k:'Llamada pendiente',l:'Llamada pendiente'},{k:'B',l:'B'}];
-  function agState(){ return state.ag || (state.ag={q:'', rama:'todas', fase:'todas', n:40}); }
+  function agState(){ return state.ag || (state.ag={q:'', marca:'todas', rama:'todas', fase:'todas', n:40}); }
+  function ramaPasa(l, s){ return (!s.marca || s.marca==='todas' || marcaDe(l.rama)===s.marca) && (s.rama==='todas' || ramaKey(l.rama)===s.rama); }
+  function leadsRamas(){ var x=P().leads; return (x && x.length) ? x : ['ART','LABORAL','TRANSITO']; }
   function agPrio(l){ return !l.fase ? 0 : (l.fase==='B' ? 2 : 1); } // primero A y Llamada pendiente
   function agMatch(l, q){
     q=String(q||'').trim(); if (!q) return true;
@@ -1766,13 +1808,17 @@ textarea:focus,.inp:focus,select:focus{outline:none;box-shadow:0 0 0 2.5px var(-
     return t.length>=2 && normTxt(l.nombre).indexOf(t)!==-1;
   }
   function agBase(){ return (state.data.porAgendar||[]).filter(function(l){ return !l.fase || ['A','B','Llamada pendiente'].indexOf(l.fase)!==-1; }).sort(function(a,b){ return agPrio(a)-agPrio(b) || String(b.ingreso||'').localeCompare(String(a.ingreso||'')) || b.row-a.row; }); }
-  function agPasa(l, s, sinRama, sinFase){ return (sinRama || s.rama==='todas' || ramaKey(l.rama)===s.rama) && (sinFase || s.fase==='todas' || l.fase===s.fase || (s.fase==='sin' && !l.fase)) && agMatch(l, s.q); }
+  function agPasa(l, s, sinRama, sinFase){ return (sinRama || ramaPasa(l, s)) && (sinFase || s.fase==='todas' || l.fase===s.fase || (s.fase==='sin' && !l.fase)) && agMatch(l, s.q); }
   function agChipsHtml(){
     var s=agState(), base=agBase();
-    var vista=s.otra ? ((((state.otras||{})[s.otra])||{}).leads||[]) : base; var nR=function(r){ return vista.filter(function(l){ return agPasa(l,s,true,false) && (r==='todas' || ramaKey(l.rama)===r); }).length; };
+    var vista=s.otra ? ((((state.otras||{})[s.otra])||{}).leads||[]) : base; var nR=function(r){ return vista.filter(function(l){ return agPasa(l,s,true,false) && (!s.marca || s.marca==='todas' || marcaDe(l.rama)===s.marca) && (r==='todas' || ramaKey(l.rama)===r); }).length; };
+    var nM=function(m){ return vista.filter(function(l){ return agPasa(l,s,true,false) && (m==='todas' || marcaDe(l.rama)===m); }).length; };
+    var lr=leadsRamas(), hayRec=lr.indexOf('ART')!==-1 || lr.indexOf('LABORAL')!==-1, hayTra=lr.indexOf('TRANSITO')!==-1;
     var nF=function(f){ return base.filter(function(l){ return agPasa(l,s,false,true) && (f==='todas' || l.fase===f || (f==='sin' && !l.fase)); }).length; };
     var chip=function(attr,val,label,n,on){ return '<button class="chip'+(on?' on':'')+'" '+attr+'="'+esc(val)+'" aria-pressed="'+on+'">'+esc(label)+' <b class="num">'+n+'</b></button>'; };
-    return '<div class="chips ag" role="group" aria-label="Rama">'+chip('data-agrama','todas','Todas',nR('todas'),s.rama==='todas')+chip('data-agrama','art','ART',nR('art'),s.rama==='art')+chip('data-agrama','laboral','Laboral',nR('laboral'),s.rama==='laboral')+'</div>'+
+    var marcaRow=(hayRec && hayTra) ? '<div class="chips ag marca" role="group" aria-label="Marca">'+chip('data-agmarca','todas','Todas',nM('todas'),!s.marca || s.marca==='todas')+chip('data-agmarca','reclama','Reclamá',nM('reclama'),s.marca==='reclama')+chip('data-agmarca','transito','Derecho en Tránsito',nM('transito'),s.marca==='transito')+'</div>' : '';
+    var ramaRow=(s.marca==='reclama' || !hayTra) ? '<div class="chips ag" role="group" aria-label="Rama">'+chip('data-agrama','todas','ART y Laboral',nR('todas'),s.rama==='todas')+chip('data-agrama','art','ART',nR('art'),s.rama==='art')+chip('data-agrama','laboral','Laboral',nR('laboral'),s.rama==='laboral')+'</div>' : '';
+    return marcaRow+ramaRow+
       '<div class="chips ag" role="group" aria-label="Fase">'+chip('data-agfase','todas','Todas las fases',nF('todas'),s.fase==='todas' && !s.otra)+AG_FASES.map(function(f){ return chip('data-agfase',f.k,f.l,nF(f.k),s.fase===f.k && !s.otra); }).join('')+'</div>'+otrasChipsHtml(s);
   }
   function agHead(){
@@ -1784,10 +1830,10 @@ textarea:focus,.inp:focus,select:focus{outline:none;box-shadow:0 0 0 2.5px var(-
   /* ---------- Listas separadas por rama (cuando arriba está elegido "Todas") ---------- */
   function listaRamas(xs, s){
     if (s.rama!=='todas') return '<ul class="pa-list">'+xs.map(agRow).join('')+'</ul>';
-    var html='', grupos=[['art','ART'],['laboral','Laboral']];
+    var html='', grupos=[['art','ART'],['laboral','Laboral'],['transito','Derecho en Tránsito']];
     grupos.forEach(function(g){ var ys=xs.filter(function(l){ return ramaKey(l.rama)===g[0]; });
       if (ys.length) html+='<p class="grp-sub">'+g[1]+' · '+ys.length+'</p><ul class="pa-list">'+ys.map(agRow).join('')+'</ul>'; });
-    var otros=xs.filter(function(l){ var k=ramaKey(l.rama); return k!=='art' && k!=='laboral'; });
+    var otros=xs.filter(function(l){ var k=ramaKey(l.rama); return k!=='art' && k!=='laboral' && k!=='transito'; });
     if (otros.length) html+='<p class="grp-sub">Sin rama · '+otros.length+'</p><ul class="pa-list">'+otros.map(agRow).join('')+'</ul>';
     return html;
   }
@@ -1797,7 +1843,7 @@ textarea:focus,.inp:focus,select:focus{outline:none;box-shadow:0 0 0 2.5px var(-
   function otrasChipsHtml(s){
     var O=state.otras||{};
     return '<div class="chips ag otras" role="group" aria-label="Otras fases"><span class="chips-lbl">Otras fases:</span>'+OTRAS_FASES.map(function(f){ var on=s.otra===f, o=O[f];
-      return '<button class="chip'+(on?' on':'')+'" data-agotra="'+esc(f)+'" aria-pressed="'+on+'">'+esc(faseLbl(f))+(o && o.leads ? ' <b class="num">'+(s.rama==='todas' ? o.total : o.leads.filter(function(l){ return ramaKey(l.rama)===s.rama; }).length)+'</b>' : '')+'</button>'; }).join('')+'</div>';
+      return '<button class="chip'+(on?' on':'')+'" data-agotra="'+esc(f)+'" aria-pressed="'+on+'">'+esc(faseLbl(f))+(o && o.leads ? ' <b class="num">'+((s.rama==='todas' && (!s.marca || s.marca==='todas')) ? o.total : o.leads.filter(function(l){ return ramaPasa(l, s); }).length)+'</b>' : '')+'</button>'; }).join('')+'</div>';
   }
   function precargarOtras(){
     // Al abrir Agendar se traen todas las otras fases juntas en segundo plano: al tocar una, ya está
@@ -1888,8 +1934,11 @@ textarea:focus,.inp:focus,select:focus{outline:none;box-shadow:0 0 0 2.5px var(-
     if (phone(l.tel)) html += '<div class="big-acts"><a href="'+telHref(l.tel)+'" target="_top">'+I.call+'Llamar</a><a class="wa" href="'+waHref(l.tel)+'" target="_blank" rel="noopener">'+I.chat+'WhatsApp</a></div>';
     if (ag) html += '<div class="pa-has" style="margin:12px 2px 0">Ya tiene consulta: '+esc(diaCorto(l.fecha))+' '+esc(l.hora||'')+(l.abogada?' con '+esc(l.abogada):'')+'</div><button class="btn3" data-open="'+esc(l.id)+'">Ver la consulta</button>';
     else if (puede('agendar')) html += '<button class="btn3 fi-ag" data-agendar="'+esc(l.id)+'">'+I.cal+'Agendar consulta</button>';
+    html += internasBlk(l);
     var b=function(md, t){ var on=u.modo===md; return '<button data-fimodo="'+md+'" class="'+(on?'on':'')+'" aria-pressed="'+on+'">'+t+'</button>'; };
-    html += '<div class="fi-acts'+(ag?' dos':'')+'">'+(ag?'':b('fase','Cambiar fase'))+b('nota','＋ Nota')+b('datos','Corregir datos')+'</div>'+fichaPanel(l, u);
+    var conFase=!ag && puede('agendar');
+    html += '<div class="fi-acts'+(conFase?'':' dos')+'">'+(conFase?b('fase','Cambiar fase'):'')+b('nota','＋ Nota')+b('datos','Corregir datos')+'</div>'+fichaPanel(l, u);
+    if (puedeMarca(l)) html += '<button class="btn3" data-marcanueva="'+esc(l.id)+'">'+I.swap+'Pasar a otra rama</button>';
     html += '<div class="blk"><h3 class="blk-t">Contacto</h3><div class="box">'+fkv('Teléfono', l.tel||'—', 'num')+fkv('Email', l.email)+'</div></div>';
     if (l.info && l.info.length) html += '<div class="blk"><h3 class="blk-t">Lo que contó en el formulario</h3><div class="box">'+l.info.map(function(c){ return fkv(c.label, c.text, 'pre'); }).join('')+'</div></div>';
     html += '<div class="blk"><h3 class="blk-t">Notas y seguimiento</h3>'+((l.comentarios && l.comentarios.length) ?
@@ -2011,8 +2060,9 @@ textarea:focus,.inp:focus,select:focus{outline:none;box-shadow:0 0 0 2.5px var(-
   /* ---------- Agendar a alguien que no está en la lista ---------- */
   var NUEVO_ID='__nuevo__';
   function abrirManual(){
-    var q=String(agState().q||'').trim(), dig=q.replace(/\D/g,''), r=agState().rama;
-    state.manual={ nombre: dig.length>=6 ? '' : q, tel: dig.length>=6 ? q : '', rama: r==='laboral' ? 'LABORAL' : (r==='art' ? 'ART' : ''), origen:'', nota:'' };
+    var q=String(agState().q||'').trim(), dig=q.replace(/\D/g,''), r=agState().rama, mk=agState().marca;
+    var lr=leadsRamas(), r0=r==='laboral' ? 'LABORAL' : (r==='art' ? 'ART' : (mk==='transito' ? 'TRANSITO' : (lr.length===1 ? lr[0] : '')));
+    state.manual={ nombre: dig.length>=6 ? '' : q, tel: dig.length>=6 ? q : '', rama: r0, origen:'', nota:'' };
     state.nuevoLead=null; closeSearch(); openSheet({type:'manual'});
   }
   function manualOk(){ var m=state.manual||{}; return String(m.nombre||'').trim().length>=2 && phone(m.tel).length>=8 && !!m.rama && !!m.origen; }
@@ -2029,7 +2079,7 @@ textarea:focus,.inp:focus,select:focus{outline:none;box-shadow:0 0 0 2.5px var(-
       '<div class="field"><label for="mnTel">Teléfono</label><input class="inp" id="mnTel" type="tel" inputmode="tel" autocomplete="off" value="'+esc(m.tel||'')+'"></div>'+
         '<div class="field"><label for="mnEmail">Email (opcional)</label><input class="inp" id="mnEmail" type="email" inputmode="email" autocomplete="off" value="'+esc(m.email||'')+'"></div>'+
       '<div id="mnDup">'+dupHtml()+'</div>'+
-      '<div class="field"><span class="lbl">Rama</span><div class="pick">'+pick('data-mnrama','ART','ART',m.rama==='ART')+pick('data-mnrama','LABORAL','Laboral',m.rama==='LABORAL')+'</div></div>'+
+      '<div class="field"><span class="lbl">Rama</span><div class="pick">'+[['ART','ART'],['LABORAL','Laboral'],['TRANSITO','Tránsito']].filter(function(x){ return leadsRamas().indexOf(x[0])!==-1; }).map(function(x){ return pick('data-mnrama',x[0],x[1],m.rama===x[0]); }).join('')+'</div></div>'+
       '<div class="field"><span class="lbl">¿De dónde viene?</span><div class="pick">'+(state.data.origenes||[]).map(function(o){ return pick('data-mnorigen',o,o,m.origen===o); }).join('')+'</div></div>'+
       '<div class="field"><label for="mnNota">Nota (opcional)</label><textarea id="mnNota" placeholder="Ej.: lo recomendó un cliente">'+esc(m.nota||'')+'</textarea></div>'+
       '<div class="save-wrap"><button class="save" data-mnsig '+(manualOk()?'':'disabled')+'>Elegir día y horario</button>'+
@@ -2073,7 +2123,7 @@ textarea:focus,.inp:focus,select:focus{outline:none;box-shadow:0 0 0 2.5px var(-
 
   /* ---------- Reportes: semana por rama (app, CARGA SEMANAL y KPIs) ---------- */
   var REP_FILAS=[
-    {k:'llam', l:'Llamadas agendadas', soloArt:true},
+    {k:'llam', l:'Llamadas agendadas', ramas:['ART','TRANSITO']},
     {k:'cons', l:'Consultas (tenían turno)'},
     {k:'reag', l:'Pidieron reagendar'},
     {k:'ns',   l:'No show'},
@@ -2286,7 +2336,7 @@ textarea:focus,.inp:focus,select:focus{outline:none;box-shadow:0 0 0 2.5px var(-
   }
   function repRama(r, ctrl){
     var open=state.repOpen||{}, app=r.app||{}, ca=r.carga, kp=r.kpis;
-    var filas=REP_FILAS.filter(function(f){ return !f.soloArt || r.rama==='ART'; });
+    var filas=REP_FILAS.filter(function(f){ return !f.ramas || f.ramas.indexOf(r.rama)!==-1; });
     if (ctrl) filas=filas.concat([{k:'agend', l:'Consultas agendadas (turnos nuevos)', sinCarga:true}]);
     var celda=function(x, ref){ return x===null ? '<td class="na">—</td>' : '<td class="num'+(ref!==null && x!==ref?' df':'')+'">'+x+'</td>'; };
     var html='<h2 class="sec-t">'+ramaLabel(r.rama)+'</h2>';
@@ -2504,6 +2554,7 @@ textarea:focus,.inp:focus,select:focus{outline:none;box-shadow:0 0 0 2.5px var(-
     var dw=dow(nowBA().date); if (dw===6 || dw===0 || dw===1) body+='<button class="btn3" data-view="reporte" style="margin-top:12px">📊 Armar el reporte de la semana para CARGA SEMANAL</button>';
     body += secTarea('Confirmar hoy', t.hoy.length, 'Mensaje del día para las consultas de hoy. Tocá lo que respondió.', '<ol class="dk">'+t.hoy.map(function(l){ return tkRow(l,'confDia'); }).join('')+'</ol>');
     body += secTarea('Mensaje previo', t.previa.length, 'Consultas de los próximos días que todavía no tienen la confirmación previa.', '<ol class="dk">'+t.previa.map(function(l){ return tkRow(l,'confPrev'); }).join('')+'</ol>');
+    body += respuestasHtml();
     body += secTarea('Sin resumen', t.sinRes.length, 'Escribí el resumen para que la abogada lo tenga antes de la consulta.', '<ul class="todo">'+t.sinRes.map(srRow).join('')+'</ul>');
     body += secTarea('Por agendar', pa.length, 'Leads que todavía no tienen consulta. Tocá uno para elegir día, horario y abogada.',
       '<ul class="todo">'+agBase().slice(0,5).map(paRow).join('')+'</ul>'+(pa.length?'<button class="btn3" data-view="agendar">Ver todos en Agendar ('+pa.length+')</button>':''));
@@ -2530,13 +2581,26 @@ textarea:focus,.inp:focus,select:focus{outline:none;box-shadow:0 0 0 2.5px var(-
   }
 
   /* ---------- escribir el resumen en la app ---------- */
-  var PLANT = { art:['ART','Resumen'], laboral:['Antigüedad','Rubro','Irregularidad','Resumen'], transito:['Resumen'] };
-  var PH = { art:'Ej: Prevención', resumen:'Qué le pasó, lesión, tratamiento, estudios', antiguedad:'Ej: 3 años', rubro:'Ej: gastronomía', irregularidad:'Ej: 100% en negro, lo despidieron' };
+  var PLANT = { art:['ART','Resumen'], laboral:['Antigüedad','Rubro','Irregularidad','Resumen'],
+    transito:['Acta vial o fallo','Quién se presentó','Cómo fue','Aseguradora','Lesión','Daños materiales','Quién más iba'] };
+  var PH = { art:'Ej: Prevención', resumen:'Qué le pasó, lesión, tratamiento, estudios', antiguedad:'Ej: 3 años', rubro:'Ej: gastronomía', irregularidad:'Ej: 100% en negro, lo despidieron',
+    'acta vial o fallo':'Sí, hay acta / Fallo a favor / No / No sabe', 'quien se presento':'Tránsito, policía, los dos o nadie', 'como fue':'La mecánica en 2 o 3 líneas: quién iba en qué, qué pasó',
+    aseguradora:'De la otra parte', lesion:'Ej: fractura de muñeca, cirugía', 'danos materiales':'Ej: moto destruida, más de $5M', 'quien mas iba':'Acompañantes: otro posible cliente' };
+  // Tránsito: el resumen arranca con lo que la persona ya contestó en el formulario
+  var PRE_TRA = { 'quien se presento':['quien se presento'], aseguradora:['compania de seguro'], lesion:['gravedad de las heridas'], 'danos materiales':['danos materiales'], 'como fue':['participacion','comentarios'] };
+  function infoDe(l, claves){ return (l.info||[]).filter(function(c){ var k=keyOf(c.label); return claves.some(function(x){ return k.indexOf(x)===0; }); }).map(function(c){ return String(c.text||'').trim(); }).filter(Boolean); }
+  function precargaTransito(l, k){
+    var cl=PRE_TRA[keyOf(k)]; if (!cl) return '';
+    var v=infoDe(l, cl);
+    if (keyOf(k)==='lesion' && v.length) return 'Gravedad: '+v[0];
+    if (keyOf(k)==='como fue' && v.length) return v.join('. ');
+    return v.join(' · ');
+  }
   function camposIniciales(l){
     var tpl=PLANT[ramaKey(l.rama)]||['Resumen'], ex=l.resumen?fieldsOf(l.resumen):[], used={}, out=[];
     tpl.forEach(function(k){
       var f=null; for (var i=0;i<ex.length;i++) if (!used[i] && keyOf(ex[i].k)===keyOf(k)){ f=ex[i]; used[i]=1; break; }
-      out.push({k:f?f.k:k, v:f?f.v:''});
+      out.push({k:f?f.k:k, v:f?f.v:(ramaKey(l.rama)==='transito' ? precargaTransito(l, k) : '')});
     });
     ex.forEach(function(f,i){ if (!used[i]) out.push({k:f.k, v:f.v}); });
     return out;
@@ -2548,13 +2612,15 @@ textarea:focus,.inp:focus,select:focus{outline:none;box-shadow:0 0 0 2.5px var(-
     var html = head(esc(l.hora||'--:--'), l.fecha?diaCorto(l.fecha):'', 'Resumen de '+esc(l.nombre),
       '<div class="mt"><span class="rama r-'+ramaKey(l.rama)+'">'+ramaLabel(l.rama)+'</span>'+(l.abogada?'<span class="cp">Con '+esc(l.abogada)+'</span>':'')+'</div>');
     d.campos.forEach(function(c,i){
-      var k=keyOf(c.k), big = /^(resumen|irregularidad)/.test(k) || c.v.length>60 || c.v.indexOf('\n')!==-1;
+      var k=keyOf(c.k), big = /^(resumen|irregularidad|como fue)/.test(k) || c.v.length>60 || c.v.indexOf('\n')!==-1;
       var ph = PH[k] ? ' placeholder="'+esc(PH[k])+'"' : '';
+      if (k==='acta vial o fallo'){ html += '<div class="field"><label for="cf'+i+'">'+esc(c.k)+'</label><div class="pick campo-pick">'+['Hay acta vial','Fallo a favor','No hay','No sabe'].map(function(o){ var on=c.v===o; return '<button class="'+(on?'on':'')+'" data-campopick="'+i+'|'+esc(o)+'" aria-pressed="'+on+'">'+esc(o)+'</button>'; }).join('')+'</div>'+
+        '<input class="inp" id="cf'+i+'" data-campo="'+i+'" value="'+esc(c.v)+'"'+ph+' style="margin-top:8px"></div>'; return; }
       html += '<div class="field"><label for="cf'+i+'">'+esc(c.k)+'</label>'+(big
         ? '<textarea id="cf'+i+'" data-campo="'+i+'" style="margin-top:0" rows="'+(k==='resumen'?5:3)+'"'+ph+'>'+esc(c.v)+'</textarea>'
         : '<input class="inp" id="cf'+i+'" data-campo="'+i+'" value="'+esc(c.v)+'"'+ph+'>')+'</div>';
     });
-    html += '<p class="hint">Nombre, teléfono, día y hora ya salen de la planilla.</p>';
+    html += '<p class="hint">Nombre, teléfono, día y hora ya salen de la planilla.'+(ramaKey(l.rama)==='transito'?' Lo que ya contestó en el formulario viene cargado: corregilo o completalo.':'')+'</p>';
     html += '<div class="save-wrap"><button class="save" data-savecampos '+(textoCampos()?'':'disabled')+'>Guardar resumen</button>'+
       '<button class="link" data-pastefor="'+esc(l.id)+'">Prefiero pegar el mensaje de WhatsApp</button></div>';
     return html;
@@ -2645,7 +2711,7 @@ textarea:focus,.inp:focus,select:focus{outline:none;box-shadow:0 0 0 2.5px var(-
       var r=R[a]||[]; return {a:a, rama:(!l.rama || !r.length || r.indexOf(l.rama)!==-1)}; });
   }
   function puedeDerivar(l){
-    return puede('agendar') && !!l.abogada && (l.fase==='Consulta agendada' || l.fase==='Reagenda') &&
+    return !l.parcial && (puede('agendar') || (state.me && l.abogada===state.me.nombre)) && !!l.abogada && (l.fase==='Consulta agendada' || l.fase==='Reagenda') &&
       candDeriv(l).some(function(c){ return c.rama; });
   }
   function estadoDeriv(a, l, hora){
@@ -2903,6 +2969,153 @@ textarea:focus,.inp:focus,select:focus{outline:none;box-shadow:0 0 0 2.5px var(-
     sh.addEventListener('touchstart', function(e){ y0 = (sh.scrollTop<=0 && !e.target.closest('textarea,select,input')) ? e.touches[0].clientY : null; }, {passive:true});
     sh.addEventListener('touchmove', function(e){ if (y0!==null && e.touches[0].clientY-y0>90){ y0=null; closeSheet(); } }, {passive:true});
   })();
+
+  /* ---------- Consultas internas: preguntar si es caso o derivar la llamada (sin abrirle los leads a nadie) ---------- */
+  function yoNombre(){ return state.me ? state.me.nombre : ''; }
+  function intCfg(){ return (state.data && state.data.internas) || null; }
+  function intQuienes(tipo, l){ var c=intCfg(); if (!c) return []; var r=String(l.rama||'').toUpperCase(); return ((c[tipo]||{})[r]||[]).filter(function(a){ return a!==yoNombre(); }); }
+  function puedeInterna(l){ return !l.parcial && puede('agendar') && (intQuienes('criterio', l).length + intQuienes('llamada', l).length) > 0; }
+  function intAbiertaMia(l){ return (l.internas||[]).filter(function(x){ return x.a===yoNombre() && x.abierta; }); }
+  function intTipoTxt(x){ return x.tipo==='llamada' ? 'Llamada derivada' : '¿Es caso?'; }
+  function respuestaHtml(l, x){
+    var ops=((state.data.respuestas||{})[x.tipo]||[]).filter(function(o){ return o!==x.estado; });
+    return '<div class="blk int-ask"><h3 class="blk-t">'+esc(x.de)+(x.tipo==='llamada'?' te derivó la llamada':' te pregunta si es caso')+'<small>'+esc(x.cuando)+(x.estado!=='Pendiente'?' · ahora: '+esc(x.estado):'')+'</small></h3>'+
+      (x.nota?'<div class="note">'+esc(x.nota)+'</div>':'')+
+      '<textarea id="intResp" placeholder="Comentario para '+esc(x.de)+' (opcional)"></textarea>'+
+      '<div class="pick int-ops">'+ops.map(function(o){ return '<button data-intresp="'+esc(l.id)+'|'+x.i+'|'+esc(o)+'">'+esc(o)+'</button>'; }).join('')+'</div></div>';
+  }
+  function internasBlk(l){
+    if (!l || l.parcial) return '';
+    var xs=l.internas||[], html='';
+    intAbiertaMia(l).forEach(function(x){ html += respuestaHtml(l, x); });
+    if (xs.length) html += '<div class="blk"><h3 class="blk-t">Consultas internas</h3><div class="box">'+xs.map(function(x){
+      return '<div class="kv stack"><span>'+esc(x.cuando)+' · '+esc(x.de)+' → '+esc(x.a)+' · '+intTipoTxt(x)+'</span><b class="'+(x.abierta?'int-open':'')+'">'+esc(x.estado)+(x.nota?' · '+esc(x.nota):'')+(x.resp?' · '+esc(x.resp):'')+'</b></div>'; }).join('')+'</div></div>';
+    if (puedeInterna(l)) html += '<button class="btn3" data-intnueva="'+esc(l.id)+'">💬 Consultar si es caso o derivar la llamada</button>';
+    return html;
+  }
+  function internasBanner(){
+    var xs=(state.data && state.data.paraMi)||[]; if (!xs.length || state.view==='finanzas') return '';
+    return '<div class="int-ban" role="region" aria-label="Consultas para vos"><b>💬 '+plural(xs.length,'consulta para vos','consultas para vos')+'</b>'+xs.slice(0,8).map(function(l){
+      var x=intAbiertaMia(l)[0]||{};
+      return '<button class="int-it" data-ficha="'+esc(l.id)+'"><span><b>'+esc(l.nombre||'Sin nombre')+'</b> · '+ramaLabel(l.rama)+'</span><small>'+esc(x.de||'')+(x.tipo==='llamada'?' te derivó la llamada':' pregunta si es caso')+(x.estado==='Lo llamo yo'?' · la tomaste vos':'')+'</small></button>'; }).join('')+'</div>';
+  }
+  // Para los intakers: respuestas de los últimos días a lo que consultaron
+  function cuandoIso(c){ var m=String(c||'').match(/^(\d{2})\/(\d{2})\/(\d{4})/); return m ? m[3]+'-'+m[2]+'-'+m[1] : ''; }
+  function respuestasParaMi(){
+    var me=yoNombre(), hoy=nowBA().date, vistos={}, out=[];
+    var todos=[].concat(state.data.porAgendar||[], state.data.leads||[]);
+    Object.keys(state.otras||{}).forEach(function(k){ var o=state.otras[k]; if (o && o.leads) todos=todos.concat(o.leads); });
+    todos.forEach(function(l){ if (!l || vistos[l.id]) return; vistos[l.id]=1;
+      (l.internas||[]).forEach(function(x){ var d=cuandoIso(x.cuando); if (x.de===me && x.estado!=='Pendiente' && d && diffDays(hoy, d)<=3) out.push({l:l, x:x}); }); });
+    return out;
+  }
+  function respuestasHtml(){
+    var rs=respuestasParaMi(); if (!rs.length) return '';
+    return '<h2 class="sec-t">Te respondieron <span class="cnt num">'+rs.length+'</span></h2><p class="sec-sub">Consultas internas de los últimos 3 días.</p><ul class="todo">'+rs.map(function(r){
+      return '<li><button data-ficha="'+esc(r.l.id)+'"><span class="w"><b>'+esc(r.l.nombre||'Sin nombre')+'</b><span>'+esc(r.x.a)+': '+esc(r.x.estado)+(r.x.resp?' · '+esc(r.x.resp):'')+'</span></span><span class="go2">Ver</span></button></li>'; }).join('')+'</ul>';
+  }
+  function waUrl(tel, texto){ var t=encodeURIComponent(texto||''); var p=phone(tel); return p.length>=8 ? 'https://wa.me/549'+p+'?text='+t : 'https://wa.me/?text='+t; }
+  function waTexto(l, tipo, nota){
+    var ls=[tipo==='llamada' ? 'Hola, ¿te puedo derivar este caso?' : 'Hola, ¿me decís si esto es caso?', '',
+      'Nombre: '+(l.nombre||'—'), 'Teléfono: '+(l.tel||'—'), 'Rama: '+ramaLabel(l.rama)];
+    var rf=l.resumen ? fieldsOf(l.resumen) : [];
+    if (rf.length) rf.forEach(function(f){ ls.push(f.k+': '+f.v); });
+    else (l.info||[]).slice(0,8).forEach(function(c){ ls.push(c.label+': '+c.text); });
+    if (nota) ls.push('', 'Nota: '+nota);
+    ls.push('', 'Lo tenés en la app para responder.');
+    return ls.join('\n');
+  }
+  function sheetInterna(){
+    var l=findLead(state.sheet.id); if (!l) return null;
+    var d=state.draft||{}, r=String(l.rama||'').toUpperCase(), cri=intQuienes('criterio', l), lla=intQuienes('llamada', l);
+    var html='<div class="grab"></div><div class="sh-head"><div class="sh-who"><h2>Consultar o derivar</h2><div class="mt"><span class="rama r-'+ramaKey(l.rama)+'">'+ramaLabel(l.rama)+'</span><span class="cp">'+esc(l.nombre||'Sin nombre')+'</span></div></div><button class="close" data-close aria-label="Cerrar">'+I.x+'</button></div>';
+    if (d.hecho){
+      return html+'<div class="ok-box"><b>Listo: le llegó a '+esc(d.hecho.a)+' en la app.</b><span>Avisale por WhatsApp para que lo vea ya.</span></div>'+
+        '<a class="save wa-go" href="'+esc(waUrl(d.hecho.tel, waTexto(l, d.hecho.tipo, d.hecho.nota)))+'" target="_blank" rel="noopener">'+I.chat+' Avisar a '+esc(d.hecho.a)+' por WhatsApp</a>'+
+        '<button class="link" data-close style="display:block;margin:10px auto 0">Cerrar</button>';
+    }
+    var pk=function(tipo, a){ var on=d.tipo===tipo && d.a===a; return '<button class="'+(on?'on':'')+'" data-intsel="'+tipo+'|'+esc(a)+'" aria-pressed="'+on+'">'+esc(a)+'</button>'; };
+    if (cri.length) html += '<div class="field"><span class="lbl">¿Es caso? Preguntale a</span><div class="pick">'+cri.map(function(a){ return pk('criterio', a); }).join('')+'</div></div>';
+    if (lla.length) html += '<div class="field"><span class="lbl">Ya es caso y necesita una llamada: derivásela a</span><div class="pick">'+lla.map(function(a){ return pk('llamada', a); }).join('')+'</div>'+
+      '<p class="hint" style="margin:6px 2px 0">'+(r==='TRANSITO' ? 'En Tránsito la llamada previa la hacen Karim o Julián.' : 'Por ejemplo, si la persona duda o es un caso grave.')+(['','A','B'].indexOf(l.fase||'')!==-1 ? ' El lead pasa a Llamada pendiente.' : '')+'</p></div>';
+    html += '<div class="field"><label for="intNota">Nota (opcional)</label><textarea id="intNota" placeholder="'+(d.tipo==='llamada'?'Ej.: duda por los honorarios, prefiere que la llamen a la tarde':'Ej.: no tiene acta, pero el seguro ya lo llamó')+'">'+esc(d.nota||'')+'</textarea></div>';
+    html += '<div class="save-wrap"><button class="save" data-intenviar '+(d.a?'':'disabled')+'>'+(d.a ? (d.tipo==='llamada' ? 'Derivarle la llamada a '+esc(d.a) : 'Preguntarle a '+esc(d.a)) : 'Elegí a quién')+'</button>'+
+      '<p class="hint" style="text-align:center;margin-top:8px">'+(d.a?esc(d.a)+' ve solo esta ficha y responde desde la app. Después te ofrezco avisarle por WhatsApp.':'')+'</p></div>';
+    return html;
+  }
+  function enviarInterna(){
+    var d=state.draft, id=state.sheet && state.sheet.id; if (!d || !d.a || !id) return;
+    busySheet(true, 'Enviando…');
+    call('pedirInterna', {id:id, tipo:d.tipo, a:d.a, nota:d.nota||''}).then(function(r){
+      if (r && r.lead) replaceAny(r.lead);
+      d.hecho={a:d.a, tipo:d.tipo, nota:d.nota||'', tel:(r && r.tel) || ((intCfg()||{}).telefonos||{})[d.a] || ''};
+      renderSheet(); render();
+    }).catch(function(e){ renderSheet(); toast((e&&e.message)||'No se pudo enviar.', true); });
+  }
+  function actualizarParaMi(nl){
+    var A=state.data.paraMi||(state.data.paraMi=[]);
+    for (var i=0;i<A.length;i++) if (A[i].id===nl.id){ if (intAbiertaMia(nl).length) A[i]=nl; else A.splice(i,1); return; }
+    if (intAbiertaMia(nl).length) A.push(nl);
+  }
+  function responderInternaUI(v){
+    var p=v.split('|'), resp=p.pop(), i=p.pop(), id=p.join('|'), nt=$('intResp');
+    busySheet(true, 'Guardando…');
+    call('responderInterna', {id:id, i:+i, respuesta:resp, nota:nt?nt.value:''}).then(function(nl){
+      if (nl){ actualizarParaMi(nl); replaceAny(nl); }
+      renderSheet(); render(); toast('Respuesta enviada: '+resp);
+    }).catch(function(e){ renderSheet(); toast((e&&e.message)||'No se pudo guardar.', true); });
+  }
+
+  /* ---------- Pasar un lead a otra rama (queda asentado en las dos planillas) ---------- */
+  function puedeMarca(l){ return !l.parcial && puede('agendar') && leadsRamas().filter(function(r){ return r!==String(l.rama||'').toUpperCase(); }).length>0 && ['Consulta agendada','Reagenda'].indexOf(l.fase)===-1; }
+  function sheetMarca(){
+    var l=findLead(state.sheet.id); if (!l) return null;
+    var d=state.draft||{}, actual=String(l.rama||'').toUpperCase();
+    var ops=[['ART','ART (Reclamá)'],['LABORAL','Laboral (Reclamá)'],['TRANSITO','Derecho en Tránsito']].filter(function(x){ return x[0]!==actual && leadsRamas().indexOf(x[0])!==-1; });
+    var html='<div class="grab"></div><div class="sh-head"><div class="sh-who"><h2>Pasar a otra rama</h2><div class="mt"><span class="rama r-'+ramaKey(l.rama)+'">'+ramaLabel(l.rama)+'</span><span class="cp">'+esc(l.nombre||'Sin nombre')+'</span></div></div><button class="close" data-close aria-label="Cerrar">'+I.x+'</button></div>';
+    if (d.dup){
+      var x=d.dup;
+      return html+'<div class="warn">Ya está en la planilla de '+esc(ramaLabel(x.rama))+': '+esc(x.nombre||'')+(x.pestana?' (pestaña "'+esc(String(x.pestana).trim())+'")':'')+', fase '+esc(faseLbl(x.fase))+'.</div>'+
+        '<div class="save-wrap"><button class="btn3" data-ficha="'+esc(x.id)+'">Ver esa ficha</button><button class="save" data-mkenviar="1">Pasarlo igual</button></div>';
+    }
+    html += '<p class="hint" style="margin:10px 2px 0">Se carga en la planilla de la otra rama (sin clasificar, aparece arriba en Agendar) con sus datos, el resumen y lo que contó en el formulario. En esta planilla queda la fase "'+esc(({ART:'EN ART RECLAMA',LABORAL:'EN LABORAL RECLAMA',TRANSITO:'EN TRANSITO'})[d.destino]||'EN …')+'" y una nota.</p>';
+    html += '<div class="field"><span class="lbl">¿A qué rama?</span><div class="pick">'+ops.map(function(o){ var on=d.destino===o[0]; return '<button class="'+(on?'on':'')+'" data-mksel="'+o[0]+'" aria-pressed="'+on+'">'+esc(o[1])+'</button>'; }).join('')+'</div></div>';
+    html += '<div class="field"><label for="mkNota">Nota (opcional)</label><textarea id="mkNota" placeholder="Ej.: iba al trabajo cuando lo chocaron">'+esc(d.nota||'')+'</textarea></div>';
+    html += '<div class="save-wrap"><button class="save" data-mkenviar '+(d.destino?'':'disabled')+'>'+(d.destino?'Pasar a '+esc(ramaLabel(d.destino)):'Elegí la rama')+'</button></div>';
+    return html;
+  }
+  function enviarMarca(forzar){
+    var d=state.draft, id=state.sheet && state.sheet.id; if (!d || !d.destino || !id) return;
+    busySheet(true, 'Pasando…');
+    call('derivarMarca', {id:id, destino:d.destino, nota:d.nota||'', forzar:!!forzar}).then(function(r){
+      if (r && r.duplicado){ d.dup=r.duplicado; renderSheet(); return; }
+      if (r.lead) replaceAny(r.lead); if (r.nuevo) replaceAny(r.nuevo);
+      state.otrasPre=false; render();
+      if (r.nuevo) openSheet({type:'ficha', id:r.nuevo.id}); else closeSheet();
+      toast('Pasado a '+ramaLabel(d.destino)+'. Quedó asentado en las dos planillas.');
+    }).catch(function(e){ renderSheet(); toast((e&&e.message)||'No se pudo pasar.', true); });
+  }
+
+  document.addEventListener('click', function(ev){
+    var t=ev.target.closest('[data-marca],[data-agmarca],[data-intnueva],[data-intsel],[data-intenviar],[data-intresp],[data-marcanueva],[data-mksel],[data-mkenviar],[data-campopick]');
+    if (!t) return;
+    if (t.hasAttribute('data-marca')){ state.marca=t.getAttribute('data-marca'); store('marca', state.marca); if (state.abog && state.abog!=='Todas' && personas().indexOf(state.abog)===-1){ state.abog='Todas'; store('abogada','Todas'); } state.weekDay=null; render(); return; }
+    if (t.hasAttribute('data-agmarca')){ var s=agState(); s.marca=t.getAttribute('data-agmarca'); s.rama='todas'; s.n=40; renderAg(); return; }
+    if (t.hasAttribute('data-intnueva')){ openSheet({type:'interna', id:t.getAttribute('data-intnueva')}); return; }
+    if (t.hasAttribute('data-marcanueva')){ openSheet({type:'marca', id:t.getAttribute('data-marcanueva')}); return; }
+    if (t.hasAttribute('data-intresp')){ responderInternaUI(t.getAttribute('data-intresp')); return; }
+    if (!state.sheet) return;
+    if (t.hasAttribute('data-intsel') && state.sheet.type==='interna'){ var q=t.getAttribute('data-intsel').split('|'); state.draft.tipo=q[0]; state.draft.a=q.slice(1).join('|'); renderSheet(); return; }
+    if (t.hasAttribute('data-intenviar') && state.sheet.type==='interna'){ enviarInterna(); return; }
+    if (t.hasAttribute('data-mksel') && state.sheet.type==='marca'){ state.draft.destino=t.getAttribute('data-mksel'); renderSheet(); return; }
+    if (t.hasAttribute('data-mkenviar') && state.sheet.type==='marca'){ enviarMarca(t.getAttribute('data-mkenviar')==='1'); return; }
+    if (t.hasAttribute('data-campopick') && state.draft && state.draft.campos){ var cp=t.getAttribute('data-campopick').split('|'), k=+cp.shift(), val=cp.join('|'); var c=state.draft.campos[k]; if (c){ c.v = c.v===val ? '' : val; renderSheet(); } return; }
+  });
+  document.addEventListener('input', function(ev){
+    var id=ev.target.id;
+    if (id==='intNota' && state.draft && state.sheet && state.sheet.type==='interna') state.draft.nota=ev.target.value;
+    if (id==='mkNota' && state.draft && state.sheet && state.sheet.type==='marca') state.draft.nota=ev.target.value;
+  });
 
   load(false);
   (function(){ // Disponibilidad: tocar marca o desmarca media hora; mantener apretado y deslizar pinta varias (en la compu, arrastrar)
