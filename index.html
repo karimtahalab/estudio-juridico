@@ -662,6 +662,14 @@ a.save.wa-go svg{width:20px;height:20px}
 .seg.marca{margin-bottom:-4px}
 .seg.marca button.on.mk-transito{background:#0B8B8B;color:#fff}
 .campo-pick button{flex:1 1 auto}
+.cre-guion{white-space:pre-wrap;font-size:16px;line-height:1.55;padding:12px 14px}
+.cre-hook{display:flex;gap:10px;align-items:flex-start;width:100%;text-align:left;padding:10px 4px;border-top:1px solid var(--line)}
+.cre-hook:first-child{border-top:0}
+.cre-hook small{display:block;color:var(--ink-3);font-size:12px;font-weight:700}
+.cre-chk{flex:0 0 22px;height:22px;border-radius:6px;box-shadow:0 0 0 1.5px var(--line) inset;display:flex;align-items:center;justify-content:center;font-size:14px;margin-top:2px}
+.cre-hook.on .cre-chk{background:var(--green,#1f8a5b);color:#fff;box-shadow:none}
+.go2.ok{color:var(--green,#1f8a5b)}
+.wk-nav{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:10px}
 </style>
 </head>
 <body>
@@ -697,6 +705,7 @@ a.save.wa-go svg{width:20px;height:20px}
   <button data-view="tareas" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 6h10M10 12h10M10 18h10"/><path d="m3.5 6 1.6 1.6L8 4.8M3.5 12l1.6 1.6L8 10.8M3.5 18l1.6 1.6L8 16.8"/></svg>Tareas<span class="badge" id="badgeT" hidden></span></button>
   <button data-view="agendar" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="3"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4M12 12.5v5M9.5 15h5"/></svg>Agendar</button>
   <button data-view="resumen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V11M10 20V5M16 20v-6M2 20h20"/></svg>Resumen</button>
+  <button data-view="guiones" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="6" width="13" height="12" rx="2.5"/><path d="m15.5 10.5 6-3.5v10l-6-3.5"/></svg>Guiones</button>
   <button data-view="falta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2 20h20L12 3Z"/><path d="M12 10v4M12 17h.01"/></svg>Falta cargar<span class="badge" id="badge" hidden></span></button>
 </nav>
 
@@ -1237,11 +1246,11 @@ a.save.wa-go svg{width:20px;height:20px}
     // Si están escribiendo en el buscador de Agendar, solo se actualiza la lista (no se pierde lo escrito)
     if (state.view==='agendar' && document.activeElement && document.activeElement.id==='aq' && $('agList')){ renderAg(); renderNav(); return; }
     var v = ({hoy:viewHoy, manana:viewManana, semana:viewSemana, resumen:viewResumen, falta:viewFalta, tareas:viewTareas, agendar:viewAgendar, agenda:viewAgenda,
-      reporte:function(){ return viewReporte(false); }, reportes:function(){ return viewReporte(true); }, finanzas:viewFinanzas})[state.view]();
+      reporte:function(){ return viewReporte(false); }, reportes:function(){ return viewReporte(true); }, finanzas:viewFinanzas, guiones:viewGuiones})[state.view]();
     $('ttl').innerHTML = '<h1>'+v.h1+'</h1><p>'+v.p+'</p>';
     $('headExtra').innerHTML = v.extra || '';
     $('offline').classList.toggle('on', state.offline);
-    $('main').innerHTML = pinBanner() + dupBanner() + internasBanner() + v.body + '<div class="foot">'+(state.snapT?'Mostrando lo guardado a las '+state.snapT+'. Actualizando…':'Actualizado a las '+nowBA().hm)+(state.me?'. Usás la app como '+esc(state.me.nombre)+' ('+({abogada:'parte de abogadas', intaker:'parte de intakers', admin:'administración'}[state.me.rol]||state.me.rol)+')'+' <button data-yocambiar>Cambiar</button>':'')+'</div>';
+    $('main').innerHTML = pinBanner() + dupBanner() + internasBanner() + v.body + '<div class="foot">'+(state.snapT?'Mostrando lo guardado a las '+state.snapT+'. Actualizando…':'Actualizado a las '+nowBA().hm)+(state.me?'. Usás la app como '+esc(state.me.nombre)+' ('+({abogada:'parte de abogadas', intaker:'parte de intakers', admin:'administración', produccion:'filmación y edición'}[state.me.rol]||state.me.rol)+')'+' <button data-yocambiar>Cambiar</button>':'')+'</div>';
     alignRs();
     renderNav();
     // En modo prueba, arriba a la derecha se ve quién está usando la app y se toca para cambiar de persona o rol
@@ -1274,6 +1283,7 @@ a.save.wa-go svg{width:20px;height:20px}
     if (sh.type==='derivar') state.draft={ dv:null, hora:null };
     if (sh.type==='interna') state.draft={ tipo:null, a:null, nota:'', hecho:null };
     if (sh.type==='marca') state.draft={ destino:null, nota:'', dup:null };
+    if (sh.type==='guion') state.draft={};
     if (sh.type==='yo' && !state.login) state.login={};
     if (sh.type==='ficha' || sh.type==='lead') state.fichaUI={};
     renderSheet();
@@ -1284,7 +1294,7 @@ a.save.wa-go svg{width:20px;height:20px}
   function renderSheet(){
     if (!state.sheet) return;
     var y=$('sheet').scrollTop;
-    var ty=state.sheet.type, html = ({lead:sheetLead, bloq:sheetBloq, pegar:sheetPegar, nuevo:sheetNuevo, escribir:sheetEscribir, agendar:sheetAgendar, derivar:sheetDerivar, ficha:sheetFicha, yo:sheetYo, manual:sheetManual, dup:sheetDup, fin:sheetFin, interna:sheetInterna, marca:sheetMarca})[ty]();
+    var ty=state.sheet.type, html = ({lead:sheetLead, bloq:sheetBloq, pegar:sheetPegar, nuevo:sheetNuevo, escribir:sheetEscribir, agendar:sheetAgendar, derivar:sheetDerivar, ficha:sheetFicha, yo:sheetYo, manual:sheetManual, dup:sheetDup, fin:sheetFin, interna:sheetInterna, marca:sheetMarca, guion:sheetGuion})[ty]();
     if (html===null){ closeSheet(); return; }
     $('sheet').innerHTML = html; $('sheet').scrollTop=y;
   }
@@ -1630,7 +1640,7 @@ a.save.wa-go svg{width:20px;height:20px}
 
   /* ---------- quién usa la app ---------- */
   // Cada rol ve su parte. El Resumen (con números por persona) queda solo para administración.
-  var NAV_ROL = { abogada:['agenda','falta','agendar'], intaker:['tareas','agendar','agenda','reporte'], admin:['agenda','tareas','agendar','reportes','falta'] };
+  var NAV_ROL = { abogada:['agenda','falta','agendar'], intaker:['tareas','agendar','agenda','reporte'], admin:['agenda','tareas','agendar','reportes','falta'], produccion:['guiones'] };
   function equipoBy(n){ var eq=(state.data&&state.data.equipo)||state.equipo||[]; for (var i=0;i<eq.length;i++) if (eq[i].nombre===n) return eq[i]; return null; }
   function resolveMe(d){
     var u=d.user||{};
@@ -1642,7 +1652,7 @@ a.save.wa-go svg{width:20px;height:20px}
   function P(){ return (state.data && state.data.permisos) || {}; }
   function conPermisos(){ return !!(state.data && state.data.permisos); }
   function puede(acc){ var r=rol(); if (acc==='confirmar') return r==='intaker' || r==='admin'; if (acc==='agendar') return conPermisos() ? !!P().agendar : true; return true; }
-  function navList(){ var l=(NAV_ROL[rol()] || NAV_ROL.admin).slice(); if (conPermisos() && !P().agendar) l=l.filter(function(v){ return v!=='agendar'; }); if (rol()!=='admin' && state.data && state.data.finAcceso && l.indexOf('finanzas')===-1) l=l.concat(['finanzas']); return l; }
+  function navList(){ var l=(NAV_ROL[rol()] || NAV_ROL.admin).slice(); if (conPermisos() && !P().agendar) l=l.filter(function(v){ return v!=='agendar'; }); if (rol()!=='admin' && state.data && state.data.finAcceso && l.indexOf('finanzas')===-1) l=l.concat(['finanzas']); if ((P().creativos||[]).length && l.indexOf('guiones')===-1) l=l.concat(['guiones']); return l; }
   function renderNav(){
     var list=navList(), nav=$('nav'), btns=nav.querySelectorAll('button[data-view]');
     nav.style.gridTemplateColumns='repeat('+list.length+',1fr)'; nav.classList.toggle('six', list.length>5);
@@ -1655,7 +1665,7 @@ a.save.wa-go svg{width:20px;height:20px}
   }
   function sheetYo(){
     var eq=(state.data&&state.data.equipo)||state.equipo||[], cur=state.me&&state.me.nombre, L=state.login||(state.login={});
-    var sub={abogada:'Agenda y resultados', intaker:'Confirma, agenda y hace el seguimiento', admin:'Ve todo'};
+    var sub={abogada:'Agenda y resultados', intaker:'Confirma, agenda y hace el seguimiento', admin:'Ve todo', produccion:'Guiones del mes'};
     var cerrar=(state.sheet.first && !state.me)?'':'<button class="close" data-close aria-label="Cerrar">'+I.x+'</button>';
     if (L.n){
       var tit=L.crear ? (L.paso2?'Repetí el PIN para confirmarlo.':'Es la primera vez que entrás: elegí un PIN de 4 números. Lo vas a usar para entrar desde cualquier celular o compu.') : 'Poné tu PIN de 4 números.';
@@ -1670,7 +1680,7 @@ a.save.wa-go svg{width:20px;height:20px}
       return xs.length ? '<p class="grp-lbl">'+t+'</p><div class="who-grid">'+xs.map(function(e){ return '<button class="who'+(e.nombre===cur?' on':'')+'" data-yo="'+esc(e.nombre)+'">'+esc(e.nombre)+'<small>'+sub[e.rol]+'</small></button>'; }).join('')+'</div>' : ''; };
     var soloPin=!!(state.sheet && state.sheet.pines);
     var html= soloPin ? '<div class="grab"></div><div class="sh-head"><div class="sh-who"><h2>Equipo y PINs</h2><p class="hint" style="margin:4px 0 0">Si alguien se olvidó su PIN, reseteálo acá. La próxima vez que entre, elige uno nuevo.</p></div>'+cerrar+'</div>' : '<div class="grab"></div><div class="sh-head"><div class="sh-who"><h2>¿Quién sos?</h2><p class="hint" style="margin:4px 0 0">Elegí tu nombre y poné tu PIN. El celular lo recuerda: no hace falta ponerlo cada vez.</p></div>'+cerrar+'</div>'+
-      grp('abogada','Abogadas')+grp('intaker','Intakers')+grp('admin','Administración');
+      grp('abogada','Abogadas')+grp('intaker','Intakers')+grp('admin','Administración')+grp('produccion','Filmación y edición');
     var pines=state.me && state.me.rol==='admin' && state.data && state.data.pines;
     if (pines){
       html += '<p class="grp-lbl">PIN de cada persona</p><div class="box pin-list">'+pines.map(function(x){ var conf=L.reset===x.nombre;
@@ -3115,6 +3125,82 @@ a.save.wa-go svg{width:20px;height:20px}
     var id=ev.target.id;
     if (id==='intNota' && state.draft && state.sheet && state.sheet.type==='interna') state.draft.nota=ev.target.value;
     if (id==='mkNota' && state.draft && state.sheet && state.sheet.type==='marca') state.draft.nota=ev.target.value;
+  });
+
+  /* ---------- Guiones del mes (se leen de las planillas de creativos; lo grabado queda guardado en la app) ---------- */
+  var MESES_L=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  function creMes(){ if (!state.creMes){ var d=nowBA().date; state.creMes=d.slice(0,7); } return state.creMes; }
+  function creMover(n){ var p=creMes().split('-'), y=+p[0], m=+p[1]-1+n; y+=Math.floor(m/12); m=((m%12)+12)%12; state.creMes=y+'-'+pad2(m+1); }
+  function creData(){ return (state.cre||{})[creMes()]; }
+  function loadCre(fresco){
+    var k=creMes(), C=state.cre||(state.cre={});
+    if (C[k] && C[k].cargando) return;
+    var prev=C[k]; C[k]={cargando:true, prev:prev && !prev.error ? prev : null};
+    call('getCreativos', {mes:k, fresco:!!fresco}).then(function(d){ C[k]=d;
+      // Si el mes en curso todavía no tiene pestañas, se muestra el anterior (lo que se está grabando)
+      if (!state.creMovido && !(d.ramas||[]).some(function(r){ return r.pestana; })){ state.creMovido=true; creMover(-1); loadCre(false); }
+      if (state.view==='guiones') render(); })
+      .catch(function(e){ C[k]={error:(e&&e.message)||'No se pudieron cargar los guiones.'}; if (state.view==='guiones') render(); });
+  }
+  function creRamaLbl(r){ return ({ART:'ART', LABORAL:'Laboral', TRANSITO:'Tránsito'})[r]||r; }
+  function creFind(rama, col){ var d=creData(); if (!d || !d.ramas) return null; var R=d.ramas.filter(function(x){ return x.rama===rama; })[0]; if (!R) return null; var v=R.videos.filter(function(x){ return x.col===+col; })[0]; return v ? {R:R, v:v} : null; }
+  function viewGuiones(){
+    var k=creMes(), p=k.split('-'), d=creData();
+    if (!d || (!d.ramas && !d.cargando && !d.error)) { loadCre(false); d=creData(); }
+    var nav='<div class="wk-nav"><button class="chip" data-cremes="-1" aria-label="Mes anterior">‹</button><b>'+MESES_L[+p[1]-1]+' '+p[0]+'</b><button class="chip" data-cremes="1" aria-label="Mes siguiente">›</button></div>';
+    var base=d && (d.ramas ? d : d.prev);
+    if (!base){ return { h1:'Guiones', p:'Del mes', extra:nav, body: d && d.error ? emptyBox('No se pudieron cargar', esc(d.error), '<button class="btn3" data-crefresco>Reintentar</button>') : emptyBox('Cargando guiones…') }; }
+    var ramas=base.ramas||[], sel=state.creRama||'todas';
+    if (sel!=='todas' && !ramas.some(function(r){ return r.rama===sel; })) sel=state.creRama='todas';
+    var chips=ramas.length>1 ? '<div class="chips" role="group" aria-label="Rama"><button class="chip'+(sel==='todas'?' on':'')+'" data-crerama="todas">Todas</button>'+ramas.map(function(r){ var g=r.videos.filter(function(v){ return v.grabado; }).length;
+      return '<button class="chip'+(sel===r.rama?' on':'')+'" data-crerama="'+r.rama+'">'+creRamaLbl(r.rama)+' <b class="num">'+g+'/'+r.videos.length+'</b></button>'; }).join('')+'</div>' : '';
+    var body='';
+    ramas.filter(function(r){ return sel==='todas' || r.rama===sel; }).forEach(function(r){
+      var g=r.videos.filter(function(v){ return v.grabado; }).length;
+      body+='<h2 class="sec-t"><span class="rama r-'+ramaKey(r.rama)+'">'+creRamaLbl(r.rama)+'</span> '+(r.videos.length?'<span class="cnt num">'+g+' de '+r.videos.length+' grabados</span>':'')+'</h2>';
+      if (r.error){ body+=emptyBox('No se pudo leer', esc(r.error)); return; }
+      if (!r.pestana){ body+=emptyBox('Todavía no hay guiones de '+MESES_L[+p[1]-1].toLowerCase(), 'Cuando agreguen la pestaña del mes en la planilla de creativos de '+creRamaLbl(r.rama)+', aparecen acá.'); return; }
+      if (!r.videos.length){ body+=emptyBox('La pestaña "'+esc(r.pestana)+'" no tiene videos cargados'); return; }
+      body+='<ul class="todo cre-list">'+r.videos.map(function(v){
+        return '<li><button data-creopen="'+r.rama+'|'+v.col+'"><span class="w"><b>'+(v.grabado?'✔ ':'')+esc(v.titulo||v.cab||'Sin título')+'</b><span>'+esc([v.cab, v.formato, v.angulo].filter(Boolean).join(' · ').slice(0,120))+(v.grabado?' · grabado'+(v.grabadoPor?' (marcó '+esc(v.grabadoPor)+')':''):'')+'</span></span><span class="go2'+(v.grabado?' ok':'')+'">'+(v.grabado?'Grabado':'Ver')+'</span></button></li>'; }).join('')+'</ul>';
+    });
+    if (d && d.cargando) body='<p class="hint" style="text-align:center">Actualizando…</p>'+body;
+    return { h1:'Guiones', p:MESES_L[+p[1]-1]+' '+p[0], extra:nav+chips, body:body };
+  }
+  function sheetGuion(){
+    var f=creFind(state.sheet.rama, state.sheet.col); if (!f) return null;
+    var v=f.v, d=state.draft||(state.draft={});
+    if (!d.hooks) d.hooks=(v.hooksGrabados||[]).slice();
+    var html='<div class="grab"></div><div class="sh-head"><div class="sh-who"><h2>'+esc(v.titulo||v.cab||'Guión')+'</h2><div class="mt"><span class="rama r-'+ramaKey(f.R.rama)+'">'+creRamaLbl(f.R.rama)+'</span>'+(v.cab?'<span class="cp">'+esc(v.cab)+'</span>':'')+'</div></div><button class="close" data-close aria-label="Cerrar">'+I.x+'</button></div>';
+    if (v.grabado) html+='<div class="ok-box"><b>✔ Grabado</b><span>'+esc([v.grabadoPor?'Lo marcó '+v.grabadoPor:'', v.grabadoEl].filter(Boolean).join(' · '))+((v.hooksGrabados||[]).length?' · hooks '+v.hooksGrabados.join(', '):'')+'</span></div>';
+    var info=fkv('Formato', v.formato, 'pre')+fkv('Ángulo', v.angulo, 'pre')+fkv('Contexto visual', v.contexto, 'pre');
+    if (info) html+='<div class="blk"><div class="box">'+info+'</div></div>';
+    var hs=v.hooks.map(function(h,i){ return {t:h, n:i+1}; }).filter(function(x){ return x.t; });
+    if (hs.length) html+='<div class="blk"><h3 class="blk-t">Hooks<small>Tocá los que se grabaron</small></h3><div class="box">'+hs.map(function(x){ var on=d.hooks.indexOf(x.n)!==-1;
+      return '<button class="cre-hook'+(on?' on':'')+'" data-crehook="'+x.n+'" aria-pressed="'+on+'"><span class="cre-chk">'+(on?'✔':'')+'</span><span><small>Hook '+x.n+'</small>'+esc(x.t)+'</span></button>'; }).join('')+'</div></div>';
+    if (v.guion) html+='<div class="blk"><h3 class="blk-t">Guión</h3><div class="box cre-guion">'+esc(v.guion)+'</div></div>';
+    if ((v.extra||[]).length) html+='<div class="blk"><h3 class="blk-t">Más datos</h3><div class="box">'+v.extra.map(function(x){ return fkv(x.label, x.text, 'pre'); }).join('')+'</div></div>';
+    var cambiaHooks=v.grabado && d.hooks.slice().sort().join()!==(v.hooksGrabados||[]).slice().sort().join();
+    html+='<div class="save-wrap">'+(v.grabado ? (cambiaHooks?'<button class="save" data-cresave="1">Guardar hooks grabados</button>':'')+'<button class="btn3" data-cresave="0">Desmarcar: todavía no se grabó</button>' : '<button class="save" data-cresave="1">Marcar como grabado</button>')+'</div>';
+    return html;
+  }
+  function creGuardar(grabado){
+    var sh=state.sheet, f=creFind(sh.rama, sh.col); if (!f) return; var d=state.draft||{};
+    busySheet(true, 'Guardando…');
+    call('saveGrabado', {rama:f.R.rama, pestana:f.R.pestana, col:f.v.col, titulo:f.v.titulo, grabado:grabado, hooks:grabado?(d.hooks||[]):[]}).then(function(r){
+      f.v.grabado=r.grabado; f.v.hooksGrabados=r.hooksGrabados; f.v.grabadoPor=r.grabadoPor; f.v.grabadoEl=r.grabadoEl; d.hooks=(r.hooksGrabados||[]).slice();
+      renderSheet(); render(); toast(r.grabado?'✔ Marcado como grabado':'Desmarcado');
+    }).catch(function(e){ renderSheet(); toast((e&&e.message)||'No se pudo guardar.', true); });
+  }
+  document.addEventListener('click', function(ev){
+    var t=ev.target.closest('[data-cremes],[data-crerama],[data-creopen],[data-crehook],[data-cresave],[data-crefresco]'); if (!t) return;
+    if (t.hasAttribute('data-cremes')){ state.creMovido=true; creMover(+t.getAttribute('data-cremes')); render(); return; }
+    if (t.hasAttribute('data-crerama')){ state.creRama=t.getAttribute('data-crerama'); render(); return; }
+    if (t.hasAttribute('data-crefresco')){ loadCre(true); render(); return; }
+    if (t.hasAttribute('data-creopen')){ var q=t.getAttribute('data-creopen').split('|'); openSheet({type:'guion', rama:q[0], col:+q[1]}); return; }
+    if (!state.sheet || state.sheet.type!=='guion') return;
+    if (t.hasAttribute('data-crehook')){ var n=+t.getAttribute('data-crehook'), H=state.draft.hooks||(state.draft.hooks=[]), i=H.indexOf(n); if (i===-1) H.push(n); else H.splice(i,1); renderSheet(); return; }
+    if (t.hasAttribute('data-cresave')){ creGuardar(t.getAttribute('data-cresave')==='1'); return; }
   });
 
   load(false);
