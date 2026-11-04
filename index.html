@@ -2211,8 +2211,8 @@ a.save.wa-go svg{width:20px;height:20px}
   }
   function guardarDatos(){
     var id=state.sheet.id, l=findLead(id), u=state.fichaUI||{}, arg={id:id}; if (!l) return;
-    if (u.nombre!==undefined && u.nombre.trim()!==String(l.nombre||'')) arg.nombre=u.nombre;
-    if (u.tel!==undefined && phone(u.tel)!==phone(l.tel)) arg.tel=u.tel;
+    if (u.nombre!==undefined && u.nombre.trim()!==String(l.nombre||'').trim()) arg.nombre=u.nombre;
+    if (u.tel!==undefined && u.tel.trim()!==String(l.tel||'').trim()) arg.tel=u.tel; // también si solo se limpia el formato (54, 9, 15, espacios)
     if (u.email!==undefined && u.email.trim().toLowerCase()!==String(l.email||'').toLowerCase()) arg.email=u.email;
     if (arg.nombre===undefined && arg.tel===undefined && arg.email===undefined){ toast('No hay cambios para guardar: escribí el dato nuevo en el campo.', true); return; }
     busySheet(true, 'Guardando…');
