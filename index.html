@@ -1465,6 +1465,7 @@ a.save.wa-go svg{width:20px;height:20px}
     var cabeza=html; html='';
     html += '<div class="big-acts"><a href="'+telHref(l.tel)+'" target="_top">'+I.call+'Llamar</a><a class="wa" href="'+waHref(l.tel)+'" target="_blank" rel="noopener">'+I.chat+'WhatsApp</a></div>';
     if (puede('agendar') && (isPend(s) || needsResult(l) || s==='reagenda' || s==='novino')) html += '<button class="btn3" data-agendar="'+esc(l.id)+'">'+I.cal+'Reagendar</button>';
+    if (puede('agendar') && puedeCorregir(l)) html += '<button class="btn3" data-agcorregir="'+esc(l.id)+'">✏️ Me equivoqué en el horario: corregir (no cuenta como reagenda)</button>';
     if (puedeDerivar(l)) html += '<button class="btn3" data-derivar="'+esc(l.id)+'">'+I.swap+'Derivar a otra abogada</button>';
     if (puedeSinDia(l)){ var rq=state.rsdConf===l.id; html += '<button class="btn3'+(rq?' on':'')+'" data-reagsindia="'+esc(l.id)+'">'+(rq?'Tocá de nuevo para confirmar: queda en Reagenda y sale de la agenda':'↻ Pidió reagendar, todavía sin día')+'</button>'; }
     html += internasBlk(l);
@@ -2898,10 +2899,16 @@ a.save.wa-go svg{width:20px;height:20px}
   function sheetAgendar(){
     var l=findLead(state.sheet.id); if (!l) return null;
     var d=state.draft, reag=agendada(l.id), today=nowBA().date, corr=corrige(l,d);
-    var html='<div class="grab"></div><div class="sh-head"><div class="sh-who"><h2>'+(reag?'Reagendar':'Agendar')+' a '+esc(l.nombre||'Sin nombre')+'</h2>'+
+    var html='<div class="grab"></div><div class="sh-head"><div class="sh-who"><h2>'+(corr?'Corregir el turno de':(reag?'Reagendar a':'Agendar a'))+' '+esc(l.nombre||'Sin nombre')+'</h2>'+
       '<div class="mt"><span class="rama r-'+ramaKey(l.rama)+'">'+ramaLabel(l.rama)+'</span>'+(l.tel?'<span class="cp num">'+esc(l.tel)+'</span>':'')+'</div>'+
       (reag?'<p class="hint" style="margin:6px 0 0">Ahora: '+longDate(l.fecha).toLowerCase()+', '+esc(l.hora||'sin hora')+(l.abogada?', con '+esc(l.abogada):'')+'.</p>':'')+
       '</div><button class="close" data-close aria-label="Cerrar">'+I.x+'</button></div>';
+    if (puedeCorregir(l)){
+      var bs='style="height:auto;min-height:38px;padding:6px 8px;line-height:1.2"';
+      html += '<div class="field"><span class="lbl">¿Por qué cambia el turno?</span><div class="seg2" role="radiogroup" aria-label="Por qué cambia el turno">'+
+        '<button data-agcorr="0" class="'+(!corr?'on':'')+'" role="radio" aria-checked="'+(!corr)+'" '+bs+'>El cliente pidió cambiarlo</button>'+
+        '<button data-agcorr="1" class="'+(corr?'on':'')+'" role="radio" aria-checked="'+corr+'" '+bs+'>Me equivoqué al cargarlo</button></div></div>';
+    }
     html += '<div class="field"><span class="lbl">Día</span><div class="chips" style="margin:0 -16px">'+diasAgenda().map(function(x){
       return '<button class="chip'+(x===d.fecha?' on':'')+'" data-agdia="'+x+'">'+diaCorto(x)+'</button>'; }).join('')+'</div>'+
       '<input class="inp" type="date" id="agFecha" min="'+today+'" value="'+esc(d.fecha)+'" style="margin-top:10px" aria-label="Otro día"></div>';
@@ -2921,12 +2928,6 @@ a.save.wa-go svg{width:20px;height:20px}
       html += '</div>';
     });
     html += '</div>';
-    if (puedeCorregir(l)){
-      var bs='style="height:auto;min-height:38px;padding:6px 8px;line-height:1.2"';
-      html += '<div class="field"><span class="lbl">¿Por qué cambia el turno?</span><div class="seg2" role="radiogroup" aria-label="Por qué cambia el turno">'+
-        '<button data-agcorr="0" class="'+(!corr?'on':'')+'" role="radio" aria-checked="'+(!corr)+'" '+bs+'>El cliente pidió cambiarlo</button>'+
-        '<button data-agcorr="1" class="'+(corr?'on':'')+'" role="radio" aria-checked="'+corr+'" '+bs+'>Me equivoqué al cargarlo</button></div></div>';
-    }
     var dvz=!corr && esDerivacion(l,d);
     var lab = d.hora ? (corr?'Corregir':(dvz?'Derivar':(reag?'Reagendar':'Agendar')))+': '+diaCorto(d.fecha).toLowerCase()+' '+d.hora+' con '+d.abogada : 'Elegí un horario';
     html += '<div class="save-wrap"><button class="save" data-saveag '+(d.hora?'':'disabled')+'>'+esc(lab)+'</button>'+
@@ -3063,7 +3064,7 @@ a.save.wa-go svg{width:20px;height:20px}
 
   /* ---------- eventos ---------- */
   document.addEventListener('click', function(ev){
-    var t = ev.target.closest('[data-pindesbloq],[data-fin],[data-equipo],[data-view],[data-undo],[data-agotra],[data-agbuscartodo],[data-ficha],[data-pinok],[data-pinback],[data-pinreset],[data-salir],[data-fimodo],[data-fase],[data-notasave],[data-datosave],[data-mnfase],[data-mnsin],[data-dupfase],[data-derivar],[data-reagsindia],[data-dvsel],[data-dvhora],[data-dvsave],[data-deon],[data-debrush],[data-decopia],[data-deamplio],[data-dedia],[data-dequick],[data-decopy],[data-devolver],[data-defijo],[data-definde],[data-demodo],[data-desave],[data-decancel],[data-repweek],[data-reprow],[data-repmodo],[data-repretry],[data-agmode],[data-wgday],[data-agrama],[data-agfase],[data-agmas],[data-agclr],[data-agnuevo],[data-mnrama],[data-mnorigen],[data-mnsig],[data-mncrear],[data-open],[data-result],[data-bloq],[data-nuevo],[data-week],[data-day],[data-sum],[data-chip],[data-abog],[data-close],[data-res],[data-motivo],[data-save],[data-bqwho],[data-bqtodo],[data-savebq],[data-delbq],[data-retry],[data-pastefor],[data-pasteall],[data-rvcheck],[data-rvtoggle],[data-rvsave],[data-rvback],[data-yo],[data-yocambiar],[data-visto],[data-conf],[data-escribir],[data-agendar],[data-agdia],[data-slot],[data-agcorr],[data-saveag],[data-savecampos]');
+    var t = ev.target.closest('[data-pindesbloq],[data-fin],[data-equipo],[data-view],[data-undo],[data-agotra],[data-agbuscartodo],[data-ficha],[data-pinok],[data-pinback],[data-pinreset],[data-salir],[data-fimodo],[data-fase],[data-notasave],[data-datosave],[data-mnfase],[data-mnsin],[data-dupfase],[data-derivar],[data-reagsindia],[data-dvsel],[data-dvhora],[data-dvsave],[data-deon],[data-debrush],[data-decopia],[data-deamplio],[data-dedia],[data-dequick],[data-decopy],[data-devolver],[data-defijo],[data-definde],[data-demodo],[data-desave],[data-decancel],[data-repweek],[data-reprow],[data-repmodo],[data-repretry],[data-agmode],[data-wgday],[data-agrama],[data-agfase],[data-agmas],[data-agclr],[data-agnuevo],[data-mnrama],[data-mnorigen],[data-mnsig],[data-mncrear],[data-open],[data-result],[data-bloq],[data-nuevo],[data-week],[data-day],[data-sum],[data-chip],[data-abog],[data-close],[data-res],[data-motivo],[data-save],[data-bqwho],[data-bqtodo],[data-savebq],[data-delbq],[data-retry],[data-pastefor],[data-pasteall],[data-rvcheck],[data-rvtoggle],[data-rvsave],[data-rvback],[data-yo],[data-yocambiar],[data-visto],[data-conf],[data-escribir],[data-agendar],[data-agcorregir],[data-agdia],[data-slot],[data-agcorr],[data-saveag],[data-savecampos]');
     if (!t) return;
     if (t.hasAttribute('data-pindesbloq')){ var nd=t.getAttribute('data-pindesbloq'); t.disabled=true; t.textContent='Desbloqueando…'; call('desbloquearPin', {nombre:nd}).then(function(p){ if (state.data) state.data.pines=p; if (state.sheet) renderSheet(); render(); toast('Listo: '+nd+' ya puede entrar de nuevo.'); }).catch(function(e){ t.disabled=false; toast((e&&e.message)||'No se pudo desbloquear.', true); }); return; }
     if (t.hasAttribute('data-fin')){ finClick(t); return; }
@@ -3110,6 +3111,7 @@ a.save.wa-go svg{width:20px;height:20px}
     if (t.hasAttribute('data-conf')){ var cp=t.getAttribute('data-conf').split('|'), cv=cp.pop(), cc=cp.pop(); saveConf(cp.join('|'), cc, cv); return; } // el ID puede tener '|' (fuente|pestaña|ID)
     if (t.hasAttribute('data-escribir')){ openSheet({type:'escribir', id:t.getAttribute('data-escribir')}); return; }
     if (t.hasAttribute('data-agendar')){ closeSearch(); openSheet({type:'agendar', id:t.getAttribute('data-agendar')}); return; }
+    if (t.hasAttribute('data-agcorregir')){ closeSearch(); openSheet({type:'agendar', id:t.getAttribute('data-agcorregir')}); if (state.draft){ state.draft.corregir=true; renderSheet(); } return; }
     if (t.hasAttribute('data-derivar')){ openSheet({type:'derivar', id:t.getAttribute('data-derivar')}); return; }
     if (t.hasAttribute('data-reagsindia')){ reagSinDiaUI(t.getAttribute('data-reagsindia')); return; }
     if (t.hasAttribute('data-ficha')){ if (ev.target.closest('a')) return; closeSearch(); openSheet({type:'ficha', id:t.getAttribute('data-ficha')}); return; }
