@@ -2869,7 +2869,7 @@ a.save.wa-go svg{width:20px;height:20px}
     var xs=personas().filter(function(a){ var x=rp[a]; return !x || !r || x.indexOf(r)!==-1; });
     return xs.length ? xs : personas();
   }
-  function slotsDe(a, fecha, l){
+  function slotsDe(a, fecha, l, pasados){
     var H=state.data.horario||{desde:'09:00',hasta:'19:00',cada:30}, D=state.data.duracion||30, n=nowBA(), libres=[];
     var ocup=state.data.leads.filter(function(o){ return o.id!==l.id && o.abogada===a && o.fecha===fecha && (o.fase==='Consulta agendada' || o.fase==='Reagenda'); }).sort(byTime);
     var bq=(state.data.bloqueos||[]).filter(function(b){ return b.abogada===a && b.fecha===fecha; });
@@ -2877,16 +2877,19 @@ a.save.wa-go svg{width:20px;height:20px}
     var R=state.data.dispRango||{desde:H.desde, hasta:H.hasta}, m0=Math.min(hmin(H.desde),hmin(R.desde)), m1=Math.max(hmin(H.hasta),hmin(R.hasta));
     for (var m=m0; m<m1; m+=(H.cada||30)){
       var t=pad2(m/60|0)+':'+pad2(m%60);
-      if (fecha===n.date && m<=n.min) continue;
+      if (fecha===n.date && m<=n.min && !pasados) continue; // al corregir un error de carga se puede elegir una hora que ya pasó
       if (!dispOk(a, fecha, t)) continue; // fuera de la disponibilidad de esa persona
       if (todo || ocup.some(function(o){ var om=hmin(o.hora); return om!==null && Math.abs(om-m)<D; }) || bq.some(function(b){ return !b.todoDia && m<hmin(b.hasta) && m+D>hmin(b.desde); })) continue;
       libres.push(t);
     }
     return {libres:libres, ocup:ocup, bq:bq, todo:todo};
   }
+  // Ya tiene turno: se puede corregir un error de carga sin que cuente como reagenda
+  function puedeCorregir(l){ return !!(l && l.fecha && agendada(l.id) && (l.fase==='Consulta agendada' || l.fase==='Reagenda')); }
+  function corrige(l, d){ return !!(d && d.corregir && puedeCorregir(l)); }
   function sheetAgendar(){
     var l=findLead(state.sheet.id); if (!l) return null;
-    var d=state.draft, reag=agendada(l.id), today=nowBA().date;
+    var d=state.draft, reag=agendada(l.id), today=nowBA().date, corr=corrige(l,d);
     var html='<div class="grab"></div><div class="sh-head"><div class="sh-who"><h2>'+(reag?'Reagendar':'Agendar')+' a '+esc(l.nombre||'Sin nombre')+'</h2>'+
       '<div class="mt"><span class="rama r-'+ramaKey(l.rama)+'">'+ramaLabel(l.rama)+'</span>'+(l.tel?'<span class="cp num">'+esc(l.tel)+'</span>':'')+'</div>'+
       (reag?'<p class="hint" style="margin:6px 0 0">Ahora: '+longDate(l.fecha).toLowerCase()+', '+esc(l.hora||'sin hora')+(l.abogada?', con '+esc(l.abogada):'')+'.</p>':'')+
@@ -2897,7 +2900,7 @@ a.save.wa-go svg{width:20px;height:20px}
     var ab=elegibles(l);
     html += '<div class="field"><span class="lbl">Horarios libres, '+longDate(d.fecha).toLowerCase()+(ab.length<personas().length?' (quienes toman '+ramaLabel(l.rama)+')':'')+'</span>';
     ab.forEach(function(a){
-      var s=slotsDe(a,d.fecha,l);
+      var s=slotsDe(a,d.fecha,l,corr);
       html += '<div class="ag"><div class="ag-h"><b>'+esc(a)+'</b><span>'+(s.ocup.length?plural(s.ocup.length,'consulta','consultas')+' ese día':'sin consultas ese día')+'</span></div>';
       if (s.todo) html += '<p class="ag-bq">🔒 No disponible todo el día'+(s.todo.aclaracion?': '+esc(s.todo.aclaracion):'')+'</p>';
       else if (!s.libres.length) html += '<p class="ag-bq">'+(dispArr(a, d.fecha).some(Boolean)?'No quedan horarios libres ese día.':'No marcó disponibilidad ese día.')+'</p>';
@@ -2910,9 +2913,16 @@ a.save.wa-go svg{width:20px;height:20px}
       html += '</div>';
     });
     html += '</div>';
-    var lab = d.hora ? (esDerivacion(l,d)?'Derivar':(reag?'Reagendar':'Agendar'))+': '+diaCorto(d.fecha).toLowerCase()+' '+d.hora+' con '+d.abogada : 'Elegí un horario';
+    if (puedeCorregir(l)){
+      var bs='style="height:auto;min-height:38px;padding:6px 8px;line-height:1.2"';
+      html += '<div class="field"><span class="lbl">¿Por qué cambia el turno?</span><div class="seg2" role="radiogroup" aria-label="Por qué cambia el turno">'+
+        '<button data-agcorr="0" class="'+(!corr?'on':'')+'" role="radio" aria-checked="'+(!corr)+'" '+bs+'>El cliente pidió cambiarlo</button>'+
+        '<button data-agcorr="1" class="'+(corr?'on':'')+'" role="radio" aria-checked="'+corr+'" '+bs+'>Me equivoqué al cargarlo</button></div></div>';
+    }
+    var dvz=!corr && esDerivacion(l,d);
+    var lab = d.hora ? (corr?'Corregir':(dvz?'Derivar':(reag?'Reagendar':'Agendar')))+': '+diaCorto(d.fecha).toLowerCase()+' '+d.hora+' con '+d.abogada : 'Elegí un horario';
     html += '<div class="save-wrap"><button class="save" data-saveag '+(d.hora?'':'disabled')+'>'+esc(lab)+'</button>'+
-      (reag?'<p class="hint" style="text-align:center;margin-top:8px">'+(esDerivacion(l,d) ? 'Mismo día con otra abogada: queda como derivación y no cuenta como reagenda.'+(d.hora!==l.hora?' Se borran las confirmaciones.':'') : 'Al reagendar se borran las confirmaciones de la fecha anterior.')+'</p>':'')+'</div>';
+      (reag?'<p class="hint" style="text-align:center;margin-top:8px">'+(corr ? 'Se corrige el turno: no pasa a Reagenda, no cuenta en los KPIs y las confirmaciones quedan como están.' : dvz ? 'Mismo día con otra abogada: queda como derivación y no cuenta como reagenda.'+(d.hora!==l.hora?' Se borran las confirmaciones.':'') : 'Al reagendar se borran las confirmaciones de la fecha anterior.')+'</p>':'')+'</div>';
     return html;
   }
   /* ---------- derivar una consulta a otra abogada (mismo día; la hora se puede cambiar) ---------- */
@@ -2995,15 +3005,15 @@ a.save.wa-go svg{width:20px;height:20px}
     }).catch(function(er){ renderSheet(); toast(er.message||'No se pudo derivar.', true); });
   }
   function saveAgenda(){
-    var d=state.draft, id=state.sheet.id, l=findLead(id), reag=agendada(id), dvz=esDerivacion(l,d);
+    var d=state.draft, id=state.sheet.id, l=findLead(id), reag=agendada(id), corr=corrige(l,d), dvz=!corr && esDerivacion(l,d);
     if (!d.hora || !d.abogada) return;
     if (id===NUEVO_ID){ saveManual(false); return; }
     var dC=JSON.parse(JSON.stringify(d)), copia=l?JSON.parse(JSON.stringify(l)):null;
-    var msg=(dvz?'↪ Derivada':'📅 '+(reag?'Reagendada':'Agendada'))+': '+(l?l.nombre:'')+', '+diaCorto(d.fecha).toLowerCase()+' '+d.hora+' con '+d.abogada;
+    var msg=(corr?'✏️ Turno corregido':dvz?'↪ Derivada':'📅 '+(reag?'Reagendada':'Agendada'))+': '+(l?l.nombre:'')+', '+diaCorto(d.fecha).toLowerCase()+' '+d.hora+' con '+d.abogada;
     // Se ve agendada al instante; si el servidor no puede (por ejemplo, alguien tomó ese horario), vuelve como estaba y se reabre
-    if (copia){ var n0=JSON.parse(JSON.stringify(copia)); n0.fecha=d.fecha; n0.hora=d.hora; n0.abogada=d.abogada; if (n0.sinDia){ delete n0.sinDia; } else if (!dvz){ n0.fase='Consulta agendada'; if (n0.fecha!==copia.fecha || n0.hora!==copia.hora){ n0.confPrev=''; n0.confDia=''; } } replaceLead(n0); markSeen(id); }
+    if (copia){ var n0=JSON.parse(JSON.stringify(copia)); n0.fecha=d.fecha; n0.hora=d.hora; n0.abogada=d.abogada; if (n0.sinDia){ delete n0.sinDia; } else if (!dvz && !corr){ n0.fase='Consulta agendada'; if (n0.fecha!==copia.fecha || n0.hora!==copia.hora){ n0.confPrev=''; n0.confDia=''; } } replaceLead(n0); markSeen(id); }
     closeSheet(); if (copia) openSheet({type:'lead', id:id}); render(); toast(msg);
-    call('agendar',{id:id, fecha:d.fecha, hora:d.hora, abogada:d.abogada}).then(function(nl){
+    call('agendar',{id:id, fecha:d.fecha, hora:d.hora, abogada:d.abogada, corregir:corr}).then(function(nl){
       replaceLead(nl); markSeen(id); render(); if (state.sheet && state.sheet.type==='lead' && state.sheet.id===id) renderSheet();
     }).catch(function(e){
       if (copia){ state.data.leads=(state.data.leads||[]).filter(function(x){ return x.id!==id; }); if (reag) state.data.leads.push(copia); else (state.data.porAgendar||(state.data.porAgendar=[])).unshift(copia); }
@@ -3031,7 +3041,7 @@ a.save.wa-go svg{width:20px;height:20px}
 
   /* ---------- eventos ---------- */
   document.addEventListener('click', function(ev){
-    var t = ev.target.closest('[data-pindesbloq],[data-fin],[data-equipo],[data-view],[data-undo],[data-agotra],[data-agbuscartodo],[data-ficha],[data-pinok],[data-pinback],[data-pinreset],[data-salir],[data-fimodo],[data-fase],[data-notasave],[data-datosave],[data-mnfase],[data-mnsin],[data-dupfase],[data-derivar],[data-dvsel],[data-dvhora],[data-dvsave],[data-deon],[data-debrush],[data-decopia],[data-deamplio],[data-dedia],[data-dequick],[data-decopy],[data-devolver],[data-defijo],[data-definde],[data-demodo],[data-desave],[data-decancel],[data-repweek],[data-reprow],[data-repmodo],[data-repretry],[data-agmode],[data-wgday],[data-agrama],[data-agfase],[data-agmas],[data-agclr],[data-agnuevo],[data-mnrama],[data-mnorigen],[data-mnsig],[data-mncrear],[data-open],[data-result],[data-bloq],[data-nuevo],[data-week],[data-day],[data-sum],[data-chip],[data-abog],[data-close],[data-res],[data-motivo],[data-save],[data-bqwho],[data-bqtodo],[data-savebq],[data-delbq],[data-retry],[data-pastefor],[data-pasteall],[data-rvcheck],[data-rvtoggle],[data-rvsave],[data-rvback],[data-yo],[data-yocambiar],[data-visto],[data-conf],[data-escribir],[data-agendar],[data-agdia],[data-slot],[data-saveag],[data-savecampos]');
+    var t = ev.target.closest('[data-pindesbloq],[data-fin],[data-equipo],[data-view],[data-undo],[data-agotra],[data-agbuscartodo],[data-ficha],[data-pinok],[data-pinback],[data-pinreset],[data-salir],[data-fimodo],[data-fase],[data-notasave],[data-datosave],[data-mnfase],[data-mnsin],[data-dupfase],[data-derivar],[data-dvsel],[data-dvhora],[data-dvsave],[data-deon],[data-debrush],[data-decopia],[data-deamplio],[data-dedia],[data-dequick],[data-decopy],[data-devolver],[data-defijo],[data-definde],[data-demodo],[data-desave],[data-decancel],[data-repweek],[data-reprow],[data-repmodo],[data-repretry],[data-agmode],[data-wgday],[data-agrama],[data-agfase],[data-agmas],[data-agclr],[data-agnuevo],[data-mnrama],[data-mnorigen],[data-mnsig],[data-mncrear],[data-open],[data-result],[data-bloq],[data-nuevo],[data-week],[data-day],[data-sum],[data-chip],[data-abog],[data-close],[data-res],[data-motivo],[data-save],[data-bqwho],[data-bqtodo],[data-savebq],[data-delbq],[data-retry],[data-pastefor],[data-pasteall],[data-rvcheck],[data-rvtoggle],[data-rvsave],[data-rvback],[data-yo],[data-yocambiar],[data-visto],[data-conf],[data-escribir],[data-agendar],[data-agdia],[data-slot],[data-agcorr],[data-saveag],[data-savecampos]');
     if (!t) return;
     if (t.hasAttribute('data-pindesbloq')){ var nd=t.getAttribute('data-pindesbloq'); t.disabled=true; t.textContent='Desbloqueando…'; call('desbloquearPin', {nombre:nd}).then(function(p){ if (state.data) state.data.pines=p; if (state.sheet) renderSheet(); render(); toast('Listo: '+nd+' ya puede entrar de nuevo.'); }).catch(function(e){ t.disabled=false; toast((e&&e.message)||'No se pudo desbloquear.', true); }); return; }
     if (t.hasAttribute('data-fin')){ finClick(t); return; }
@@ -3118,6 +3128,7 @@ a.save.wa-go svg{width:20px;height:20px}
       var ad=state.draft;
       if (t.hasAttribute('data-agdia')){ ad.fecha=t.getAttribute('data-agdia'); ad.hora=null; ad.abogada=null; renderSheet(); return; }
       if (t.hasAttribute('data-slot')){ var sp=t.getAttribute('data-slot').split('|'); ad.abogada=sp[0]; ad.hora=sp[1]; renderSheet(); return; }
+      if (t.hasAttribute('data-agcorr')){ ad.corregir=t.getAttribute('data-agcorr')==='1'; if (!ad.corregir && ad.fecha===nowBA().date && ad.hora && hmin(ad.hora)<=nowBA().min){ ad.hora=null; ad.abogada=null; } renderSheet(); return; }
       if (t.hasAttribute('data-saveag')){ saveAgenda(); return; }
       return;
     }
@@ -3528,13 +3539,22 @@ a.save.wa-go svg{width:20px;height:20px}
   function f2Rama(){ var rs=(state.data && state.data.finRamas)||[]; if (!state.f2Rama || rs.indexOf(state.f2Rama)===-1) state.f2Rama=rs[0]||'ART'; return state.f2Rama; }
   function f2Key(){ return f2Rama()+'|'+(f2Per()==='semana' ? 's'+f2Sem() : f2Mes()); }
   function f2Data(){ return (state.f2||{})[f2Key()]; }
-  function f2Load(fresco){
-    var k=f2Key(), C=state.f2||(state.f2={}); if (C[k] && C[k].cargando) return;
+  function f2Load(fresco, ramaX){
+    // ramaX: precarga de otra rama (mismo período), sin tocar la pantalla
+    var r=ramaX||f2Rama(), k=r+'|'+(f2Per()==='semana' ? 's'+f2Sem() : f2Mes()), C=state.f2||(state.f2={}); if (C[k] && C[k].cargando) return;
+    if (ramaX && C[k] && !C[k].error) return;
     var prev=C[k] && !C[k].error && !C[k].cargando ? C[k] : (C[k] && C[k].prev) || f2Guardado(k);
     C[k]={cargando:true, prev:prev};
-    var arg={rama:f2Rama(), fresco:!!fresco}; if (f2Per()==='semana') arg.semana=f2Sem(); else arg.mes=f2Mes();
-    call('getFin2', arg).then(function(d){ C[k]=d; if (enFinanzas()) render(); if (state.sheet && state.sheet.type==='fin2') renderSheet(); })
-      .catch(function(e){ C[k]={error:(e&&e.message)||'No se pudieron cargar las finanzas.', prev:prev}; if (enFinanzas()) render(); });
+    var arg={rama:r, fresco:!!fresco}; if (f2Per()==='semana') arg.semana=f2Sem(); else arg.mes=f2Mes();
+    call('getFin2', arg).then(function(d){ if (state.f2!==C) return; C[k]=d; if (k!==f2Key()) return; if (enFinanzas()) render(); if (state.sheet && state.sheet.type==='fin2') renderSheet(); })
+      .catch(function(e){ if (state.f2!==C) return; if (ramaX && k!==f2Key()){ delete C[k]; return; } C[k]={error:(e&&e.message)||'No se pudieron cargar las finanzas.', prev:prev}; if (enFinanzas()) render(); });
+  }
+  // Al abrir finanzas con el PIN: se piden ya el panel y las otras ramas, así al tocarlos están listos
+  function f2Precargar(){
+    if (!state.ftok) return;
+    var rs=(state.data && state.data.finRamas)||[], act=f2Rama();
+    if (f2PRamas().length) f2PLoad(false, f2PRama());
+    rs.forEach(function(r, i){ if (r!==act) setTimeout(function(){ if (state.ftok) f2Load(false, r); }, 600*(i+1)); });
   }
   // Lo último que se cargó en este celular se muestra al instante mientras llega lo nuevo (solo si coincide con lo que hoy puede ver esa persona)
   function f2Guardado(k){ return null; var x=guardado('f2:', k), modo=((state.data&&state.data.finModo)||{})[k.split('|')[0]]; return (x && x.d && modo && x.d.modo===modo) ? x.d : null; }
@@ -3552,12 +3572,14 @@ a.save.wa-go svg{width:20px;height:20px}
   /* ---------- Panel de finanzas: caja mes a mes, lo que debería entrar, atrasos, casos y gastos ---------- */
   function f2PRamas(){ var rs=(state.data&&state.data.finRamas)||[], fm=(state.data&&state.data.finModo)||{}, full=rs.filter(function(r){ return fm[r]==='full'; }); return full.length>1 ? ['TODAS'].concat(full) : full; }
   function f2PRama(){ var rs=f2PRamas(); if (!state.f2PRama || rs.indexOf(state.f2PRama)===-1) state.f2PRama=rs[0]; return state.f2PRama; }
-  function f2PLoad(fresco){
-    var k=f2PRama(), C=state.f2p||(state.f2p={}); if (C[k] && C[k].cargando) return;
+  function f2PLoad(fresco, ramaX){
+    var k=ramaX||f2PRama(), C=state.f2p||(state.f2p={}); if (C[k] && C[k].cargando) return;
+    if (ramaX && C[k] && !C[k].error) return;
     var prev=(C[k] && !C[k].error && !C[k].cargando) ? C[k] : ((C[k] && C[k].prev) || null);
     C[k]={cargando:true, prev:prev};
-    call('getFin2Panel', {rama:k, fresco:!!fresco}).then(function(d){ C[k]=d; if (enFinanzas() && f2Per()==='panel') render(); })
-      .catch(function(e){ C[k]={error:(e&&e.message)||'No se pudo armar el panel.', prev:prev}; if (enFinanzas() && f2Per()==='panel') render(); });
+    var mira=function(){ return enFinanzas() && f2Per()==='panel' && f2PRama()===k; };
+    call('getFin2Panel', {rama:k, fresco:!!fresco}).then(function(d){ if (state.f2p!==C) return; C[k]=d; if (mira()) render(); })
+      .catch(function(e){ if (state.f2p!==C) return; if (ramaX && !mira()){ delete C[k]; return; } C[k]={error:(e&&e.message)||'No se pudo armar el panel.', prev:prev}; if (mira()) render(); });
   }
   var MES3=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
   function idxLbl(ix, conAnio){ return MES3[((ix%12)+12)%12]+(conAnio?' '+String(Math.floor(ix/12)).slice(2):''); }
@@ -3731,7 +3753,7 @@ a.save.wa-go svg{width:20px;height:20px}
     L.ocupado=true; err(''); if (btn){ btn.disabled=true; btn.textContent=F.tiene?'Entrando…':'Creando…'; }
     call('finPinEntrar', arg).then(function(r){
       L.ocupado=false; L.msg=''; state.ftok=r.ftok; state.ftokT=Date.now(); if (state.data){ state.data.finPin={tiene:true, bloqueado:false}; }
-      render(); window.scrollTo(0,0); toast(r.creado ? '🔓 PIN de finanzas creado' : '🔓 Finanzas abierta por 15 minutos');
+      render(); window.scrollTo(0,0); toast(r.creado ? '🔓 PIN de finanzas creado' : '🔓 Finanzas abierta por 15 minutos'); setTimeout(f2Precargar, 250);
     }).catch(function(e){
       L.ocupado=false; var m=(e&&e.message)||'No se pudo entrar.';
       if (/bloquead/i.test(m) && state.data && state.data.finPin){ state.data.finPin.bloqueado=true; L.msg=m; render(); return; }
