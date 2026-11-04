@@ -967,7 +967,7 @@ a.save.wa-go svg{width:20px;height:20px}
 
   /* ---------- servidor ---------- */
   // Lo que cambia la agenda o los leads: mientras algo de esto está en camino, una actualización no pisa lo que se ve
-  var ESCRIBE={saveAction:1, saveResumenes:1, deshacerResultado:1, agendar:1, derivar:1, agendarNuevo:1, cambiarFase:1, editarDatos:1, agregarNota:1, saveBloqueo:1, deleteBloqueo:1, pedirInterna:1, responderInterna:1, derivarMarca:1, saveDisponibilidad:1};
+  var ESCRIBE={saveAction:1, saveResumenes:1, deshacerResultado:1, agendar:1, reagendaSinDia:1, derivar:1, agendarNuevo:1, cambiarFase:1, editarDatos:1, agregarNota:1, saveBloqueo:1, deleteBloqueo:1, pedirInterna:1, responderInterna:1, derivarMarca:1, saveDisponibilidad:1};
   // Lo que se puede repetir sin duplicar nada: si se corta internet o el servidor no contesta, se reintenta solo antes de avisar
   var REINTENTA={getData:1, saveAction:1, cambiarFase:1, saveResumenes:1, editarDatos:1, deshacerResultado:1};
   // Finanzas: cada pedido lleva la llave (PIN de finanzas). Vive solo en la memoria de la app: al cerrarla, se vuelve a pedir
@@ -1023,7 +1023,7 @@ a.save.wa-go svg{width:20px;height:20px}
       if (d.user && d.user.name && !d.__snap){ var yoSrv=(d.equipo||[]).filter(function(e){ return e.nombre===d.user.name; })[0]; if (yoSrv){ state.me=yoSrv; store('yo', yoSrv.nombre); } }
       if (!state.me) state.me = resolveMe(d);
       if (!state.seen) initSeen();
-      if (!d.__snap){ setTimeout(precargarRep, 1500); setTimeout(precargarFin, 2500); }
+      if (!d.__snap){ setTimeout(precargarRep, 1500); setTimeout(precargarFin, 2500); setTimeout(calentarFin, 2000); }
       // Guiones: se piden apenas abre la app (con lo guardado en el celular ya alcanza para saber quién es); a producción, enseguida
       if (!state.crePre && (((d.permisos||{}).creativos)||[]).length){ state.crePre=true; setTimeout(precargarCre, (state.me && state.me.rol==='produccion') ? 0 : 1200); }
       if (state.primeraVez && state.me && state.me.rol==='intaker') state.view='tareas';
@@ -1464,6 +1464,7 @@ a.save.wa-go svg{width:20px;height:20px}
     html += '<div class="big-acts"><a href="'+telHref(l.tel)+'" target="_top">'+I.call+'Llamar</a><a class="wa" href="'+waHref(l.tel)+'" target="_blank" rel="noopener">'+I.chat+'WhatsApp</a></div>';
     if (puede('agendar') && (isPend(s) || needsResult(l) || s==='reagenda' || s==='novino')) html += '<button class="btn3" data-agendar="'+esc(l.id)+'">'+I.cal+'Reagendar</button>';
     if (puedeDerivar(l)) html += '<button class="btn3" data-derivar="'+esc(l.id)+'">'+I.swap+'Derivar a otra abogada</button>';
+    if (puedeSinDia(l)){ var rq=state.rsdConf===l.id; html += '<button class="btn3'+(rq?' on':'')+'" data-reagsindia="'+esc(l.id)+'">'+(rq?'Tocá de nuevo para confirmar: queda en Reagenda y sale de la agenda':'↻ Pidió reagendar, todavía sin día')+'</button>'; }
     html += internasBlk(l);
     var fu=state.fichaUI||(state.fichaUI={});
     html += '<div class="fi-acts dos"><button data-fimodo="nota" class="'+(fu.modo==='nota'?'on':'')+'">＋ Nota</button><button data-fimodo="datos" class="'+(fu.modo==='datos'?'on':'')+'">Corregir datos</button></div>'+fichaPanel(l, fu);
@@ -2110,7 +2111,7 @@ a.save.wa-go svg{width:20px;height:20px}
     return '<li class="pa" data-ficha="'+esc(l.id)+'"><div class="pa-top"><div class="pa-who"><b>'+esc(l.nombre||'Sin nombre')+'</b><span>'+ramaLabel(l.rama)+(when?' · '+when:'')+((l.intaker||l.inicioChat)?' · '+esc(l.intaker||l.inicioChat):'')+(l.tel?' · '+esc(l.tel):'')+'</span></div>'+faseTag(l.fase)+'</div>'+
       (form?'<div class="pa-form">'+esc(form)+'</div>':'')+
       (ultima?'<div class="pa-note">💬 '+esc(ultima)+'</div>':'')+
-      (l.sinDia?'<div class="pa-note">📅 En la planilla figura '+esc(faseLbl(l.fase))+' pero sin día ni hora: cargale el turno con Agendar.</div>':'')+
+      (l.sinDia?'<div class="pa-note">'+(l.fase==='Reagenda'?'↻ Pidió reagendar y todavía no eligió día: cuando avise, cargale el turno con Agendar.':'📅 En la planilla figura '+esc(faseLbl(l.fase))+' pero sin día ni hora: cargale el turno con Agendar.')+'</div>':'')+
       '<div class="pa-acts">'+acts+'<button class="btn2" data-agendar="'+esc(l.id)+'">'+I.cal+' Agendar</button></div></li>';
   }
   /* ---------- Ficha del lead: todo lo que se ve en la planilla, ordenado ---------- */
@@ -2394,6 +2395,11 @@ a.save.wa-go svg{width:20px;height:20px}
     call('getFinanzas', {semana:sem, rama:state.finRama||'ART', fresco:fresco}).then(function(d){ if (gen===(state.finGen||0)){ state.fin[key]=d; guardar('fin:', key, d); } })
       .catch(function(e){ if (!bg && gen===(state.finGen||0)) state.fin[key]={error:(e&&e.message)||'No se pudo cargar.'}; })
       .then(function(){ delete state.finBusy[key]; if (enFinanzas() && finKey()===key) render(); });
+  }
+  // Quien tiene finanzas: al abrir la app el servidor deja listos los números del mes (no llegan al celular hasta poner el PIN)
+  function calentarFin(){
+    if (!(state.data && state.data.finAcceso) || state.ftok || Date.now()-(state.finCalT||0) < 40*60000) return;
+    state.finCalT=Date.now(); call('fin2Calentar', {}).catch(function(){ state.finCalT=0; });
   }
   function precargarFin(){ if (!(state.data && state.data.finAcceso) || !state.ftok) return; f2Load(false); return; if (!state.finSem) state.finSem=mondayOf(nowBA().date); loadFin(null, true); }
   function equipoBtn(){ return (state.me && state.me.rol==='admin') ? '<button class="fin-eq" data-equipo><span>Equipo y PINs<small>Quién tiene PIN y resetear el de alguien</small></span>'+I.chev+'</button>' : ''; }
@@ -2943,6 +2949,20 @@ a.save.wa-go svg{width:20px;height:20px}
     return (state.data.abogadas||[]).filter(function(a){ return a!==l.abogada; }).map(function(a){
       var r=R[a]||[]; return {a:a, rama:(!l.rama || !r.length || r.indexOf(l.rama)!==-1)}; });
   }
+  // El cliente pidió reagendar y va a avisar qué día: queda en Reagenda, sin día, en Agendar → "Agendadas sin día"
+  function puedeSinDia(l){ return !!(l && !l.parcial && l.fecha && (puede('agendar') || (state.me && l.abogada===state.me.nombre)) && (l.fase==='Consulta agendada' || l.fase==='Reagenda')); }
+  function reagSinDiaUI(id){
+    var l=findLead(id); if (!l) return;
+    if (state.rsdConf!==id){ state.rsdConf=id; renderSheet(); setTimeout(function(){ if (state.rsdConf===id){ state.rsdConf=null; if (state.sheet && state.sheet.id===id) renderSheet(); } }, 5000); return; }
+    state.rsdConf=null;
+    var copia=JSON.parse(JSON.stringify(l)), n0=JSON.parse(JSON.stringify(l));
+    n0.fase='Reagenda'; n0.fecha=''; n0.hora=''; n0.confPrev=''; n0.confDia=''; n0.sinDia=true;
+    var sacar=function(){ state.data.leads=(state.data.leads||[]).filter(function(x){ return x.id!==id; }); state.data.porAgendar=(state.data.porAgendar||[]).filter(function(x){ return x.id!==id; }); };
+    sacar(); (state.data.porAgendar||(state.data.porAgendar=[])).unshift(n0);
+    closeSheet(); render(); toast('↻ '+(l.nombre||'')+': queda en Reagenda, sin día. Está en Agendar → Agendadas sin día.');
+    call('reagendaSinDia', {id:id}).then(function(nl){ sacar(); nl.sinDia=true; state.data.porAgendar.unshift(nl); render(); })
+      .catch(function(e){ sacar(); state.data.leads.push(copia); render(); toast((e&&e.message)||'No se pudo guardar.', true); });
+  }
   function puedeDerivar(l){
     return !l.parcial && (puede('agendar') || (state.me && l.abogada===state.me.nombre)) && !!l.abogada && (l.fase==='Consulta agendada' || l.fase==='Reagenda') &&
       candDeriv(l).some(function(c){ return c.rama; });
@@ -3041,7 +3061,7 @@ a.save.wa-go svg{width:20px;height:20px}
 
   /* ---------- eventos ---------- */
   document.addEventListener('click', function(ev){
-    var t = ev.target.closest('[data-pindesbloq],[data-fin],[data-equipo],[data-view],[data-undo],[data-agotra],[data-agbuscartodo],[data-ficha],[data-pinok],[data-pinback],[data-pinreset],[data-salir],[data-fimodo],[data-fase],[data-notasave],[data-datosave],[data-mnfase],[data-mnsin],[data-dupfase],[data-derivar],[data-dvsel],[data-dvhora],[data-dvsave],[data-deon],[data-debrush],[data-decopia],[data-deamplio],[data-dedia],[data-dequick],[data-decopy],[data-devolver],[data-defijo],[data-definde],[data-demodo],[data-desave],[data-decancel],[data-repweek],[data-reprow],[data-repmodo],[data-repretry],[data-agmode],[data-wgday],[data-agrama],[data-agfase],[data-agmas],[data-agclr],[data-agnuevo],[data-mnrama],[data-mnorigen],[data-mnsig],[data-mncrear],[data-open],[data-result],[data-bloq],[data-nuevo],[data-week],[data-day],[data-sum],[data-chip],[data-abog],[data-close],[data-res],[data-motivo],[data-save],[data-bqwho],[data-bqtodo],[data-savebq],[data-delbq],[data-retry],[data-pastefor],[data-pasteall],[data-rvcheck],[data-rvtoggle],[data-rvsave],[data-rvback],[data-yo],[data-yocambiar],[data-visto],[data-conf],[data-escribir],[data-agendar],[data-agdia],[data-slot],[data-agcorr],[data-saveag],[data-savecampos]');
+    var t = ev.target.closest('[data-pindesbloq],[data-fin],[data-equipo],[data-view],[data-undo],[data-agotra],[data-agbuscartodo],[data-ficha],[data-pinok],[data-pinback],[data-pinreset],[data-salir],[data-fimodo],[data-fase],[data-notasave],[data-datosave],[data-mnfase],[data-mnsin],[data-dupfase],[data-derivar],[data-reagsindia],[data-dvsel],[data-dvhora],[data-dvsave],[data-deon],[data-debrush],[data-decopia],[data-deamplio],[data-dedia],[data-dequick],[data-decopy],[data-devolver],[data-defijo],[data-definde],[data-demodo],[data-desave],[data-decancel],[data-repweek],[data-reprow],[data-repmodo],[data-repretry],[data-agmode],[data-wgday],[data-agrama],[data-agfase],[data-agmas],[data-agclr],[data-agnuevo],[data-mnrama],[data-mnorigen],[data-mnsig],[data-mncrear],[data-open],[data-result],[data-bloq],[data-nuevo],[data-week],[data-day],[data-sum],[data-chip],[data-abog],[data-close],[data-res],[data-motivo],[data-save],[data-bqwho],[data-bqtodo],[data-savebq],[data-delbq],[data-retry],[data-pastefor],[data-pasteall],[data-rvcheck],[data-rvtoggle],[data-rvsave],[data-rvback],[data-yo],[data-yocambiar],[data-visto],[data-conf],[data-escribir],[data-agendar],[data-agdia],[data-slot],[data-agcorr],[data-saveag],[data-savecampos]');
     if (!t) return;
     if (t.hasAttribute('data-pindesbloq')){ var nd=t.getAttribute('data-pindesbloq'); t.disabled=true; t.textContent='Desbloqueando…'; call('desbloquearPin', {nombre:nd}).then(function(p){ if (state.data) state.data.pines=p; if (state.sheet) renderSheet(); render(); toast('Listo: '+nd+' ya puede entrar de nuevo.'); }).catch(function(e){ t.disabled=false; toast((e&&e.message)||'No se pudo desbloquear.', true); }); return; }
     if (t.hasAttribute('data-fin')){ finClick(t); return; }
@@ -3089,6 +3109,7 @@ a.save.wa-go svg{width:20px;height:20px}
     if (t.hasAttribute('data-escribir')){ openSheet({type:'escribir', id:t.getAttribute('data-escribir')}); return; }
     if (t.hasAttribute('data-agendar')){ closeSearch(); openSheet({type:'agendar', id:t.getAttribute('data-agendar')}); return; }
     if (t.hasAttribute('data-derivar')){ openSheet({type:'derivar', id:t.getAttribute('data-derivar')}); return; }
+    if (t.hasAttribute('data-reagsindia')){ reagSinDiaUI(t.getAttribute('data-reagsindia')); return; }
     if (t.hasAttribute('data-ficha')){ if (ev.target.closest('a')) return; closeSearch(); openSheet({type:'ficha', id:t.getAttribute('data-ficha')}); return; }
     if (t.hasAttribute('data-pinok')){ pinOk(); return; }
     if (t.hasAttribute('data-pinback')){ state.login={}; renderSheet(); return; }
@@ -3811,6 +3832,7 @@ a.save.wa-go svg{width:20px;height:20px}
     if (F.acuerdo) acts.push('<button class="btn2" data-f2nuevo="acuerdo">＋ '+esc(b.acuerdoNombre||'Acuerdo')+'</button>');
     if (F.gasto) acts.push('<button class="btn2" data-f2nuevo="gasto">＋ Gasto</button>');
     else if (F.cliente) acts.push('<button class="btn2" data-f2nuevo="cliente">＋ Cliente</button>');
+    if (F.retiro) acts.push('<button class="btn2" data-f2nuevo="retiro">＋ Retiro de honorarios</button>');
     body+='<div class="f2-acts">'+acts.join('')+'</div>';
     // Por cobrar (solo quien ve todo, por mes)
     if (!carga && b.tieneAcuerdos && !sem){
@@ -3842,10 +3864,14 @@ a.save.wa-go svg{width:20px;height:20px}
     if (!carga){
       var ga=b.gastos||[];
       body+=f2Sec('Gastos', ga.length, ga.length?R.gastado:null, '', '');
+      var re=b.retiros||[];
+      var reHtml = b.tieneRetiros ? f2Sec('Retiros de honorarios', re.length, re.length?R.retirado:null, '', 'Lo que cada socio sacó de la caja (pestaña Honorarios). La Caja lo descuenta sola.')+
+        (re.length ? '<ul class="todo">'+re.map(function(x){ return f2Fila('re','🏦', 'Retiro de '+(x.socio||'socio'), [shortDate(x.fecha), x.sale?'salió de '+x.sale:'', x.mesRep?'reparto de '+String(x.mesRep).toLowerCase():'', x.detalle].filter(Boolean).join(' · '), plata(x.monto), 'data-f2edit="retiro|'+x.fila+'"'); }).join('')+'</ul>' : emptyBox('Sin retiros cargados')) : '';
       body+=ga.length ? '<ul class="todo">'+ga.map(function(g){ return f2Fila('ga','💸', g.categoria||'Gasto', [shortDate(g.fecha), g.pago?'pagó '+g.pago:'', g.reparto && g.propio!==g.monto ? g.reparto+' (total '+plata(g.monto)+')' : '', g.detalle].filter(Boolean).join(' · '), plata(g.propio), 'data-f2edit="gasto|'+g.fila+'"'); }).join('')+'</ul>' : emptyBox('Sin gastos cargados');
+      body+=reHtml;
     }
     if (sem) body+='<button class="btn3 f2-share" data-f2share>Compartir el reporte de la semana</button>';
-    body+='<p class="hint" style="text-align:center;margin-top:14px">Todo se guarda en la planilla contable de '+F2_RAMA[r]+' (copia de prueba).</p>';
+    body+='<p class="hint" style="text-align:center;margin-top:14px">Todo se guarda en la planilla contable de '+F2_RAMA[r]+(r==='LABORAL'?' (copia de prueba)':'')+'.</p>';
     titulo.body=body; return titulo;
   }
   // Texto del reporte semanal (el mismo formato que el PDF de Sol), para mandar por WhatsApp o copiar
@@ -3879,12 +3905,12 @@ a.save.wa-go svg{width:20px;height:20px}
     // Una fecha dentro de la semana o el mes que se está mirando (si hoy no cae ahí)
     var pd=b.periodo; if (pd && v.fecha && (hoy<pd.desde || hoy>pd.hasta)) v.fecha=pd.desde;
     var src=null;
-    if (sh.fila){ var lista={cobro:b.cobros, gasto:b.gastos, cliente:b.clientes, factura:b.facturas, acuerdo:b.acuerdos}[sh.tipo]||[]; src=lista.filter(function(x){ return x.fila===sh.fila; })[0]||null; }
+    if (sh.fila){ var lista={cobro:b.cobros, gasto:b.gastos, cliente:b.clientes, factura:b.facturas, acuerdo:b.acuerdos, retiro:b.retiros}[sh.tipo]||[]; src=lista.filter(function(x){ return x.fila===sh.fila; })[0]||null; }
     if (src) Object.keys(src).forEach(function(k){ if (k!=='fila' && src[k]!=='' && src[k]!=null) v[k]=String(src[k]); });
     if (sh.pre) Object.keys(sh.pre).forEach(function(k){ v[k]=sh.pre[k]; });
     return { v:v, borrar:false, dup:null };
   }
-  function f2Titulo(sh){ var b=f2Base()||{}; return ({cobro:'Cargar cobro', gasto:'Cargar gasto', factura:'Cargar facturado', acuerdo:'Cargar '+(b.acuerdoNombre||'acuerdo').toLowerCase(), cliente:'Cliente'})[sh.tipo]+(sh.fila && sh.tipo!=='cliente'?' (corregir)':''); }
+  function f2Titulo(sh){ var b=f2Base()||{}; return ({cobro:'Cargar cobro', gasto:'Cargar gasto', factura:'Cargar facturado', acuerdo:'Cargar '+(b.acuerdoNombre||'acuerdo').toLowerCase(), cliente:'Cliente', retiro:'Retiro de honorarios'})[sh.tipo]+(sh.fila && sh.tipo!=='cliente'?' (corregir)':''); }
   // Honorarios que salen de lo homologado (se ven mientras se escribe)
   function f2HonTxt(c, v){ var n=finNum(v); if (!(isFinite(n) && n>0) || !c.pct) return montoTxt(v); var cli=n*c.pct[0], art=n*c.pct[1]; return '= '+plata(n)+' · honorarios '+plata(Math.round((cli+art)*100)/100)+' (cliente '+plata(Math.round(cli*100)/100)+' + ART '+plata(Math.round(art*100)/100)+')'; }
   function sheetFin2(){
@@ -3908,7 +3934,7 @@ a.save.wa-go svg{width:20px;height:20px}
     });
     if (sh.tipo==='gasto' && d.v.reparto && !/100%|^Solo/.test(d.v.reparto)) html+='<p class="hint">El gasto compartido se anota también en las planillas de las otras ramas, cada una con su parte.</p>';
     html+='<div class="save-wrap"><button class="save" data-f2save>Guardar</button>';
-    if (sh.fila && (sh.tipo==='cobro' || sh.tipo==='gasto' || sh.tipo==='factura')) html+= d.borrar ? '<button class="btn3 danger" data-f2borrar="2">Sí, borrar esta fila de la planilla</button>' : '<button class="link" data-f2borrar="1">Borrar</button>';
+    if (sh.fila && (sh.tipo==='cobro' || sh.tipo==='gasto' || sh.tipo==='factura' || sh.tipo==='retiro')) html+= d.borrar ? '<button class="btn3 danger" data-f2borrar="2">Sí, borrar esta fila de la planilla</button>' : '<button class="link" data-f2borrar="1">Borrar</button>';
     html+='</div>';
     return html;
   }
