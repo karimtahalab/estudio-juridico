@@ -1830,7 +1830,6 @@ a.save.wa-go svg{width:20px;height:20px}
   }
   function sheetYo(){
     var eq=(state.data&&state.data.equipo)||state.equipo||[], cur=state.me&&state.me.nombre, L=state.login||(state.login={});
-    var sub={abogada:'Agenda y resultados', intaker:'Confirma, agenda y hace el seguimiento', admin:'Ve todo', produccion:'Guiones del mes'};
     var cerrar=(state.sheet.first && !state.me)?'':'<button class="close" data-close aria-label="Cerrar">'+I.x+'</button>';
     if (L.n){
       var tit=L.crear ? (L.paso2?'Repetí el PIN para confirmarlo.':'Es la primera vez que entrás: elegí un PIN de 4 números. Lo vas a usar para entrar desde cualquier celular o compu.') : 'Poné tu PIN de 4 números.';
@@ -1842,7 +1841,7 @@ a.save.wa-go svg{width:20px;height:20px}
         (L.crear?'':'<p class="hint" style="text-align:center;margin-top:8px">¿No te acordás? Pedile a Karim que te lo resetee.</p>')+'</div>';
     }
     var grp=function(r,t){ var xs=eq.filter(function(e){ return e.rol===r; });
-      return xs.length ? '<p class="grp-lbl">'+t+'</p><div class="who-grid">'+xs.map(function(e){ return '<button class="who'+(e.nombre===cur?' on':'')+'" data-yo="'+esc(e.nombre)+'">'+esc(e.nombre)+'<small>'+sub[e.rol]+'</small></button>'; }).join('')+'</div>' : ''; };
+      return xs.length ? '<p class="grp-lbl">'+t+'</p><div class="who-grid">'+xs.map(function(e){ return '<button class="who'+(e.nombre===cur?' on':'')+'" data-yo="'+esc(e.nombre)+'">'+esc(e.nombre)+'</button>'; }).join('')+'</div>' : ''; };
     var soloPin=!!(state.sheet && state.sheet.pines);
     var html= soloPin ? '<div class="grab"></div><div class="sh-head"><div class="sh-who"><h2>Equipo y PINs</h2><p class="hint" style="margin:4px 0 0">Si alguien se olvidó su PIN, reseteálo acá. La próxima vez que entre, elige uno nuevo.</p></div>'+cerrar+'</div>' : '<div class="grab"></div><div class="sh-head"><div class="sh-who"><h2>¿Quién sos?</h2><p class="hint" style="margin:4px 0 0">Elegí tu nombre y poné tu PIN. El celular lo recuerda: no hace falta ponerlo cada vez.</p></div>'+cerrar+'</div>'+
       grp('abogada','Abogadas')+grp('intaker','Intakers')+grp('admin','Administración')+grp('produccion','Filmación y edición');
