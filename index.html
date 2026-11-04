@@ -1003,11 +1003,11 @@ a.save.wa-go svg{width:20px;height:20px}
     t.className='toast on undo'+pos; state.undo=fn;
     clearTimeout(toast._t); toast._t=setTimeout(function(){ t.className='toast'+pos; state.undo=null; }, 10000);
   }
-  function toastAccion(msg, label, fn){
+  function toastAccion(msg, label, fn, ms){
     var t=$('toast'), pos=state.sheet?' top':'';
     t.innerHTML='<span>'+esc(msg)+'</span><button data-undo>'+esc(label)+'</button>';
     t.className='toast on undo'+pos; state.undo=fn;
-    clearTimeout(toast._t); toast._t=setTimeout(function(){ t.className='toast'+pos; state.undo=null; }, 10000);
+    clearTimeout(toast._t); toast._t=setTimeout(function(){ t.className='toast'+pos; state.undo=null; }, ms||10000);
   }
   // Aviso de leads nuevos para quien agenda: al volver a la app o con la actualización automática (cada 2 minutos)
   function avisoNuevos(d){
@@ -3397,13 +3397,31 @@ a.save.wa-go svg{width:20px;height:20px}
       '</section>';
     }).join('');
   }
+  // En el celular (sobre todo con la app instalada) el sistema no deja abrir la impresión: se arma un PDF y se abre para imprimir o compartir
+  function esCelular(){ try{ return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || !!navigator.standalone || window.matchMedia('(display-mode: standalone)').matches; }catch(e){ return false; } }
   function creImprimir(xs, porHoja){
     if (!xs.length) return;
+    if (esCelular()) return crePdf(xs, porHoja);
     var a=$('printArea'); if (!a){ a=document.createElement('div'); a.id='printArea'; document.body.appendChild(a); }
     a.innerHTML=crePrintHtml(xs, porHoja); document.body.classList.add('imprimiendo');
     var fin=function(){ document.body.classList.remove('imprimiendo'); a.innerHTML=''; window.removeEventListener('afterprint', fin); };
     window.addEventListener('afterprint', fin);
     setTimeout(function(){ try{ window.print(); }catch(e){ toast('Este celular no deja imprimir desde la app: usá "Compartir como texto".', true); fin(); } }, 60);
+  }
+  function crePdf(xs, porHoja){
+    var p=creMes().split('-'), nombre='Guiones '+MESES_L[+p[1]-1]+' '+p[0]+'.pdf';
+    toast('Armando el PDF de '+plural(xs.length,'guión','guiones')+'…');
+    call('creaPdf', {html:crePrintHtml(xs, porHoja), nombre:nombre}).then(function(r){
+      var bin=atob(r.b64), u=new Uint8Array(bin.length); for (var i=0;i<bin.length;i++) u[i]=bin.charCodeAt(i);
+      var blob=new Blob([u], {type:'application/pdf'}), file=null; try{ file=new File([blob], r.nombre||nombre, {type:'application/pdf'}); }catch(e){}
+      var abrir=function(){
+        // Compartir abre el menú del celular: Imprimir, Guardar en archivos, WhatsApp…
+        if (file && navigator.canShare && navigator.canShare({files:[file]})){ navigator.share({files:[file], title:r.nombre||nombre}).catch(function(){}); return; }
+        var url=URL.createObjectURL(blob), a=document.createElement('a'); a.href=url; a.download=r.nombre||nombre; a.target='_blank'; document.body.appendChild(a); a.click();
+        setTimeout(function(){ a.remove(); URL.revokeObjectURL(url); }, 120000);
+      };
+      toastAccion('📄 PDF listo: '+plural(xs.length,'guión','guiones'), 'Abrir', abrir, 30000);
+    }).catch(function(e){ toast((e&&e.message)||'No se pudo armar el PDF. Probá "Compartir como texto".', true); });
   }
   function creTexto(xs){
     var p=creMes().split('-'), mes=MESES_L[+p[1]-1]+' '+p[0];
