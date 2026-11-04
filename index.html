@@ -675,6 +675,29 @@ a.save.wa-go svg{width:20px;height:20px}
 .seg.marca button.on.mk-transito{background:#0B8B8B;color:#fff}
 .campo-pick button{flex:1 1 auto}
 .cre-guion{white-space:pre-wrap;font-size:16px;line-height:1.55;padding:12px 14px}
+.cre-acts{display:flex;gap:8px;margin:12px 0 2px}
+.cre-acts .btn2,.cre-acts .btn3{flex:1;justify-content:center}
+.cre-acts.dos{margin-top:14px}
+#printArea{display:none}
+@media print{
+  @page{margin:16mm 14mm}
+  body.imprimiendo{background:#fff !important}
+  body.imprimiendo > *:not(#printArea){display:none !important}
+  body.imprimiendo #printArea{display:block;color:#111;font-family:Arial,Helvetica,sans-serif}
+  .pv{padding:0 0 10mm}
+  .pv.corte{page-break-after:always;break-after:page}
+  .pv-top{font-size:10pt;color:#555;text-transform:uppercase;letter-spacing:.04em}
+  .pv h1{font-size:20pt;margin:4pt 0 6pt;line-height:1.15}
+  .pv-meta{font-size:11pt;margin-bottom:6pt}
+  .pv-meta span{margin-right:14pt}
+  .pv-sec{margin-top:10pt;break-inside:avoid-page}
+  .pv-sec h2{font-size:10.5pt;text-transform:uppercase;letter-spacing:.05em;color:#444;margin:0 0 3pt;border-bottom:1px solid #ccc;padding-bottom:2pt}
+  .pv-sec p{font-size:12pt;line-height:1.45;margin:0;white-space:pre-wrap}
+  .pv-guion{font-size:13.5pt !important;line-height:1.6 !important}
+  .pv-hook{margin:0 0 5pt !important}
+  .pv-box{font-size:14pt;margin-right:6pt}
+  .pv-pie{margin-top:14pt;font-size:11pt;color:#333;border-top:1px dashed #999;padding-top:6pt}
+}
 .cre-hook{display:flex;gap:10px;align-items:flex-start;width:100%;text-align:left;padding:10px 4px;border-top:1px solid var(--line)}
 .cre-hook:first-child{border-top:0}
 .cre-hook small{display:block;color:var(--ink-3);font-size:12px;font-weight:700}
@@ -937,7 +960,7 @@ a.save.wa-go svg{width:20px;height:20px}
       if (d.user && d.user.name && !d.__snap){ var yoSrv=(d.equipo||[]).filter(function(e){ return e.nombre===d.user.name; })[0]; if (yoSrv){ state.me=yoSrv; store('yo', yoSrv.nombre); } }
       if (!state.me) state.me = resolveMe(d);
       if (!state.seen) initSeen();
-      if (!d.__snap){ setTimeout(precargarRep, 1500); setTimeout(precargarFin, 2500); }
+      if (!d.__snap){ setTimeout(precargarRep, 1500); setTimeout(precargarFin, 2500); setTimeout(precargarCre, 3500); }
       if (state.primeraVez && state.me && state.me.rol==='intaker') state.view='tareas';
       if (state.abog===null && state.me && state.me.rol==='abogada' && !store('abogada')) state.abog = state.me.nombre;
       if (state.abog===null){
@@ -1309,6 +1332,8 @@ a.save.wa-go svg{width:20px;height:20px}
     if (sh.type==='escribir'){ var le=findLead(sh.id); if (!le) return; state.draft={ campos:camposIniciales(le) }; }
     if (sh.type==='agendar'){ var la=findLead(sh.id); if (!la) return; var dias=diasAgenda(); state.draft={ fecha:(la.fecha && la.fecha>=nowBA().date)?la.fecha:(dias.indexOf(nextHabil(nowBA().date))!==-1?nextHabil(nowBA().date):dias[0]), abogada:null, hora:null }; }
     if (sh.type==='yo') state.draft={};
+    if (sh.type==='creprint') state.draft={ rama:state.creRama||'todas', faltan:true, porHoja:true };
+    if (sh.type==='guion') state.draft=null;
     if (sh.type==='derivar') state.draft={ dv:null, hora:null };
     if (sh.type==='interna') state.draft={ tipo:null, a:null, nota:'', hecho:null };
     if (sh.type==='marca') state.draft={ destino:null, nota:'', dup:null };
@@ -1324,7 +1349,7 @@ a.save.wa-go svg{width:20px;height:20px}
   function renderSheet(){
     if (!state.sheet) return;
     var y=$('sheet').scrollTop;
-    var ty=state.sheet.type, html = ({lead:sheetLead, bloq:sheetBloq, pegar:sheetPegar, nuevo:sheetNuevo, escribir:sheetEscribir, agendar:sheetAgendar, derivar:sheetDerivar, ficha:sheetFicha, yo:sheetYo, manual:sheetManual, dup:sheetDup, fin:sheetFin, interna:sheetInterna, marca:sheetMarca, guion:sheetGuion, fin2:sheetFin2})[ty]();
+    var ty=state.sheet.type, html = ({lead:sheetLead, bloq:sheetBloq, pegar:sheetPegar, nuevo:sheetNuevo, escribir:sheetEscribir, agendar:sheetAgendar, derivar:sheetDerivar, ficha:sheetFicha, yo:sheetYo, manual:sheetManual, dup:sheetDup, fin:sheetFin, interna:sheetInterna, marca:sheetMarca, guion:sheetGuion, creprint:sheetCrePrint, fin2:sheetFin2})[ty]();
     if (html===null){ closeSheet(); return; }
     $('sheet').innerHTML = html; $('sheet').scrollTop=y;
   }
@@ -2251,7 +2276,7 @@ a.save.wa-go svg{width:20px;height:20px}
   // (con la hora) y se actualiza solo en segundo plano.
   function guardado(pref, key){ try{ var x=JSON.parse(store(pref+key)||'null'); if (x && x.d && x.n===(state.me&&state.me.nombre) && Date.now()-x.t < 3*86400000) return x; }catch(e){} return null; }
   function guardar(pref, key, d){ if (!d || d.error || !state.me) return; try{ store(pref+key, JSON.stringify({t:Date.now(), n:state.me.nombre, d:d})); var ik=pref+'keys', ks=JSON.parse(store(ik)||'[]').filter(function(k){ return k!==key; }); ks.unshift(key); ks.slice(8).forEach(function(k){ try{ localStorage.removeItem(pref+k); }catch(e){} }); store(ik, JSON.stringify(ks.slice(0,8))); }catch(e){} }
-  function borrarGuardados(){ ['rep:','fin:','f2:'].forEach(function(pref){ try{ JSON.parse(store(pref+'keys')||'[]').forEach(function(k){ localStorage.removeItem(pref+k); }); localStorage.removeItem(pref+'keys'); }catch(e){} }); }
+  function borrarGuardados(){ ['rep:','fin:','f2:','cre:'].forEach(function(pref){ try{ JSON.parse(store(pref+'keys')||'[]').forEach(function(k){ localStorage.removeItem(pref+k); }); localStorage.removeItem(pref+'keys'); }catch(e){} }); }
   function notaViejo(t){ var hh=''; try{ hh=new Date(t).toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:TZ}); }catch(e){} return '<p class="hint rep-viejo"><span class="spin-dot"></span>Mostrando lo de las '+hh+'. Actualizando…</p>'; }
 
   function loadFin(sem, bg){
@@ -3208,19 +3233,24 @@ a.save.wa-go svg{width:20px;height:20px}
 
   /* ---------- Guiones del mes (se leen de las planillas de creativos; lo grabado queda guardado en la app) ---------- */
   var MESES_L=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-  function creMes(){ if (!state.creMes){ var d=nowBA().date; state.creMes=d.slice(0,7); } return state.creMes; }
+  // Arranca en el último mes que se vio en este celular (si es este mes o el anterior), así aparece al instante
+  function creMes(){ if (!state.creMes){ var d=nowBA().date.slice(0,7), ult=store('creUlt')||'', p=d.split('-'), ant=(+p[1]===1?(+p[0]-1)+'-12':p[0]+'-'+pad2(+p[1]-1)); state.creMes=(ult===d || ult===ant) ? ult : d; } return state.creMes; }
   function creMover(n){ var p=creMes().split('-'), y=+p[0], m=+p[1]-1+n; y+=Math.floor(m/12); m=((m%12)+12)%12; state.creMes=y+'-'+pad2(m+1); }
   function creData(){ return (state.cre||{})[creMes()]; }
   function loadCre(fresco){
     var k=creMes(), C=state.cre||(state.cre={});
     if (C[k] && C[k].cargando) return;
-    var prev=C[k]; C[k]={cargando:true, prev:prev && !prev.error ? prev : null};
-    call('getCreativos', {mes:k, fresco:!!fresco}).then(function(d){ C[k]=d;
-      // Si el mes en curso todavía no tiene pestañas, se muestra el anterior (lo que se está grabando)
-      if (!state.creMovido && !(d.ramas||[]).some(function(r){ return r.pestana; })){ state.creMovido=true; creMover(-1); loadCre(false); }
-      if (state.view==='guiones') render(); })
-      .catch(function(e){ C[k]={error:(e&&e.message)||'No se pudieron cargar los guiones.'}; if (state.view==='guiones') render(); });
+    var prev=C[k] && !C[k].error && !C[k].cargando ? C[k] : ((C[k] && C[k].prev) || ((guardado('cre:', k)||{}).d) || null);
+    C[k]={cargando:true, prev:prev};
+    // Sin mes elegido a mano, el servidor decide en un solo pedido: este mes o, si todavía no tiene pestañas, el anterior
+    var arg={fresco:!!fresco}; if (state.creMovido) arg.mes=k;
+    call('getCreativos', arg).then(function(d){
+      var km=d.anio+'-'+pad2(d.mes); C[km]=d; if (km!==k){ delete C[k]; if (creMes()===k) state.creMes=km; }
+      state.creMovido=true; guardar('cre:', km, d); store('creUlt', km);
+      if (state.view==='guiones') render(); if (state.sheet && state.sheet.type==='guion') renderSheet(); })
+      .catch(function(e){ C[k]={error:(e&&e.message)||'No se pudieron cargar los guiones.', prev:prev}; if (state.view==='guiones') render(); });
   }
+  function precargarCre(){ if ((P().creativos||[]).length && !creData()) loadCre(false); }
   function creRamaLbl(r){ return ({ART:'ART', LABORAL:'Laboral', TRANSITO:'Tránsito'})[r]||r; }
   function creFind(rama, col){ var d=creData(); if (!d || !d.ramas) return null; var R=d.ramas.filter(function(x){ return x.rama===rama; })[0]; if (!R) return null; var v=R.videos.filter(function(x){ return x.col===+col; })[0]; return v ? {R:R, v:v} : null; }
   function viewGuiones(){
@@ -3228,6 +3258,7 @@ a.save.wa-go svg{width:20px;height:20px}
     if (!d || (!d.ramas && !d.cargando && !d.error)) { loadCre(false); d=creData(); }
     var nav='<div class="wk-nav"><button class="chip" data-cremes="-1" aria-label="Mes anterior">‹</button><b>'+MESES_L[+p[1]-1]+' '+p[0]+'</b><button class="chip" data-cremes="1" aria-label="Mes siguiente">›</button></div>';
     var base=d && (d.ramas ? d : d.prev);
+    if (base && base.anio && (base.anio+'-'+pad2(base.mes))!==k){ base=null; }
     if (!base){ return { h1:'Guiones', p:'Del mes', extra:nav, body: d && d.error ? emptyBox('No se pudieron cargar', esc(d.error), '<button class="btn3" data-crefresco>Reintentar</button>') : emptyBox('Cargando guiones…') }; }
     var ramas=base.ramas||[], sel=state.creRama||'todas';
     if (sel!=='todas' && !ramas.some(function(r){ return r.rama===sel; })) sel=state.creRama='todas';
@@ -3244,6 +3275,7 @@ a.save.wa-go svg{width:20px;height:20px}
         return '<li><button data-creopen="'+r.rama+'|'+v.col+'"><span class="w"><b>'+(v.grabado?'✔ ':'')+esc(v.titulo||v.cab||'Sin título')+'</b><span>'+esc([v.cab, v.formato, v.angulo].filter(Boolean).join(' · ').slice(0,120))+(v.grabado?' · grabado'+(v.grabadoPor?' (marcó '+esc(v.grabadoPor)+')':''):'')+'</span></span><span class="go2'+(v.grabado?' ok':'')+'">'+(v.grabado?'Grabado':'Ver')+'</span></button></li>'; }).join('')+'</ul>';
     });
     if (d && d.cargando) body='<p class="hint" style="text-align:center">Actualizando…</p>'+body;
+    if (ramas.some(function(r){ return (r.videos||[]).length; })) body='<div class="cre-acts"><button class="btn2" data-creprint>🖨 Imprimir guiones</button></div>'+body;
     return { h1:'Guiones', p:MESES_L[+p[1]-1]+' '+p[0], extra:nav+chips, body:body };
   }
   function sheetGuion(){
@@ -3259,10 +3291,77 @@ a.save.wa-go svg{width:20px;height:20px}
       return '<button class="cre-hook'+(on?' on':'')+'" data-crehook="'+x.n+'" aria-pressed="'+on+'"><span class="cre-chk">'+(on?'✔':'')+'</span><span><small>Hook '+x.n+'</small>'+esc(x.t)+'</span></button>'; }).join('')+'</div></div>';
     if (v.guion) html+='<div class="blk"><h3 class="blk-t">Guión</h3><div class="box cre-guion">'+esc(v.guion)+'</div></div>';
     if ((v.extra||[]).length) html+='<div class="blk"><h3 class="blk-t">Más datos</h3><div class="box">'+v.extra.map(function(x){ return fkv(x.label, x.text, 'pre'); }).join('')+'</div></div>';
+    html+='<div class="cre-acts dos"><button class="btn3" data-creuno="imprimir">🖨 Imprimir este guión</button><button class="btn3" data-creuno="compartir">Compartir como texto</button></div>';
     var cambiaHooks=v.grabado && d.hooks.slice().sort().join()!==(v.hooksGrabados||[]).slice().sort().join();
     html+='<div class="save-wrap">'+(v.grabado ? (cambiaHooks?'<button class="save" data-cresave="1">Guardar hooks grabados</button>':'')+'<button class="btn3" data-cresave="0">Desmarcar: todavía no se grabó</button>' : '<button class="save" data-cresave="1">Marcar como grabado</button>')+'</div>';
     return html;
   }
+  /* ---------- Imprimir guiones (o guardarlos en PDF) ---------- */
+  function creSel(o){
+    var d=creData(), base=d && (d.ramas ? d : d.prev), out=[]; if (!base) return out;
+    (base.ramas||[]).forEach(function(R){ if (o.rama!=='todas' && R.rama!==o.rama) return; (R.videos||[]).forEach(function(v){ if (o.faltan && v.grabado) return; out.push({R:R, v:v}); }); });
+    return out;
+  }
+  function sheetCrePrint(){
+    var o=(state.draft && state.draft.rama) ? state.draft : (state.draft={rama:state.creRama||'todas', faltan:true, porHoja:true}), d=creData(), base=d && (d.ramas ? d : d.prev), ramas=(base&&base.ramas)||[], n=creSel(o).length, p=creMes().split('-');
+    var pick=function(attr, val, label, on){ return '<button '+attr+'="'+esc(val)+'" class="'+(on?'on':'')+'" aria-pressed="'+on+'">'+esc(label)+'</button>'; };
+    return '<div class="grab"></div><div class="sh-head"><div class="sh-who"><h2>Imprimir guiones</h2><p class="hint" style="margin:4px 0 0">'+MESES_L[+p[1]-1]+' '+p[0]+'. Sale una versión limpia para papel, con casillas para tachar los hooks. También se puede guardar como PDF.</p></div><button class="close" data-close aria-label="Cerrar">'+I.x+'</button></div>'+
+      (ramas.length>1 ? '<div class="field"><span class="lbl">Rama</span><div class="pick">'+pick('data-cpr','todas','Todas',o.rama==='todas')+ramas.map(function(R){ return pick('data-cpr',R.rama,creRamaLbl(R.rama),o.rama===R.rama); }).join('')+'</div></div>' : '')+
+      '<div class="field"><span class="lbl">¿Cuáles?</span><div class="pick">'+pick('data-cpf','1','Los que faltan grabar',!!o.faltan)+pick('data-cpf','0','Todos',!o.faltan)+'</div></div>'+
+      '<div class="field"><span class="lbl">Hojas</span><div class="pick">'+pick('data-cph','1','Un guión por hoja',!!o.porHoja)+pick('data-cph','0','Seguidos',!o.porHoja)+'</div></div>'+
+      '<div class="save-wrap"><button class="save" data-cprgo '+(n?'':'disabled')+'>'+(n?'Imprimir '+plural(n,'guión','guiones'):'No hay guiones con ese filtro')+'</button>'+
+      '<button class="link" data-cprshare '+(n?'':'disabled')+'>O compartirlos como texto (WhatsApp)</button></div>';
+  }
+  function crePrintHtml(xs, porHoja){
+    var p=creMes().split('-'), mes=MESES_L[+p[1]-1]+' '+p[0];
+    var sec=function(t, x){ return x ? '<div class="pv-sec"><h2>'+esc(t)+'</h2><p>'+esc(x)+'</p></div>' : ''; };
+    return xs.map(function(it, i){
+      var v=it.v, hs=(v.hooks||[]).map(function(h,j){ return {t:h, n:j+1}; }).filter(function(x){ return x.t; });
+      return '<section class="pv'+(porHoja && i<xs.length-1?' corte':'')+'">'+
+        '<div class="pv-top">'+esc([creRamaLbl(it.R.rama), mes, v.cab].filter(Boolean).join(' · '))+'</div>'+
+        '<h1>'+esc(v.titulo||v.cab||'Guión')+'</h1>'+
+        ((v.formato||v.angulo) ? '<div class="pv-meta">'+(v.formato?'<span><b>Formato:</b> '+esc(v.formato)+'</span>':'')+(v.angulo?'<span><b>Ángulo:</b> '+esc(v.angulo)+'</span>':'')+'</div>' : '')+
+        sec('Contexto visual', v.contexto)+
+        (hs.length ? '<div class="pv-sec"><h2>Hooks</h2>'+hs.map(function(x){ return '<p class="pv-hook"><span class="pv-box">☐</span><b>'+x.n+'.</b> '+esc(x.t)+'</p>'; }).join('')+'</div>' : '')+
+        (v.guion ? '<div class="pv-sec"><h2>Guión</h2><p class="pv-guion">'+esc(v.guion)+'</p></div>' : '')+
+        (v.extra||[]).map(function(x){ return sec(x.label, x.text); }).join('')+
+        '<div class="pv-pie"><span class="pv-box">☐</span> Grabado &nbsp;&nbsp; Fecha: ____________ &nbsp;&nbsp; Notas: ______________________</div>'+
+      '</section>';
+    }).join('');
+  }
+  function creImprimir(xs, porHoja){
+    if (!xs.length) return;
+    var a=$('printArea'); if (!a){ a=document.createElement('div'); a.id='printArea'; document.body.appendChild(a); }
+    a.innerHTML=crePrintHtml(xs, porHoja); document.body.classList.add('imprimiendo');
+    var fin=function(){ document.body.classList.remove('imprimiendo'); a.innerHTML=''; window.removeEventListener('afterprint', fin); };
+    window.addEventListener('afterprint', fin);
+    setTimeout(function(){ try{ window.print(); }catch(e){ toast('Este celular no deja imprimir desde la app: usá "Compartir como texto".', true); fin(); } }, 60);
+  }
+  function creTexto(xs){
+    var p=creMes().split('-'), mes=MESES_L[+p[1]-1]+' '+p[0];
+    return xs.map(function(it){ var v=it.v, L=['*'+creRamaLbl(it.R.rama)+' · '+mes+(v.cab?' · '+v.cab:'')+'*', '*'+(v.titulo||'Guión')+'*'];
+      if (v.formato) L.push('Formato: '+v.formato); if (v.angulo) L.push('Ángulo: '+v.angulo); if (v.contexto) L.push('Contexto visual: '+v.contexto);
+      (v.hooks||[]).forEach(function(h,j){ if (h) L.push('Hook '+(j+1)+': '+h); });
+      if (v.guion) L.push('', v.guion);
+      return L.join('\n'); }).join('\n\n———\n\n');
+  }
+  function creCompartir(xs){
+    var t=creTexto(xs); if (!t) return;
+    if (navigator.share){ navigator.share({text:t}).catch(function(){}); return; }
+    try{ navigator.clipboard.writeText(t).then(function(){ toast('Copiado: pegalo donde quieras.'); }, function(){ window.open('https://wa.me/?text='+encodeURIComponent(t), '_blank'); }); }catch(e){ window.open('https://wa.me/?text='+encodeURIComponent(t), '_blank'); }
+  }
+  document.addEventListener('click', function(ev){
+    var t=ev.target.closest && ev.target.closest('[data-creprint],[data-creuno],[data-cpr],[data-cpf],[data-cph],[data-cprgo],[data-cprshare]'); if (!t) return;
+    if (t.hasAttribute('data-creprint')){ openSheet({type:'creprint'}); return; }
+    if (t.hasAttribute('data-creuno')){ var f=state.sheet && creFind(state.sheet.rama, state.sheet.col); if (!f) return; if (t.getAttribute('data-creuno')==='imprimir') creImprimir([f], false); else creCompartir([f]); return; }
+    if (!state.sheet || state.sheet.type!=='creprint') return;
+    var o=state.draft;
+    if (t.hasAttribute('data-cpr')){ o.rama=t.getAttribute('data-cpr'); renderSheet(); return; }
+    if (t.hasAttribute('data-cpf')){ o.faltan=t.getAttribute('data-cpf')==='1'; renderSheet(); return; }
+    if (t.hasAttribute('data-cph')){ o.porHoja=t.getAttribute('data-cph')==='1'; renderSheet(); return; }
+    if (t.hasAttribute('data-cprgo')){ var xs=creSel(o); closeSheet(); creImprimir(xs, o.porHoja); return; }
+    if (t.hasAttribute('data-cprshare')){ creCompartir(creSel(o)); return; }
+  });
   function creGuardar(grabado){
     var sh=state.sheet, f=creFind(sh.rama, sh.col); if (!f) return; var d=state.draft||{};
     busySheet(true, 'Guardando…');
