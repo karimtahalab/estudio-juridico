@@ -925,28 +925,44 @@ a.save.wa-go svg{width:20px;height:20px}
   };
 
   /* ---------- servidor ---------- */
+  // Lo que cambia la agenda o los leads: mientras algo de esto está en camino, una actualización no pisa lo que se ve
+  var ESCRIBE={saveAction:1, saveResumenes:1, deshacerResultado:1, agendar:1, derivar:1, agendarNuevo:1, cambiarFase:1, editarDatos:1, agregarNota:1, saveBloqueo:1, deleteBloqueo:1, pedirInterna:1, responderInterna:1, derivarMarca:1, saveDisponibilidad:1};
+  // Lo que se puede repetir sin duplicar nada: si se corta internet o el servidor no contesta, se reintenta solo antes de avisar
+  var REINTENTA={getData:1, saveAction:1, cambiarFase:1, saveResumenes:1, editarDatos:1, deshacerResultado:1};
+  function esCorte(e){ return /Sin conexi|no respondi|Failed to fetch|NetworkError|Load failed|network|timeout|JSON|Unexpected token/i.test(String((e&&e.message)||e)); }
+  function call1(fn, arg){
+    return new Promise(function(res, rej){
+      // App instalable (pantalla publicada aparte): habla con el mismo servidor por POST
+      if (window.API_URL){
+        fetch(window.API_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({fn:fn, arg:arg}), redirect:'follow' })
+          .then(function(r){ if (!r.ok) throw new Error('El servidor no respondió ('+r.status+'). Probá de nuevo.'); return r.json(); })
+          .then(function(x){ if (x && x.ok) res(x.data); else rej(new Error((x && x.error) || 'Error del servidor.')); })
+          .catch(function(e){ rej(/fetch|network|load failed/i.test(String(e && e.message)) ? new Error('Sin conexión. Revisá internet y probá de nuevo.') : e); });
+        return;
+      }
+      google.script.run.withSuccessHandler(res).withFailureHandler(rej)[fn](arg);
+    });
+  }
   function call(fn, arg){
     // Cada llamada lleva la sesión (token del PIN). Si venció, se vuelve a pedir el PIN.
     if (Array.isArray(arg)) arg = {items:arg};
     if (arg === undefined || arg === null) arg = {};
     if (typeof arg==='object'){ arg.tok = store('tok') || ''; if (state.me) arg.who = state.me.nombre; }
-    return new Promise(function(res, rej){
-      var ok = function(x){ if (REP_CAMBIA[fn]) repInvalidar(); res(x); };
-      var fail = function(e){
-        var msg = (e && e.message) ? e.message : String(e);
-        if (/AUTH\|/.test(msg)){ sinSesion(); rej(new Error(msg.replace(/^.*AUTH\|/, ''))); return; }
-        rej(e && e.message ? e : new Error(String(e)));
+    var w=!!ESCRIBE[fn], esperas=REINTENTA[fn] ? [1500, 4000] : [];
+    if (w){ state.wPend=(state.wPend||0)+1; state.wSeq=(state.wSeq||0)+1; }
+    var p=new Promise(function(res, rej){
+      var intento=function(k){
+        call1(fn, arg).then(function(x){ if (REP_CAMBIA[fn]) repInvalidar(); res(x); }, function(e){
+          var msg = (e && e.message) ? e.message : String(e);
+          if (/AUTH\|/.test(msg)){ sinSesion(); rej(new Error(msg.replace(/^.*AUTH\|/, ''))); return; }
+          if (k<esperas.length && esCorte(e)){ setTimeout(function(){ intento(k+1); }, esperas[k]); return; }
+          rej(e && e.message ? e : new Error(msg));
+        });
       };
-      // App instalable (pantalla publicada aparte): habla con el mismo servidor por POST
-      if (window.API_URL){
-        fetch(window.API_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({fn:fn, arg:arg}), redirect:'follow' })
-          .then(function(r){ if (!r.ok) throw new Error('El servidor no respondió ('+r.status+'). Probá de nuevo.'); return r.json(); })
-          .then(function(x){ if (x && x.ok) ok(x.data); else fail(new Error((x && x.error) || 'Error del servidor.')); })
-          .catch(function(e){ fail(/fetch|network|load failed/i.test(String(e && e.message)) ? new Error('Sin conexión. Revisá internet y probá de nuevo.') : e); });
-        return;
-      }
-      google.script.run.withSuccessHandler(ok).withFailureHandler(fail)[fn](arg);
+      intento(0);
     });
+    if (w){ var fin=function(){ state.wPend=Math.max(0,(state.wPend||0)-1); if (!state.wPend && state.wRecargar){ state.wRecargar=false; setTimeout(function(){ load(true); }, 300); } }; p.then(fin, fin); }
+    return p;
   }
   var recibir = null;
   function load(silent, fresh){
@@ -954,7 +970,10 @@ a.save.wa-go svg{width:20px;height:20px}
     if (state.busy) return;
     if (fresh){ state.otras={}; state.busq=null; state.otrasPre=false; } // Actualizar: las otras fases se vuelven a pedir
     state.busy = true; $('btnRefresh').classList.add('spin');
+    var seq0=state.wSeq||0;
     call('getData', {fresh: !!fresh, who: store('yo') || ''}).then(recibir = function(d){
+      // Si mientras llegaba se guardó algo (o sigue guardándose), esta lectura puede ser de antes: no se usa y se pide otra al terminar
+      if (!d.__snap && state.data && (state.wPend || (state.wSeq||0)!==seq0)){ if (state.wPend) state.wRecargar=true; else setTimeout(function(){ load(true); }, 300); return; }
       if (d.__snap){ state.snapT=d.__snapT; } else { state.snapT=null; try{ store('snap', JSON.stringify({t:Date.now(), d:d})); }catch(e){} }
       state.data = d; state.offline = false;
       if (d.user && d.user.name && !d.__snap){ var yoSrv=(d.equipo||[]).filter(function(e){ return e.nombre===d.user.name; })[0]; if (yoSrv){ state.me=yoSrv; store('yo', yoSrv.nombre); } }
@@ -971,6 +990,7 @@ a.save.wa-go svg{width:20px;height:20px}
       if (state.sheet && (state.sheet.type==='lead' || state.sheet.type==='bloq')) renderSheet();
       if (state.primeraVez){ state.primeraVez=false; if (!state.me && d.modoPrueba) openSheet({type:'yo', first:true}); }
       if ($('search').classList.contains('on')) renderSearch();
+      avisoNuevos(d);
     }).catch(function(e){
       if (!state.data){
         $('main').innerHTML = '<div class="err-box">No se pudieron cargar las consultas.<br><small>'+esc(e.message)+'</small><br><button data-retry>Reintentar</button></div>';
@@ -982,6 +1002,29 @@ a.save.wa-go svg{width:20px;height:20px}
     t.innerHTML='<span>'+esc(msg)+'</span><button data-undo>Deshacer</button>';
     t.className='toast on undo'+pos; state.undo=fn;
     clearTimeout(toast._t); toast._t=setTimeout(function(){ t.className='toast'+pos; state.undo=null; }, 10000);
+  }
+  function toastAccion(msg, label, fn){
+    var t=$('toast'), pos=state.sheet?' top':'';
+    t.innerHTML='<span>'+esc(msg)+'</span><button data-undo>'+esc(label)+'</button>';
+    t.className='toast on undo'+pos; state.undo=fn;
+    clearTimeout(toast._t); toast._t=setTimeout(function(){ t.className='toast'+pos; state.undo=null; }, 10000);
+  }
+  // Aviso de leads nuevos para quien agenda: al volver a la app o con la actualización automática (cada 2 minutos)
+  function avisoNuevos(d){
+    if (!d || !((d.permisos||{}).leads||[]).length) return;
+    var prev=state.paIds, hoy=nowBA().date, ayer=addDays(hoy,-1);
+    state.paIds={}; (d.porAgendar||[]).forEach(function(l){ state.paIds[l.id]=1; });
+    if (!prev || d.__snap) return;
+    var nuevos=(d.porAgendar||[]).filter(function(l){ return !prev[l.id] && (!l.fase || ['A','B','Llamada pendiente'].indexOf(l.fase)!==-1) && l.ingreso && l.ingreso>=ayer; });
+    if (!nuevos.length) return;
+    try{ if (navigator.vibrate && rol()==='intaker') navigator.vibrate([70,50,70]); }catch(e){}
+    var msg='🔔 '+(nuevos.length===1 ? 'Lead nuevo: '+(nuevos[0].nombre||'sin nombre')+' · '+ramaLabel(nuevos[0].rama) : plural(nuevos.length,'lead nuevo','leads nuevos'));
+    toastAccion(msg, 'Ver', function(){ if (state.sheet) closeSheet(); closeSearch(); state.view=navList().indexOf('agendar')!==-1?'agendar':state.view; render(); window.scrollTo(0,0); });
+  }
+  // Número en el ícono de la app instalada: resultados que faltan (abogadas) o tareas urgentes (intakers)
+  function badgeApp(n){
+    try{ if (!navigator.setAppBadge) return; var k=n>0?Math.min(n,99):0; if (k===state.badgeK) return; state.badgeK=k;
+      var pr=k ? navigator.setAppBadge(k) : navigator.clearAppBadge(); if (pr && pr.catch) pr.catch(function(){}); }catch(e){}
   }
   function toast(msg, err){
     var t=$('toast'), pos=state.sheet?' top':''; t.textContent=msg; t.className='toast on'+(err?' err':'')+pos;
@@ -1692,15 +1735,23 @@ a.save.wa-go svg{width:20px;height:20px}
   function saveResumenesUI(){
     var d=state.draft, tgt=state.sheet.target, its=d.items.filter(function(x){ return x.on && x.leadId; });
     if (!its.length) return;
-    busySheet(true);
+    // Se ven guardados al instante; si el servidor no puede, vuelven como estaban y se reabre lo pegado
+    var borr=JSON.parse(JSON.stringify(d)), antes={};
+    its.forEach(function(x){ var l=findLead(x.leadId); if (l){ antes[x.leadId]=l.resumen||''; l.resumen=x.texto; } });
+    if (tgt) openSheet({type:'lead', id:tgt}); else closeSheet();
+    render(); toast('📋 '+plural(its.length,'resumen guardado','resúmenes guardados'));
     call('saveResumenes', its.map(function(x){ return {id:x.leadId, texto:x.texto}; })).then(function(r){
       r = r || {};
       (r.leads||[]).forEach(function(nl){ if (nl) replaceLead(nl); });
-      var n=(r.leads||[]).length, f=(r.faltan||[]).length;
-      if (tgt) openSheet({type:'lead', id:tgt}); else closeSheet();
-      render();
-      toast('📋 '+plural(n,'resumen guardado','resúmenes guardados')+(f?'. '+plural(f,'no se encontró','no se encontraron')+' en la planilla':''));
-    }).catch(function(e){ renderSheet(); toast(e.message||'No se pudieron guardar los resúmenes.', true); });
+      var f=r.faltan||[];
+      f.forEach(function(id){ var l=findLead(id); if (l && Object.prototype.hasOwnProperty.call(antes,id)) l.resumen=antes[id]; });
+      render(); if (state.sheet && state.sheet.type==='lead') renderSheet();
+      if (f.length) toast(plural(f.length,'resumen no se guardó','resúmenes no se guardaron')+': no se encontró en la planilla. Tocá Actualizar.', true);
+    }).catch(function(e){
+      Object.keys(antes).forEach(function(id){ var l=findLead(id); if (l) l.resumen=antes[id]; });
+      render(); openSheet({type:'pegar', target:tgt}); state.draft=borr; renderSheet();
+      toast((e&&e.message)||'No se pudieron guardar los resúmenes.', true);
+    });
   }
 
   /* ---------- quién usa la app ---------- */
@@ -1729,6 +1780,7 @@ a.save.wa-go svg{width:20px;height:20px}
     if (fb && fb.lastChild && fb.lastChild.nodeType===3) fb.lastChild.nodeValue=(fks.length && fks.every(function(x){ return fm[x]==='carga'; })) ? 'Reporte' : 'Finanzas';
     var n=faltaItems().length, b=$('badge'); b.hidden=!n; b.textContent=n;
     var t=tareasUrgentes(), bt=$('badgeT'); bt.hidden=!t; bt.textContent=t>99?'99+':t;
+    badgeApp(rol()==='abogada' ? n : (rol()==='intaker' ? t : 0));
   }
   function sheetYo(){
     var eq=(state.data&&state.data.equipo)||state.equipo||[], cur=state.me&&state.me.nombre, L=state.login||(state.login={});
@@ -1981,15 +2033,17 @@ a.save.wa-go svg{width:20px;height:20px}
   }
   function busqHtml(s){
     var q=String(s.q||'').trim(); if (q.length<3) return '';
-    var b=state.busq;
-    if (b && b.q===q){
-      if (b.cargando) return '<p class="hint" style="text-align:center;margin-top:12px">Buscando en todas las fases…</p>';
-      if (b.error) return '<p class="hint" style="text-align:center;margin-top:12px">'+esc(b.error)+'</p>';
-      var ya=function(id){ return (state.data.porAgendar||[]).some(function(p){ return p.id===id && (!p.fase || ['A','B','Llamada pendiente'].indexOf(p.fase)!==-1); }) || (state.data.leads||[]).some(function(p){ return p.id===id; }); };
-      var xs=b.leads.filter(function(l){ return !ya(l.id); });
-      return xs.length ? '<p class="grp-lbl">En otras fases</p>'+listaRamas(xs, agState()) : '<p class="hint" style="text-align:center;margin-top:12px">Tampoco aparece en otras fases de los últimos 4 meses.</p>';
-    }
-    return '<button class="btn3" data-agbuscartodo>Buscar «'+esc(q)+'» en todas las fases</button>';
+    var ya=function(id){ return (state.data.porAgendar||[]).some(function(p){ return p.id===id && (!p.fase || ['A','B','Llamada pendiente'].indexOf(p.fase)!==-1); }) || (state.data.leads||[]).some(function(p){ return p.id===id; }); };
+    // Primero lo que ya está en el celular (otras fases precargadas): aparece mientras se escribe
+    var vis={}, xs=[], add=function(l){ if (!l || vis[l.id] || ya(l.id)) return; vis[l.id]=1; xs.push(l); };
+    OTRAS_FASES.forEach(function(f){ var o=(state.otras||{})[f]; ((o && o.leads)||[]).forEach(function(l){ if (agMatch(l, q)) add(l); }); });
+    var b=state.busq, srv=b && b.q===q;
+    if (srv && b.leads) b.leads.forEach(add);
+    var html=xs.length ? '<p class="grp-lbl">En otras fases</p>'+listaRamas(xs, agState()) : '';
+    if (srv && b.cargando) return html+'<p class="hint" style="text-align:center;margin-top:12px">Buscando en toda la planilla…</p>';
+    if (srv && b.error) return html+'<p class="hint" style="text-align:center;margin-top:12px">'+esc(b.error)+'</p>';
+    if (srv) return html || '<p class="hint" style="text-align:center;margin-top:12px">Tampoco aparece en otras fases de los últimos 4 meses.</p>';
+    return html+'<button class="btn3" data-agbuscartodo>'+(xs.length ? '¿No es? Buscar «'+esc(q)+'» en toda la planilla' : 'Buscar «'+esc(q)+'» en todas las fases')+'</button>';
   }
   function buscarTodo(){
     var q=String(agState().q||'').trim(); if (q.length<3) return;
@@ -2734,12 +2788,20 @@ a.save.wa-go svg{width:20px;height:20px}
     return html;
   }
   function saveCampos(){
+    // Se ve guardado al instante y la planilla se actualiza atrás; si falla, vuelve como estaba y se reabre con lo escrito
     var id=state.sheet.id, texto=textoCampos(); if (!texto) return;
-    busySheet(true);
+    var l=findLead(id), antes=l?(l.resumen||''):'', borr=JSON.parse(JSON.stringify(state.draft));
+    if (l) l.resumen=texto;
+    openSheet({type:'lead', id:id}); render(); toast('📋 Resumen guardado');
     call('saveResumenes',[{id:id, texto:texto}]).then(function(r){
       ((r&&r.leads)||[]).forEach(function(nl){ if (nl){ replaceLead(nl); markSeen(nl.id); } });
-      openSheet({type:'lead', id:id}); render(); toast('📋 Resumen guardado');
-    }).catch(function(e){ renderSheet(); toast(e.message||'No se pudo guardar el resumen.', true); });
+      if (r && (r.faltan||[]).length) throw new Error('No encontré a esa persona en la planilla. Tocá Actualizar.');
+      render(); if (state.sheet && state.sheet.type==='lead' && state.sheet.id===id) renderSheet();
+    }).catch(function(e){
+      var l2=findLead(id); if (l2) l2.resumen=antes; render();
+      if (l2){ openSheet({type:'escribir', id:id}); state.draft=borr; renderSheet(); }
+      toast((e&&e.message)||'No se pudo guardar el resumen.', true);
+    });
   }
 
   /* ---------- agendar con horarios libres ---------- */
