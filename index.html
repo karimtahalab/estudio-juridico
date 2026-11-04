@@ -722,6 +722,11 @@ a.save.wa-go svg{width:20px;height:20px}
 .f2t tr:last-child td{border-bottom:0}
 .f2t tr.tot td{font-weight:800}
 .f2t .neg{color:var(--red)} .f2t .pos{color:var(--green)}
+.f2t td small{font-weight:500;color:var(--ink-3);font-size:12px;white-space:normal}
+.f2t tr.yo td,.f2-hb li.yo{background:var(--blue-bg)}
+.f2-hb .neg{color:var(--red)}
+.f2-hb li small{grid-column:1/-1;color:var(--ink-3);font-size:12px}
+.f2-cruce li{grid-template-columns:1fr}
 .f2-hb{list-style:none;margin:8px 0 0;padding:4px 0;background:var(--paper);border-radius:14px;box-shadow:0 0 0 1px var(--line) inset}
 .f2-hb li{display:grid;grid-template-columns:1fr auto;gap:4px 10px;padding:8px 12px;font-size:14px}
 .f2-hb li b small{font-weight:600;color:var(--ink-3);margin-left:4px}
@@ -732,6 +737,15 @@ a.save.wa-go svg{width:20px;height:20px}
 .f2-sub{display:block;font-size:12px;color:var(--ink-3);font-weight:600;margin-top:1px}
 .todo button[disabled]{opacity:1;cursor:default}
 @media (min-width:760px){ .f2p-tiles{grid-template-columns:repeat(3,1fr) !important} }
+.fin-llave{background:var(--paper);border-radius:var(--r-lg);box-shadow:0 0 0 1px var(--line) inset;padding:22px 18px;margin-top:14px;text-align:center}
+.fin-llave .fl-ico{font-size:34px}
+.fin-llave h2{margin:6px 0 4px;font-size:21px}
+.fin-llave p{color:var(--ink-2);margin:6px 0 12px}
+.fin-llave .lbl{display:block;text-align:left;margin:10px 2px 4px;font-weight:700;font-size:13.5px;color:var(--ink-2)}
+.fin-llave .fpin{text-align:center;font-size:24px;letter-spacing:.35em;height:54px}
+.fin-llave .save{margin-top:14px;width:100%}
+.fin-llave .fl-err{color:var(--red);font-weight:700}
+.fin-pin{color:var(--ink-2);font-weight:600}
 .ftile{background:var(--paper);border-radius:14px;box-shadow:0 0 0 1px var(--line) inset;padding:10px 12px 11px;min-width:0}
 .ftile span{display:block;font-size:13px;font-weight:700;color:var(--ink-2)}
 .ftile b{display:block;font-size:20px;font-weight:800;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -956,6 +970,8 @@ a.save.wa-go svg{width:20px;height:20px}
   var ESCRIBE={saveAction:1, saveResumenes:1, deshacerResultado:1, agendar:1, derivar:1, agendarNuevo:1, cambiarFase:1, editarDatos:1, agregarNota:1, saveBloqueo:1, deleteBloqueo:1, pedirInterna:1, responderInterna:1, derivarMarca:1, saveDisponibilidad:1};
   // Lo que se puede repetir sin duplicar nada: si se corta internet o el servidor no contesta, se reintenta solo antes de avisar
   var REINTENTA={getData:1, saveAction:1, cambiarFase:1, saveResumenes:1, editarDatos:1, deshacerResultado:1};
+  // Finanzas: cada pedido lleva la llave (PIN de finanzas). Vive solo en la memoria de la app: al cerrarla, se vuelve a pedir
+  var FIN_FN={getFin2:1, getFin2Panel:1, saveFin2:1, getFinanzas:1, saveFinanza:1, borrarFinanza:1};
   function esCorte(e){ return /Sin conexi|no respondi|Failed to fetch|NetworkError|Load failed|network|timeout|JSON|Unexpected token/i.test(String((e&&e.message)||e)); }
   function call1(fn, arg){
     return new Promise(function(res, rej){
@@ -974,13 +990,14 @@ a.save.wa-go svg{width:20px;height:20px}
     // Cada llamada lleva la sesión (token del PIN). Si venció, se vuelve a pedir el PIN.
     if (Array.isArray(arg)) arg = {items:arg};
     if (arg === undefined || arg === null) arg = {};
-    if (typeof arg==='object'){ arg.tok = store('tok') || ''; if (state.me) arg.who = state.me.nombre; }
+    if (typeof arg==='object'){ arg.tok = store('tok') || ''; if (state.me) arg.who = state.me.nombre; if (FIN_FN[fn]) arg.ftok = finTok(); }
     var w=!!ESCRIBE[fn], esperas=REINTENTA[fn] ? [1500, 4000] : [];
     if (w){ state.wPend=(state.wPend||0)+1; state.wSeq=(state.wSeq||0)+1; }
     var p=new Promise(function(res, rej){
       var intento=function(k){
-        call1(fn, arg).then(function(x){ if (REP_CAMBIA[fn]) repInvalidar(); res(x); }, function(e){
+        call1(fn, arg).then(function(x){ if (REP_CAMBIA[fn]) repInvalidar(); if (FIN_FN[fn] && state.ftok) state.ftokT=Date.now(); res(x); }, function(e){
           var msg = (e && e.message) ? e.message : String(e);
+          if (/FIN\|/.test(msg)){ finCerrar(true); rej(new Error(msg.replace(/^.*FIN\|/, ''))); return; }
           if (/AUTH\|/.test(msg)){ sinSesion(); rej(new Error(msg.replace(/^.*AUTH\|/, ''))); return; }
           if (k<esperas.length && esCorte(e)){ setTimeout(function(){ intento(k+1); }, esperas[k]); return; }
           rej(e && e.message ? e : new Error(msg));
@@ -1834,7 +1851,8 @@ a.save.wa-go svg{width:20px;height:20px}
       html += '<p class="grp-lbl">PIN de cada persona</p><div class="box pin-list">'+pines.map(function(x){ var conf=L.reset===x.nombre;
         return '<div class="kv"><span>'+esc(x.nombre)+'</span><b>'+(x.tiene?'✓ Tiene PIN':'Todavía no creó el suyo')+
           (x.tiene && x.nombre!==cur ? ' <button class="mini'+(conf?' warn':'')+'" data-pinreset="'+esc(x.nombre)+'">'+(conf?'¿Seguro? Tocá de nuevo':'Resetear')+'</button>' : '')+
-          (x.bloqueado ? '<br><span class="pin-bloq">'+(x.fijo?'Bloqueado por intentos':'Bloqueado 15 min')+'</span> <button class="mini" data-pindesbloq="'+esc(x.nombre)+'">Desbloquear</button>' : '')+'</b></div>'; }).join('')+'</div>'+
+          (x.bloqueado ? '<br><span class="pin-bloq">'+(x.fijo?'Bloqueado por intentos':'Bloqueado 15 min')+'</span> <button class="mini" data-pindesbloq="'+esc(x.nombre)+'">Desbloquear</button>' : '')+
+          (x.fin ? '<br><small class="fin-pin">🔒 Finanzas: '+(x.fin.bloqueado?'<span class="pin-bloq">bloqueado</span>':(x.fin.tiene?'✓ tiene PIN':'sin crear'))+'</small>'+((x.fin.tiene||x.fin.bloqueado) && x.nombre!==cur ? ' <button class="mini'+(L.freset===x.nombre?' warn':'')+'" data-finpinreset="'+esc(x.nombre)+'">'+(L.freset===x.nombre?'¿Seguro? Tocá de nuevo':'Resetear')+'</button>':'') : '')+'</b></div>'; }).join('')+'</div>'+
         '<p class="hint" style="margin:6px 2px 0">Resetear borra el PIN y cierra su sesión: la próxima vez que entre, crea uno nuevo.</p>';
     }
     if (state.me && !soloPin) html += '<button class="dv-lnk" data-salir>Salir de la app en este dispositivo</button>';
@@ -1881,7 +1899,7 @@ a.save.wa-go svg{width:20px;height:20px}
   function sinSesion(){
     if (state.sinSes) return; state.sinSes=true;
     if (state.data && state.data.equipo) state.equipo=state.data.equipo;
-    store('tok',''); state.me=null;
+    store('tok',''); state.me=null; state.ftok=null;
     setTimeout(function(){ state.sinSes=false; abrirIngreso(); }, 0);
   }
   function salir(){
@@ -2377,7 +2395,7 @@ a.save.wa-go svg{width:20px;height:20px}
       .catch(function(e){ if (!bg && gen===(state.finGen||0)) state.fin[key]={error:(e&&e.message)||'No se pudo cargar.'}; })
       .then(function(){ delete state.finBusy[key]; if (enFinanzas() && finKey()===key) render(); });
   }
-  function precargarFin(){ if (!(state.data && state.data.finAcceso)) return; f2Load(false); return; if (!state.finSem) state.finSem=mondayOf(nowBA().date); loadFin(null, true); }
+  function precargarFin(){ if (!(state.data && state.data.finAcceso) || !state.ftok) return; f2Load(false); return; if (!state.finSem) state.finSem=mondayOf(nowBA().date); loadFin(null, true); }
   function equipoBtn(){ return (state.me && state.me.rol==='admin') ? '<button class="fin-eq" data-equipo><span>Equipo y PINs<small>Quién tiene PIN y resetear el de alguien</small></span>'+I.chev+'</button>' : ''; }
   function viewFinanzas(){
     if (!state.finSem) state.finSem=mondayOf(nowBA().date);
@@ -3515,11 +3533,11 @@ a.save.wa-go svg{width:20px;height:20px}
     var prev=C[k] && !C[k].error && !C[k].cargando ? C[k] : (C[k] && C[k].prev) || f2Guardado(k);
     C[k]={cargando:true, prev:prev};
     var arg={rama:f2Rama(), fresco:!!fresco}; if (f2Per()==='semana') arg.semana=f2Sem(); else arg.mes=f2Mes();
-    call('getFin2', arg).then(function(d){ C[k]=d; guardar('f2:', k, d); if (enFinanzas()) render(); if (state.sheet && state.sheet.type==='fin2') renderSheet(); })
+    call('getFin2', arg).then(function(d){ C[k]=d; if (enFinanzas()) render(); if (state.sheet && state.sheet.type==='fin2') renderSheet(); })
       .catch(function(e){ C[k]={error:(e&&e.message)||'No se pudieron cargar las finanzas.', prev:prev}; if (enFinanzas()) render(); });
   }
   // Lo último que se cargó en este celular se muestra al instante mientras llega lo nuevo (solo si coincide con lo que hoy puede ver esa persona)
-  function f2Guardado(k){ var x=guardado('f2:', k), modo=((state.data&&state.data.finModo)||{})[k.split('|')[0]]; return (x && x.d && modo && x.d.modo===modo) ? x.d : null; }
+  function f2Guardado(k){ return null; var x=guardado('f2:', k), modo=((state.data&&state.data.finModo)||{})[k.split('|')[0]]; return (x && x.d && modo && x.d.modo===modo) ? x.d : null; }
   function f2Base(){ var d=f2Data(); if (!d) return null; if (d.cargando || d.error) return d.prev || null; return d; }
   function f2Alias(n, ops){ var al=((f2Base()||{}).alias||{})[n]||[], c=[n].concat(al); for (var i=0;i<c.length;i++) if ((ops||[]).indexOf(c[i])!==-1) return c[i]; return ''; }
   function f2Esmio(v){ var me=state.me&&state.me.nombre; if (!me || !v) return false; return v===me || (((f2Base()||{}).alias||{})[me]||[]).indexOf(v)!==-1; }
@@ -3536,9 +3554,9 @@ a.save.wa-go svg{width:20px;height:20px}
   function f2PRama(){ var rs=f2PRamas(); if (!state.f2PRama || rs.indexOf(state.f2PRama)===-1) state.f2PRama=rs[0]; return state.f2PRama; }
   function f2PLoad(fresco){
     var k=f2PRama(), C=state.f2p||(state.f2p={}); if (C[k] && C[k].cargando) return;
-    var prev=(C[k] && !C[k].error && !C[k].cargando) ? C[k] : ((C[k] && C[k].prev) || ((guardado('f2p:', k)||{}).d) || null);
+    var prev=(C[k] && !C[k].error && !C[k].cargando) ? C[k] : ((C[k] && C[k].prev) || null);
     C[k]={cargando:true, prev:prev};
-    call('getFin2Panel', {rama:k, fresco:!!fresco}).then(function(d){ C[k]=d; guardar('f2p:', k, d); if (enFinanzas() && f2Per()==='panel') render(); })
+    call('getFin2Panel', {rama:k, fresco:!!fresco}).then(function(d){ C[k]=d; if (enFinanzas() && f2Per()==='panel') render(); })
       .catch(function(e){ C[k]={error:(e&&e.message)||'No se pudo armar el panel.', prev:prev}; if (enFinanzas() && f2Per()==='panel') render(); });
   }
   var MES3=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
@@ -3567,6 +3585,48 @@ a.save.wa-go svg{width:20px;height:20px}
     var max=xs.reduce(function(m,x){ return Math.max(m, Math.abs(x.m)); }, 0)||1;
     return '<ul class="f2-hb">'+xs.map(function(x){ return '<li><span>'+esc(x.k)+'</span><b class="num">'+plata(x.m)+(total?' <small>'+Math.round(x.m/total*100)+'%</small>':'')+'</b><i><em style="width:'+Math.max(2,Math.round(Math.abs(x.m)/max*100))+'%"></em></i></li>'; }).join('')+'</ul>';
   }
+  // Caja hoy: lo que calcula cada planilla (pestaña Caja o Balance entre socios); cambia sola con cada cobro o gasto que se carga
+  function f2CajaSaldoTxt(p, rama){
+    if (p.deberia!=null && p.difSocio!=null && (p.difSocio||p.deberia)) return p.difSocio>0 ? 'tiene '+plataE(p.difSocio)+' de más: le pasa a los otros' : (p.difSocio<0 ? 'le falta '+plataE(-p.difSocio)+': le tienen que pasar' : 'está justo');
+    if (p.saldo<0) return 'puso '+plataE(-p.saldo)+' de su bolsillo: '+F2_RAMA[rama]+' se lo debe';
+    if (p.saldo>0) return 'tiene '+plataE(p.saldo)+' de '+F2_RAMA[rama];
+    return 'sin movimientos';
+  }
+  function f2DeudaTxt(a, b, monto){ // monto según a: + b le debe a a
+    if (!monto) return 'Con '+F2_RAMA[b]+': sin deuda cargada';
+    return monto>0 ? F2_RAMA[b]+' le debe '+plataE(monto)+' a '+F2_RAMA[a] : F2_RAMA[a]+' le debe '+plataE(-monto)+' a '+F2_RAMA[b];
+  }
+  function f2CajaHtml(b, r){
+    var me=state.me&&state.me.nombre, html='';
+    if (r==='TODAS'){
+      var J=b.cajaJunta; if (!J) return '';
+      html+='<h2 class="sec-t">Caja hoy</h2><p class="sec-sub">Lo que tiene cada uno de cada rama según las planillas (Caja y Balance entre socios). Negativo = puso de su bolsillo y la rama se lo debe. Cambia solo con cada cobro o gasto que se carga.</p>';
+      html+='<div class="f2t-wrap"><table class="f2t"><thead><tr><th>Quién</th>'+J.ramas.map(function(x){ return '<th>'+F2_RAMA[x]+'</th>'; }).join('')+'</tr></thead><tbody>'+
+        J.personas.map(function(p){ return '<tr'+(p.n===me?' class="yo"':'')+'><td><b>'+esc(p.n)+'</b></td>'+J.ramas.map(function(x){ var v=p.porRama[x]; return '<td class="num'+(v<0?' neg':'')+'" title="'+(v==null?'':plataE(v))+'">'+(v==null?'·':plataC(v))+'</td>'; }).join('')+'</tr>'; }).join('')+
+        '<tr class="tot"><td>💵 Efectivo</td>'+J.ramas.map(function(x){ return '<td class="num">'+plataC(J.efectivo[x]||0)+'</td>'; }).join('')+'</tr></tbody></table></div>'+
+        '<ul class="f2-hb">'+J.personas.map(function(p){ return '<li'+(p.n===me?' class="yo"':'')+'><span><b>'+esc(p.n)+'</b></span><b class="num'+(p.total<0?' neg':'')+'">'+plataE(p.total)+'</b><small>'+(p.total<0?'en total puso '+plataE(-p.total)+' más de lo que tiene de las ramas':'en total tiene '+plataE(p.total)+' de las ramas')+'</small></li>'; }).join('')+'</ul>';
+      if ((J.cruces||[]).length){
+        html+='<h2 class="sec-t">Entre ramas</h2><ul class="f2-hb f2-cruce">'+J.cruces.map(function(c){
+          return '<li><span>'+(c.ok?'✅ ':'⚠️ ')+esc(f2DeudaTxt(c.a, c.b, c.segunA || -c.segunB))+'</span>'+(c.ok?'':'<small>No coincide: la planilla de '+F2_RAMA[c.a]+' dice «'+esc(f2DeudaTxt(c.a,c.b,c.segunA))+'» y la de '+F2_RAMA[c.b]+' dice «'+esc(f2DeudaTxt(c.b,c.a,c.segunB))+'».</small>')+'</li>'; }).join('')+'</ul>';
+      }
+      if ((J.errores||[]).length) html+='<div class="warn">'+esc(J.errores.join(' · '))+'</div>';
+      return html;
+    }
+    var C=b.caja; if (!C) return '';
+    if (C.error) return '<h2 class="sec-t">Caja hoy</h2><div class="warn">'+esc(C.error)+'</div>';
+    var socios=C.tipo==='socios', conArq=C.personas.some(function(p){ return p.arqueo!=null; });
+    html+='<h2 class="sec-t">Caja hoy</h2><p class="sec-sub">'+(socios?'Saldo de la plata de Tránsito en la cuenta de cada socio, lo que le toca según su porcentaje y cuánto tiene de más o de menos.':'Plata de '+F2_RAMA[r]+' que tiene cada uno (cobros que recibió menos gastos que pagó y retiros). Negativo = puso de su bolsillo.')+' Sale de la pestaña «'+esc(C.hoja)+'» y cambia solo con cada cobro o gasto.</p>';
+    html+='<div class="fin-tabs f2p-tiles"><div class="ftile"><span>💵 Efectivo'+(socios?' (caja fuerte)':'')+'</span><b class="num">'+plataE(C.efectivo)+'</b></div><div class="ftile'+(C.totalMano<0?' bad':'')+'"><span>'+(socios?'En cuentas de socios':'En mano de cada uno')+'</span><b class="num">'+plataE(C.totalMano)+'</b></div>'+
+      (C.totalCaja!=null?'<div class="ftile'+(C.totalCaja<0?' bad':' good')+'"><span>'+(socios?'Patrimonio':'Total en caja')+'</span><b class="num">'+plataE(C.totalCaja)+'</b><small class="f2-sub">'+(socios?'cuentas + caja fuerte':'con créditos y deudas')+'</small></div>':'')+'</div>';
+    html+='<ul class="f2-hb">'+C.personas.map(function(p){ var ex=[];
+        if (socios) ex.push('le toca '+plataE(p.deberia)+(p.pct?' ('+p.pct+')':''));
+        if (p.arqueo!=null) ex.push('contado '+plataE(p.arqueo)+(p.dif?' · diferencia '+plataE(p.dif):''));
+        return '<li'+(p.n===me?' class="yo"':'')+'><span><b>'+esc(p.n)+'</b></span><b class="num'+(p.saldo<0?' neg':'')+'">'+plataE(p.saldo)+'</b><small>'+esc(f2CajaSaldoTxt(p, r))+(ex.length?' · '+esc(ex.join(' · ')):'')+'</small></li>'; }).join('')+'</ul>';
+    var cr=(C.creditos||[]).filter(function(k){ return k.saldo || k.con; });
+    if (cr.length) html+='<h2 class="sec-t">Créditos y deudas</h2><ul class="f2-hb">'+cr.map(function(k){ return '<li><span>'+esc(k.con && k.con!==r ? f2DeudaTxt(r, k.con, k.saldo) : k.concepto)+'</span><b class="num'+(k.saldo<0?' neg':'')+'">'+plataE(k.saldo)+'</b><small>'+esc(k.concepto)+'</small></li>'; }).join('')+'</ul>';
+    if ((C.movimientos||[]).length) html+='<p class="hint">Últimos movimientos con otras ramas: '+C.movimientos.map(function(m){ return esc(m.fecha+' '+m.rama+' '+m.concepto+' '+plataE(m.monto)); }).join(' · ')+'</p>';
+    return html;
+  }
   function viewF2Panel(){
     var plata=plataE;
     var rs=f2PRamas(), r=f2PRama(), C=state.f2p||(state.f2p={}), d=C[r];
@@ -3586,6 +3646,7 @@ a.save.wa-go svg{width:20px;height:20px}
       tile('Resultado '+b.anio, plata(neto), neto<0?'bad':'good', margen!==null?'margen '+margen+'%':'')+
       (b.tieneAcuerdos ? tile('Por cobrar', plata(b.debido), '', b.nAtrasados?plural(b.nAtrasados,'caso atrasado','casos atrasados'):'')+tile('Atrasado', plata(b.atrasado), b.atrasado>0?'bad':'')+tile('Próximos 3 meses', plata(prox3), '', 'según las cuotas') : '')+
       '</div>';
+    body+=f2CajaHtml(b, r);
     // Caja mes a mes
     var M=b.meses||[];
     body+='<h2 class="sec-t">Caja mes a mes</h2><p class="sec-sub">Lo que entró y lo que se gastó cada mes (últimos 12). Gastos: solo la parte de '+(r==='TODAS'?'cada rama':esc(lbl(r)))+'.</p>';
@@ -3625,7 +3686,81 @@ a.save.wa-go svg{width:20px;height:20px}
     body+='<p class="hint" style="text-align:center;margin-top:18px">Armado a las '+esc(b.generado||'')+' con las planillas contables. <button class="lk" data-f2pfresco>Actualizar</button></p>';
     titulo.body=body; return titulo;
   }
+  /* ---------- Llave de Finanzas (PIN de finanzas, 6 números) ---------- */
+  var FIN_TOK_MS=15*60*1000;
+  function borrarFinGuardado(){ ['f2:','f2p:','fin:'].forEach(function(pref){ try{ JSON.parse(store(pref+'keys')||'[]').forEach(function(k){ localStorage.removeItem(pref+k); }); localStorage.removeItem(pref+'keys'); }catch(e){} }); }
+  try{ borrarFinGuardado(); }catch(e){} // lo que quedó guardado de versiones anteriores
+  function finTok(){ if (state.ftok && Date.now()-(state.ftokT||0) > FIN_TOK_MS) finCerrar(false); return state.ftok || ''; }
+  function finCerrar(aviso){
+    var habia=!!state.ftok; if (state.ftok) call1('finPinSalir', {tok:store('tok')||'', ftok:state.ftok}).catch(function(){});
+    state.ftok=null; state.f2={}; state.f2p={}; state.fin={};
+    if (state.sheet && state.sheet.type==='fin2') closeSheet();
+    if (enFinanzas()) render();
+    if (aviso && habia) toast('🔒 Finanzas se cerró. Poné tu PIN de finanzas para seguir.');
+  }
+  setInterval(function(){ if (state.ftok) finTok(); }, 30000);
+  function viewFinLlave(){
+    var F=(state.data && state.data.finPin)||{}, L=state.finL||(state.finL={}), crear=!F.tiene;
+    var inp=function(id, ph, n){ return '<input class="inp fpin" id="'+id+'" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="'+n+'" autocomplete="off" placeholder="'+ph+'">'; };
+    var body='<div class="fin-llave"><div class="fl-ico">🔒</div><h2>Finanzas protegidas</h2>';
+    if (F.bloqueado) body+='<p>Tu PIN de finanzas quedó bloqueado por muchos intentos. Pedile a Karim o a Julián que lo reseteen desde <b>Equipo y PINs</b>.</p>';
+    else if (crear) body+='<p>Para ver Finanzas hace falta un <b>PIN de finanzas</b> de 6 números, distinto del PIN de la app. Se pide de nuevo a los 15 minutos sin usar o al cerrar la app.</p>'+
+      '<label class="lbl">Tu PIN de la app (4 números)</label>'+inp('fpinApp','••••',4)+
+      '<label class="lbl">PIN de finanzas nuevo (6 números)</label>'+inp('fpin1','••••••',6)+
+      '<label class="lbl">Repetilo</label>'+inp('fpin2','••••••',6)+
+      '<button class="save" data-finentrar '+(L.ocupado?'disabled':'')+'>'+(L.ocupado?'Creando…':'Crear y entrar')+'</button>';
+    else body+='<p>Poné tu PIN de finanzas (6 números).</p>'+inp('fpin','••••••',6)+'<button class="save" data-finentrar '+(L.ocupado?'disabled':'')+'>'+(L.ocupado?'Entrando…':'Entrar')+'</button>'+
+      '<p class="hint">¿No te acordás? Pedile a Karim o a Julián que lo reseteen desde Equipo y PINs.</p>';
+    body+='<p class="fl-err" aria-live="polite">'+esc(L.msg||'')+'</p>';
+    body+='</div>';
+    return { h1:'Finanzas', p:'Protegidas con PIN de finanzas', extra:'', body:body };
+  }
+  function finEntrarUI(){
+    // Sin volver a dibujar la pantalla (así no se borra lo escrito): solo el mensaje y el botón
+    var F=(state.data && state.data.finPin)||{}, L=state.finL||(state.finL={}), v=function(id){ var e=$(id); return e ? e.value.replace(/\D/g,'') : ''; };
+    var err=function(m){ L.msg=m; var e=document.querySelector('.fin-llave .fl-err'); if (e) e.textContent=m; };
+    var btn=document.querySelector('.fin-llave [data-finentrar]');
+    if (L.ocupado || F.bloqueado) return;
+    var arg;
+    if (!F.tiene){ var a=v('fpinApp'), p1=v('fpin1'), p2=v('fpin2');
+      if (a.length!==4) return err('Poné tu PIN de la app (4 números).');
+      if (p1.length!==6) return err('El PIN de finanzas tiene 6 números.');
+      if (p1!==p2) return err('Los dos PIN de finanzas no coinciden.');
+      arg={pin:p1, pinApp:a};
+    } else { var p=v('fpin'); if (p.length!==6) return err('El PIN de finanzas tiene 6 números.'); arg={pin:p}; }
+    L.ocupado=true; err(''); if (btn){ btn.disabled=true; btn.textContent=F.tiene?'Entrando…':'Creando…'; }
+    call('finPinEntrar', arg).then(function(r){
+      L.ocupado=false; L.msg=''; state.ftok=r.ftok; state.ftokT=Date.now(); if (state.data){ state.data.finPin={tiene:true, bloqueado:false}; }
+      render(); window.scrollTo(0,0); toast(r.creado ? '🔓 PIN de finanzas creado' : '🔓 Finanzas abierta por 15 minutos');
+    }).catch(function(e){
+      L.ocupado=false; var m=(e&&e.message)||'No se pudo entrar.';
+      if (/bloquead/i.test(m) && state.data && state.data.finPin){ state.data.finPin.bloqueado=true; L.msg=m; render(); return; }
+      err(m); if (btn){ btn.disabled=false; btn.textContent=F.tiene?'Entrar':'Crear y entrar'; }
+      var x=$('fpin'); if (x){ x.value=''; x.focus(); }
+    });
+  }
+  document.addEventListener('click', function(ev){
+    var t=ev.target.closest && ev.target.closest('[data-finentrar],[data-fincerrar],[data-finpinreset]'); if (!t) return;
+    if (t.hasAttribute('data-finentrar')){ finEntrarUI(); return; }
+    if (t.hasAttribute('data-fincerrar')){ finCerrar(false); toast('🔒 Finanzas cerrada'); return; }
+    if (t.hasAttribute('data-finpinreset')) resetFinPinUI(t.getAttribute('data-finpinreset'));
+  });
+  document.addEventListener('input', function(ev){ var t=ev.target; if (!t || t.id!=='fpin') return; var x=t.value.replace(/\D/g,''); if (x!==t.value) t.value=x; if (x.length===6) finEntrarUI(); });
+  document.addEventListener('keydown', function(ev){ var t=ev.target; if (ev.key==='Enter' && t && /^fpin/.test(t.id||'')) finEntrarUI(); });
+  function resetFinPinUI(n){
+    var L=state.login||(state.login={});
+    if (L.freset!==n){ L.freset=n; renderSheet(); setTimeout(function(){ if (L.freset===n){ L.freset=null; if (state.sheet && state.sheet.type==='yo') renderSheet(); } }, 5000); return; }
+    L.freset=null; toast('Reseteando el PIN de finanzas de '+n+'…');
+    call('resetFinPin', {nombre:n}).then(function(p){ if (state.data) state.data.pines=p; if (state.sheet && state.sheet.type==='yo') renderSheet(); toast('Listo: '+n+' crea un PIN de finanzas nuevo la próxima vez.'); })
+      .catch(function(e){ toast((e&&e.message)||'No se pudo resetear.', true); });
+  }
   function viewFin2(){
+    if (!finTok()) return viewFinLlave();
+    var v=viewFin2Adentro();
+    v.body=(v.body||'')+'<p class="hint" style="text-align:center;margin-top:16px"><button class="lk" data-fincerrar>🔒 Cerrar finanzas</button> · se cierra sola a los 15 minutos sin usar</p>';
+    return v;
+  }
+  function viewFin2Adentro(){
     if (f2Per()==='panel') return viewF2Panel();
     var rs=(state.data && state.data.finRamas)||[], r=f2Rama(), d=f2Data(), carga=f2Modo(r)==='carga', sem=f2Per()==='semana';
     if (!d) { f2Load(state.finFresco); state.finFresco=false; d=f2Data(); }
