@@ -1844,7 +1844,7 @@ a.save.wa-go svg{width:20px;height:20px}
       return xs.length ? '<p class="grp-lbl">'+t+'</p><div class="who-grid">'+xs.map(function(e){ return '<button class="who'+(e.nombre===cur?' on':'')+'" data-yo="'+esc(e.nombre)+'">'+esc(e.nombre)+'</button>'; }).join('')+'</div>' : ''; };
     var soloPin=!!(state.sheet && state.sheet.pines);
     var html= soloPin ? '<div class="grab"></div><div class="sh-head"><div class="sh-who"><h2>Equipo y PINs</h2><p class="hint" style="margin:4px 0 0">Si alguien se olvidó su PIN, reseteálo acá. La próxima vez que entre, elige uno nuevo.</p></div>'+cerrar+'</div>' : '<div class="grab"></div><div class="sh-head"><div class="sh-who"><h2>¿Quién sos?</h2><p class="hint" style="margin:4px 0 0">Elegí tu nombre y poné tu PIN. El celular lo recuerda: no hace falta ponerlo cada vez.</p></div>'+cerrar+'</div>'+
-      grp('abogada','Abogadas')+grp('intaker','Intakers')+grp('admin','Administración')+grp('produccion','Filmación y edición');
+      grp('abogada','Abogados y abogadas')+grp('intaker','Intakers')+grp('admin','Administración')+grp('produccion','Filmación y edición');
     var pines=state.me && state.me.rol==='admin' && state.data && state.data.pines;
     if (pines){
       html += '<p class="grp-lbl">PIN de cada persona</p><div class="box pin-list">'+pines.map(function(x){ var conf=L.reset===x.nombre;
