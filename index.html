@@ -2031,14 +2031,18 @@ a.save.wa-go svg{width:20px;height:20px}
     if (xs.length>shown.length) html+='<button class="btn3" data-agmas>Mostrar más ('+(xs.length-shown.length)+')</button>';
     return html;
   }
+  function yaEnLista(id){ return (state.data.porAgendar||[]).some(function(p){ return p.id===id && (!p.fase || ['A','B','Llamada pendiente'].indexOf(p.fase)!==-1); }) || (state.data.leads||[]).some(function(p){ return p.id===id; }); }
+  // Lo que ya está en el celular (otras fases precargadas al abrir Agendar): aparece mientras se escribe
+  function otrasLocales(q){
+    q=String(q||'').trim(); var vis={}, xs=[]; if (q.length<3) return xs;
+    OTRAS_FASES.forEach(function(f){ var o=(state.otras||{})[f]; ((o && o.leads)||[]).forEach(function(l){ if (!vis[l.id] && agMatch(l, q) && !yaEnLista(l.id)){ vis[l.id]=1; xs.push(l); } }); });
+    return xs;
+  }
   function busqHtml(s){
     var q=String(s.q||'').trim(); if (q.length<3) return '';
-    var ya=function(id){ return (state.data.porAgendar||[]).some(function(p){ return p.id===id && (!p.fase || ['A','B','Llamada pendiente'].indexOf(p.fase)!==-1); }) || (state.data.leads||[]).some(function(p){ return p.id===id; }); };
-    // Primero lo que ya está en el celular (otras fases precargadas): aparece mientras se escribe
-    var vis={}, xs=[], add=function(l){ if (!l || vis[l.id] || ya(l.id)) return; vis[l.id]=1; xs.push(l); };
-    OTRAS_FASES.forEach(function(f){ var o=(state.otras||{})[f]; ((o && o.leads)||[]).forEach(function(l){ if (agMatch(l, q)) add(l); }); });
+    var xs=otrasLocales(q), vis={}; xs.forEach(function(l){ vis[l.id]=1; });
     var b=state.busq, srv=b && b.q===q;
-    if (srv && b.leads) b.leads.forEach(add);
+    if (srv && b.leads) b.leads.forEach(function(l){ if (l && !vis[l.id] && !yaEnLista(l.id)){ vis[l.id]=1; xs.push(l); } });
     var html=xs.length ? '<p class="grp-lbl">En otras fases</p>'+listaRamas(xs, agState()) : '';
     if (srv && b.cargando) return html+'<p class="hint" style="text-align:center;margin-top:12px">Buscando en toda la planilla…</p>';
     if (srv && b.error) return html+'<p class="hint" style="text-align:center;margin-top:12px">'+esc(b.error)+'</p>';
@@ -2204,7 +2208,9 @@ a.save.wa-go svg{width:20px;height:20px}
     var ya=s.q ? (state.data.leads||[]).filter(function(l){ return agMatch(l,s.q) && (l.fase==='Consulta agendada' || l.fase==='Reagenda') && l.fecha>=nowBA().date; }).slice(0,5) : [];
     if (ya.length) html+='<p class="grp-lbl">Ya tienen consulta</p><ul class="pa-list">'+ya.map(agYaRow).join('')+'</ul>';
     if (!all.length){
-      if (!ya.length) html+='<div class="empty"><b>'+(s.q?'No aparece en Por agendar':'No hay leads para agendar')+'</b>'+(s.q?'Puede estar en otra fase (BC, C), tener otra rama elegida arriba o haber entrado hace más de '+(state.data.diasPorAgendar||90)+' días.':'Con estos filtros no queda nadie.')+'</div>';
+      // Si ya aparece en otras fases (abajo), alcanza con una línea; si no, la explicación completa
+      if (!ya.length && s.q && otrasLocales(s.q).length) html+='<p class="hint" style="margin:14px 2px 0">No está en Por agendar.</p>';
+      else if (!ya.length) html+='<div class="empty"><b>'+(s.q?'No aparece en Por agendar':'No hay leads para agendar')+'</b>'+(s.q?'Puede estar en otra fase (BC, C), tener otra rama elegida arriba o haber entrado hace más de '+(state.data.diasPorAgendar||90)+' días.':'Con estos filtros no queda nadie.')+'</div>';
       return html + busqHtml(s);
     }
     var sinc=shown.filter(function(l){ return agPrio(l)===0; }), prio=shown.filter(function(l){ return agPrio(l)===1; }), resto=shown.filter(function(l){ return agPrio(l)===2; });
