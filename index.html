@@ -3250,7 +3250,7 @@ a.save.wa-go svg{width:20px;height:20px}
     if (b.tieneAcuerdos){
       var solo=!!state.f2Mios, xs=(b.porCobrar||[]).filter(function(x){ return !solo || f2Esmio(x.cobra); });
       body+='<h2 class="sec-t">Por cobrar <span class="cnt num">'+xs.length+'</span><button class="lk" data-f2mios>'+(solo?'Ver todos':'Solo los míos')+'</button></h2><p class="sec-sub">Cuotas de este mes según '+(r==='ART'?'las homologaciones':'los acuerdos')+', y lo atrasado. Tocá uno para cargar lo que entró.</p>';
-      body+= xs.length ? '<ul class="todo">'+xs.map(function(x,i){ return f2Fila('pc','💵', x.caso, [x.estado, x.cobra?'cobra '+x.cobra:'', x.atrasado>0?'atrasado '+plata(x.atrasado):''].filter(Boolean).join(' · '), x.cuota>0?plata(x.cuota):plata(x.debido), 'data-f2cobrar="'+i+'"'); }).join('')+'</ul>' : emptyBox('Nada por cobrar este mes', solo?'Con el filtro de los tuyos.':'');
+      body+= xs.length ? '<ul class="todo">'+xs.map(function(x,i){ return f2Fila('pc','💵', x.caso, [x.nro?'cuota '+x.nro+' de '+x.cuotas:'', x.estado, x.cobra?'cobra '+x.cobra:'', x.atrasado>0?'atrasado '+plata(x.atrasado):'', x.fin&&x.cuotas>1?'última en '+x.fin:''].filter(Boolean).join(' · '), plata(x.falta), 'data-f2cobrar="'+i+'"'); }).join('')+'</ul>' : emptyBox('Nada por cobrar este mes', solo?'Con el filtro de los tuyos.':'');
     }
     if (b.tieneClientes){
       body+='<h2 class="sec-t">Clientes del mes <span class="cnt num">'+(b.clientes||[]).length+'</span>'+(F.cliente?'<button class="lk" data-f2nuevo="cliente">＋ Cargar</button>':'')+'</h2><p class="sec-sub">Los que firmaron entran solos desde la agenda. Tocá uno para completar '+(r==='ART'?'la lesión':'el detalle')+'.</p>';
@@ -3323,7 +3323,7 @@ a.save.wa-go svg{width:20px;height:20px}
     if (t.hasAttribute('data-f2mios')){ state.f2Mios=!state.f2Mios; render(); return; }
     if (t.hasAttribute('data-f2nuevo')){ openSheet({type:'fin2', tipo:t.getAttribute('data-f2nuevo')}); return; }
     if (t.hasAttribute('data-f2edit')){ var q=t.getAttribute('data-f2edit').split('|'); openSheet({type:'fin2', tipo:q[0], fila:+q[1]}); return; }
-    if (t.hasAttribute('data-f2cobrar')){ var b=f2Base(), x=((b&&b.porCobrar)||[])[+t.getAttribute('data-f2cobrar')]; if (!x) return; openSheet({type:'fin2', tipo:'cobro', pre:{caso:x.caso, monto:String(x.cuota>0?x.cuota:x.debido)}}); return; }
+    if (t.hasAttribute('data-f2cobrar')){ var b=f2Base(), x=((b&&b.porCobrar)||[])[+t.getAttribute('data-f2cobrar')]; if (!x) return; openSheet({type:'fin2', tipo:'cobro', pre:{caso:x.caso, monto:String(x.falta||x.cuota||x.debido)}}); return; }
     if (!state.sheet || state.sheet.type!=='fin2') return;
     if (t.hasAttribute('data-f2pick')){ var pk=t.getAttribute('data-f2pick').split('|'), k=pk.shift(); state.draft.v[k]=pk.join('|'); renderSheet(); return; }
     if (t.hasAttribute('data-f2save')){ f2Guardar(); return; }
