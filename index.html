@@ -1668,6 +1668,8 @@ a.save.wa-go svg{width:20px;height:20px}
       var v=btns[i].getAttribute('data-view'), k=list.indexOf(v), on=v===state.view;
       btns[i].hidden = k===-1; btns[i].style.order = k; btns[i].classList.toggle('on',on); btns[i].setAttribute('aria-current', on?'page':'false');
     }
+    var fb=nav.querySelector('button[data-view="finanzas"]'), fm=(state.data&&state.data.finModo)||{}, fks=Object.keys(fm);
+    if (fb && fb.lastChild && fb.lastChild.nodeType===3) fb.lastChild.nodeValue=(fks.length && fks.every(function(x){ return fm[x]==='carga'; })) ? 'Clientes' : 'Finanzas';
     var n=faltaItems().length, b=$('badge'); b.hidden=!n; b.textContent=n;
     var t=tareasUrgentes(), bt=$('badgeT'); bt.hidden=!t; bt.textContent=t>99?'99+':t;
   }
@@ -2186,7 +2188,7 @@ a.save.wa-go svg{width:20px;height:20px}
   // (con la hora) y se actualiza solo en segundo plano.
   function guardado(pref, key){ try{ var x=JSON.parse(store(pref+key)||'null'); if (x && x.d && x.n===(state.me&&state.me.nombre) && Date.now()-x.t < 3*86400000) return x; }catch(e){} return null; }
   function guardar(pref, key, d){ if (!d || d.error || !state.me) return; try{ store(pref+key, JSON.stringify({t:Date.now(), n:state.me.nombre, d:d})); var ik=pref+'keys', ks=JSON.parse(store(ik)||'[]').filter(function(k){ return k!==key; }); ks.unshift(key); ks.slice(8).forEach(function(k){ try{ localStorage.removeItem(pref+k); }catch(e){} }); store(ik, JSON.stringify(ks.slice(0,8))); }catch(e){} }
-  function borrarGuardados(){ ['rep:','fin:'].forEach(function(pref){ try{ JSON.parse(store(pref+'keys')||'[]').forEach(function(k){ localStorage.removeItem(pref+k); }); localStorage.removeItem(pref+'keys'); }catch(e){} }); }
+  function borrarGuardados(){ ['rep:','fin:','f2:'].forEach(function(pref){ try{ JSON.parse(store(pref+'keys')||'[]').forEach(function(k){ localStorage.removeItem(pref+k); }); localStorage.removeItem(pref+'keys'); }catch(e){} }); }
   function notaViejo(t){ var hh=''; try{ hh=new Date(t).toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:TZ}); }catch(e){} return '<p class="hint rep-viejo"><span class="spin-dot"></span>Mostrando lo de las '+hh+'. Actualizando…</p>'; }
 
   function loadFin(sem, bg){
@@ -3220,12 +3222,14 @@ a.save.wa-go svg{width:20px;height:20px}
   function f2Data(){ return (state.f2||{})[f2Key()]; }
   function f2Load(fresco){
     var k=f2Key(), C=state.f2||(state.f2={}); if (C[k] && C[k].cargando) return;
-    var prev=C[k] && !C[k].error && !C[k].cargando ? C[k] : (C[k] && C[k].prev) || null;
+    var prev=C[k] && !C[k].error && !C[k].cargando ? C[k] : (C[k] && C[k].prev) || f2Guardado(k);
     C[k]={cargando:true, prev:prev};
     var pm=f2Mes(), pr=f2Rama();
-    call('getFin2', {rama:pr, mes:pm, fresco:!!fresco}).then(function(d){ C[pr+'|'+pm]=d; if (enFinanzas()) render(); if (state.sheet && state.sheet.type==='fin2') renderSheet(); })
+    call('getFin2', {rama:pr, mes:pm, fresco:!!fresco}).then(function(d){ C[pr+'|'+pm]=d; guardar('f2:', pr+'|'+pm, d); if (enFinanzas()) render(); if (state.sheet && state.sheet.type==='fin2') renderSheet(); })
       .catch(function(e){ C[pr+'|'+pm]={error:(e&&e.message)||'No se pudieron cargar las finanzas.', prev:prev}; if (enFinanzas()) render(); });
   }
+  // Lo último que se cargó en este celular se muestra al instante mientras llega lo nuevo (solo si coincide con lo que hoy puede ver esa persona)
+  function f2Guardado(k){ var x=guardado('f2:', k), modo=((state.data&&state.data.finModo)||{})[k.split('|')[0]]; return (x && x.d && modo && x.d.modo===modo) ? x.d : null; }
   function f2Base(){ var d=f2Data(); if (!d) return null; if (d.cargando || d.error) return d.prev || null; return d; }
   function f2Alias(n, ops){ var al=((f2Base()||{}).alias||{})[n]||[], c=[n].concat(al); for (var i=0;i<c.length;i++) if ((ops||[]).indexOf(c[i])!==-1) return c[i]; return ''; }
   function f2Esmio(v){ var me=state.me&&state.me.nombre; if (!me || !v) return false; return v===me || (((f2Base()||{}).alias||{})[me]||[]).indexOf(v)!==-1; }
@@ -3238,11 +3242,20 @@ a.save.wa-go svg{width:20px;height:20px}
     var nav='<div class="wk-nav"><button class="chip" data-f2mes="-1" aria-label="Mes anterior">‹</button><b>'+MESES_L[+p[1]-1]+' '+p[0]+'</b><button class="chip" data-f2mes="1" aria-label="Mes siguiente">›</button></div>';
     var chips=rs.length>1 ? '<div class="chips" role="group" aria-label="Rama">'+rs.map(function(x){ return '<button class="chip'+(x===r?' on':'')+'" data-f2rama="'+x+'">'+F2_RAMA[x]+'</button>'; }).join('')+'</div>' : '';
     var b=f2Base();
-    var titulo={ h1:'Finanzas', p:F2_RAMA[r]+' · '+MESES_L[+p[1]-1].toLowerCase()+' '+p[0], extra:nav+chips };
+    var titulo={ h1:(((state.data&&state.data.finModo)||{})[r]==='carga'?'Clientes':'Finanzas'), p:F2_RAMA[r]+' · '+MESES_L[+p[1]-1].toLowerCase()+' '+p[0], extra:nav+chips };
     if (!b){ titulo.body = d && d.error ? emptyBox('No se pudieron cargar', esc(d.error), '<button class="btn3" data-f2retry>Reintentar</button>') : '<div class="skel"></div><div class="skel"></div>'; return titulo; }
     var R=b.resumen||{}, body='';
     if (d && d.cargando) body+='<p class="hint" style="text-align:center">Actualizando…</p>';
     if (d && d.error) body+='<div class="warn">'+esc(d.error)+'</div>';
+    if (b.modo==='carga'){
+      var Fc=b.forms||{}, cl=b.clientes||[];
+      titulo.h1='Clientes';
+      body+='<div class="f2-acts">'+(Fc.cliente?'<button class="btn2" data-f2nuevo="cliente">＋ Cargar cliente</button>':'')+'</div>';
+      body+='<h2 class="sec-t">Clientes del mes <span class="cnt num">'+cl.length+'</span></h2><p class="sec-sub">Los que firmaron entran solos desde la agenda. Tocá uno para completar '+(r==='ART'?'la lesión':'el detalle')+' y lo que falte.</p>';
+      body+=cl.length ? '<ul class="todo">'+cl.map(function(c){ return f2Fila('cl','👤', c.nombre, [shortDate(c.fecha), c.atiende, c.tipo, c.lesion].filter(Boolean).join(' · '), c.lesion?'':'Completar', 'data-f2edit="cliente|'+c.fila+'"'); }).join('')+'</ul>' : emptyBox('Todavía no hay clientes este mes');
+      body+='<p class="hint" style="text-align:center;margin-top:14px">Se guarda en la pestaña Clientes de la planilla contable de '+F2_RAMA[r]+' (copia de prueba).</p>';
+      titulo.body=body; return titulo;
+    }
     body+='<div class="fin-tabs"><div class="ftile"><span>Cobrado</span><b class="num">'+plata(R.cobrado)+'</b></div><div class="ftile"><span>Gastos ('+F2_RAMA[r]+')</span><b class="num">'+plata(R.gastado)+'</b></div>'+
       (b.tieneAcuerdos ? '<div class="ftile"><span>Esperado este mes</span><b class="num">'+plata(R.esperado)+'</b></div><div class="ftile'+(R.atrasado>0?' bad':'')+'"><span>Atrasado</span><b class="num">'+plata(R.atrasado)+'</b></div>' : '')+'</div>';
     var F=b.forms||{};
@@ -3312,7 +3325,7 @@ a.save.wa-go svg{width:20px;height:20px}
     busySheet(true, opts.borrar?'Borrando…':'Guardando…');
     call('saveFin2', {rama:f2Rama(), tipo:sh.tipo, datos:d.v, fila:sh.fila||0, borrar:!!opts.borrar, forzar:!!opts.forzar}).then(function(r){
       if (r && r.duplicado){ d.dup=r.duplicado; renderSheet(); return; }
-      closeSheet(); toast(opts.borrar?'Borrado de la planilla':('✔ Guardado en la planilla'+(r && r.ramas && r.ramas.length>1?' de '+r.ramas.map(function(x){ return F2_RAMA[x]; }).join(', '):''))); state.f2={}; f2Load(true); render();
+      closeSheet(); toast(opts.borrar?'Borrado de la planilla':('✔ Guardado en la planilla'+(r && r.ramas && r.ramas.length>1?' de '+r.ramas.map(function(x){ return F2_RAMA[x]; }).join(', '):''))); var C2=state.f2||{}, kk=f2Key(); Object.keys(C2).forEach(function(x){ if (x!==kk) delete C2[x]; }); f2Load(true); render();
     }).catch(function(e){ renderSheet(); toast((e&&e.message)||'No se pudo guardar.', true); });
   }
   document.addEventListener('click', function(ev){
