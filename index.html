@@ -705,6 +705,33 @@ a.save.wa-go svg{width:20px;height:20px}
 .cre-hook.on .cre-chk{background:var(--green,#1f8a5b);color:#fff;box-shadow:none}
 .go2.ok{color:var(--green,#1f8a5b)}
 .wk-nav{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:10px}
+.f2-chart{background:var(--paper);border-radius:14px;box-shadow:0 0 0 1px var(--line) inset;padding:10px 8px 6px;margin-top:8px}
+.f2-chart svg{width:100%;height:auto;display:block}
+.f2-chart .f2-in{fill:var(--green)} .f2-chart .f2-out{fill:var(--red)} .f2-chart .f2-prox{fill:var(--mint)}
+.f2-eje{stroke:var(--line);stroke-width:1}
+.f2-ax{fill:var(--ink-3);font-size:9.5px;text-anchor:middle}
+.f2-val{fill:var(--ink-2);font-size:9px;font-weight:700;text-anchor:middle}
+.f2-lg{display:flex;gap:14px;justify-content:center;margin:4px 0 0;font-size:12.5px;color:var(--ink-2)}
+.f2-lg span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.f2-lg .f2-in::before{background:var(--green)} .f2-lg .f2-out::before{background:var(--red)}
+.f2t-wrap{overflow-x:auto;margin-top:8px;border-radius:14px;box-shadow:0 0 0 1px var(--line) inset;background:var(--paper)}
+.f2t{width:100%;border-collapse:collapse;font-size:13.5px}
+.f2t th,.f2t td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+.f2t th:first-child,.f2t td:first-child{text-align:left}
+.f2t th{font-size:12px;color:var(--ink-2);font-weight:700}
+.f2t tr:last-child td{border-bottom:0}
+.f2t tr.tot td{font-weight:800}
+.f2t .neg{color:var(--red)} .f2t .pos{color:var(--green)}
+.f2-hb{list-style:none;margin:8px 0 0;padding:4px 0;background:var(--paper);border-radius:14px;box-shadow:0 0 0 1px var(--line) inset}
+.f2-hb li{display:grid;grid-template-columns:1fr auto;gap:4px 10px;padding:8px 12px;font-size:14px}
+.f2-hb li b small{font-weight:600;color:var(--ink-3);margin-left:4px}
+.f2-hb li i{grid-column:1/-1;height:6px;border-radius:3px;background:var(--paper-2);box-shadow:0 0 0 1px var(--line) inset;display:block;overflow:hidden}
+.f2-hb li i em{display:block;height:100%;background:var(--navy-2)}
+.ftile.good b{color:var(--green)}
+.f2p-tiles .ftile b{font-size:18px}
+.f2-sub{display:block;font-size:12px;color:var(--ink-3);font-weight:600;margin-top:1px}
+.todo button[disabled]{opacity:1;cursor:default}
+@media (min-width:760px){ .f2p-tiles{grid-template-columns:repeat(3,1fr) !important} }
 .ftile{background:var(--paper);border-radius:14px;box-shadow:0 0 0 1px var(--line) inset;padding:10px 12px 11px;min-width:0}
 .ftile span{display:block;font-size:13px;font-weight:700;color:var(--ink-2)}
 .ftile b{display:block;font-size:20px;font-weight:800;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -979,7 +1006,9 @@ a.save.wa-go svg{width:20px;height:20px}
       if (d.user && d.user.name && !d.__snap){ var yoSrv=(d.equipo||[]).filter(function(e){ return e.nombre===d.user.name; })[0]; if (yoSrv){ state.me=yoSrv; store('yo', yoSrv.nombre); } }
       if (!state.me) state.me = resolveMe(d);
       if (!state.seen) initSeen();
-      if (!d.__snap){ setTimeout(precargarRep, 1500); setTimeout(precargarFin, 2500); setTimeout(precargarCre, 3500); }
+      if (!d.__snap){ setTimeout(precargarRep, 1500); setTimeout(precargarFin, 2500); }
+      // Guiones: se piden apenas abre la app (con lo guardado en el celular ya alcanza para saber quién es); a producción, enseguida
+      if (!state.crePre && (((d.permisos||{}).creativos)||[]).length){ state.crePre=true; setTimeout(precargarCre, (state.me && state.me.rol==='produccion') ? 0 : 1200); }
       if (state.primeraVez && state.me && state.me.rol==='intaker') state.view='tareas';
       if (state.abog===null && state.me && state.me.rol==='abogada' && !store('abogada')) state.abog = state.me.nombre;
       if (state.abog===null){
@@ -2336,7 +2365,7 @@ a.save.wa-go svg{width:20px;height:20px}
   // (con la hora) y se actualiza solo en segundo plano.
   function guardado(pref, key){ try{ var x=JSON.parse(store(pref+key)||'null'); if (x && x.d && x.n===(state.me&&state.me.nombre) && Date.now()-x.t < 3*86400000) return x; }catch(e){} return null; }
   function guardar(pref, key, d){ if (!d || d.error || !state.me) return; try{ store(pref+key, JSON.stringify({t:Date.now(), n:state.me.nombre, d:d})); var ik=pref+'keys', ks=JSON.parse(store(ik)||'[]').filter(function(k){ return k!==key; }); ks.unshift(key); ks.slice(8).forEach(function(k){ try{ localStorage.removeItem(pref+k); }catch(e){} }); store(ik, JSON.stringify(ks.slice(0,8))); }catch(e){} }
-  function borrarGuardados(){ ['rep:','fin:','f2:','cre:'].forEach(function(pref){ try{ JSON.parse(store(pref+'keys')||'[]').forEach(function(k){ localStorage.removeItem(pref+k); }); localStorage.removeItem(pref+'keys'); }catch(e){} }); }
+  function borrarGuardados(){ ['rep:','fin:','f2:','f2p:','cre:'].forEach(function(pref){ try{ JSON.parse(store(pref+'keys')||'[]').forEach(function(k){ localStorage.removeItem(pref+k); }); localStorage.removeItem(pref+'keys'); }catch(e){} }); }
   function notaViejo(t){ var hh=''; try{ hh=new Date(t).toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:TZ}); }catch(e){} return '<p class="hint rep-viejo"><span class="spin-dot"></span>Mostrando lo de las '+hh+'. Actualizando…</p>'; }
 
   function loadFin(sem, bg){
@@ -3502,11 +3531,106 @@ a.save.wa-go svg{width:20px;height:20px}
   function f2Sec(tit, n, total, nuevo, sub){
     return '<h2 class="sec-t">'+tit+' <span class="cnt num">'+n+'</span>'+(total!=null?'<span class="sec-tot num">'+plata(total)+'</span>':'')+(nuevo?'<button class="lk" data-f2nuevo="'+nuevo+'">＋ Cargar</button>':'')+'</h2>'+(sub?'<p class="sec-sub">'+sub+'</p>':'');
   }
+  /* ---------- Panel de finanzas: caja mes a mes, lo que debería entrar, atrasos, casos y gastos ---------- */
+  function f2PRamas(){ var rs=(state.data&&state.data.finRamas)||[], fm=(state.data&&state.data.finModo)||{}, full=rs.filter(function(r){ return fm[r]==='full'; }); return full.length>1 ? ['TODAS'].concat(full) : full; }
+  function f2PRama(){ var rs=f2PRamas(); if (!state.f2PRama || rs.indexOf(state.f2PRama)===-1) state.f2PRama=rs[0]; return state.f2PRama; }
+  function f2PLoad(fresco){
+    var k=f2PRama(), C=state.f2p||(state.f2p={}); if (C[k] && C[k].cargando) return;
+    var prev=(C[k] && !C[k].error && !C[k].cargando) ? C[k] : ((C[k] && C[k].prev) || ((guardado('f2p:', k)||{}).d) || null);
+    C[k]={cargando:true, prev:prev};
+    call('getFin2Panel', {rama:k, fresco:!!fresco}).then(function(d){ C[k]=d; guardar('f2p:', k, d); if (enFinanzas() && f2Per()==='panel') render(); })
+      .catch(function(e){ C[k]={error:(e&&e.message)||'No se pudo armar el panel.', prev:prev}; if (enFinanzas() && f2Per()==='panel') render(); });
+  }
+  var MES3=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  function idxLbl(ix, conAnio){ return MES3[((ix%12)+12)%12]+(conAnio?' '+String(Math.floor(ix/12)).slice(2):''); }
+  function plataC(n){ n=Number(n)||0; var a=Math.abs(n), s=n<0?'−':''; if (a>=1e6) return s+'$ '+(a/1e6).toLocaleString('es-AR',{maximumFractionDigits:a>=1e7?0:1})+' M'; if (a>=1e3) return s+'$ '+Math.round(a/1e3).toLocaleString('es-AR')+' mil'; return s+'$ '+Math.round(a); }
+  // Barras simples en SVG (sin librerías): grupos de una o dos barras, con etiqueta opcional arriba
+  function f2Barras(grupos, o){
+    o=o||{}; var W=340, H=o.h||150, pb=18, pt=o.valores?14:6, n=grupos.length||1, gw=W/n, max=0;
+    grupos.forEach(function(g){ g.v.forEach(function(x){ max=Math.max(max, Math.abs(x.m)); }); });
+    if (!max) max=1;
+    var hh=H-pb-pt, out='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+esc(o.titulo||'Gráfico')+'">';
+    out+='<line x1="0" x2="'+W+'" y1="'+(H-pb)+'" y2="'+(H-pb)+'" class="f2-eje"/>';
+    grupos.forEach(function(g,i){
+      var k=g.v.length, bw=Math.min(18, (gw-6)/k), x0=i*gw+(gw-bw*k)/2;
+      g.v.forEach(function(x,j){ var h=Math.max(x.m?2:0, Math.abs(x.m)/max*hh), y=H-pb-h;
+        out+='<rect x="'+(x0+j*bw).toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+(bw-1.5).toFixed(1)+'" height="'+h.toFixed(1)+'" rx="2" class="'+x.c+'"><title>'+esc(g.l+': '+plata(x.m))+'</title></rect>';
+        if (o.valores && x.m) out+='<text x="'+(x0+j*bw+bw/2).toFixed(1)+'" y="'+(y-3).toFixed(1)+'" class="f2-val">'+esc(plataC(x.m).replace('$ ',''))+'</text>'; });
+      out+='<text x="'+(i*gw+gw/2).toFixed(1)+'" y="'+(H-5)+'" class="f2-ax">'+esc(g.l)+'</text>';
+    });
+    return out+'</svg>';
+  }
+  function plataE(n){ return '$ '+Math.round(Number(n)||0).toLocaleString('es-AR'); } // en pesos, sin centavos (para el panel)
+  function f2Lista(xs, total, fmt){
+    var plata=plataE;
+    if (!xs.length) return '<p class="hint">Sin datos este año.</p>';
+    var max=xs.reduce(function(m,x){ return Math.max(m, Math.abs(x.m)); }, 0)||1;
+    return '<ul class="f2-hb">'+xs.map(function(x){ return '<li><span>'+esc(x.k)+'</span><b class="num">'+plata(x.m)+(total?' <small>'+Math.round(x.m/total*100)+'%</small>':'')+'</b><i><em style="width:'+Math.max(2,Math.round(Math.abs(x.m)/max*100))+'%"></em></i></li>'; }).join('')+'</ul>';
+  }
+  function viewF2Panel(){
+    var plata=plataE;
+    var rs=f2PRamas(), r=f2PRama(), C=state.f2p||(state.f2p={}), d=C[r];
+    if (!d){ f2PLoad(false); d=C[r]; }
+    var b=(d && !d.cargando && !d.error) ? d : (d && d.prev);
+    var per='<div class="seg2 f2-per" role="tablist"><button data-f2per="semana" role="tab" aria-selected="false">Semana</button><button data-f2per="mes" role="tab" aria-selected="false">Mes</button><button data-f2per="panel" class="on" role="tab" aria-selected="true">📊 Panel</button></div>';
+    var lbl=function(x){ return x==='TODAS'?'Todas':F2_RAMA[x]; };
+    var chips=rs.length>1 ? '<div class="chips" role="group" aria-label="Rama">'+rs.map(function(x){ return '<button class="chip'+(x===r?' on':'')+'" data-f2prama="'+x+'">'+lbl(x)+'</button>'; }).join('')+'</div>' : '';
+    var titulo={ h1:'Finanzas', p:'Panel · '+lbl(r)+(b?' · '+b.anio:''), extra:per+chips };
+    if (!b){ titulo.body = d && d.error ? emptyBox('No se pudo armar el panel', esc(d.error), '<button class="btn3" data-f2pfresco>Reintentar</button>') : '<p class="hint" style="text-align:center">Armando el panel con las planillas de '+esc(lbl(r))+'…</p><div class="skel"></div><div class="skel"></div>'; return titulo; }
+    var Y=b.ytd||{}, neto=(Y.cobrado||0)-(Y.gastado||0), margen=Y.cobrado ? Math.round(neto/Y.cobrado*100) : null, prox3=(b.proyeccion||[]).slice(0,3).reduce(function(s0,q){ return s0+q.m; },0);
+    var body='';
+    if (d && d.cargando) body+='<p class="hint" style="text-align:center">Actualizando…</p>';
+    if (d && d.error) body+='<div class="warn">'+esc(d.error)+'</div>';
+    var tile=function(t, v, cls, sub){ return '<div class="ftile'+(cls?' '+cls:'')+'"><span>'+t+'</span><b class="num">'+v+'</b>'+(sub?'<small class="f2-sub">'+sub+'</small>':'')+'</div>'; };
+    body+='<div class="fin-tabs f2p-tiles">'+tile('Cobrado en '+b.anio, plata(Y.cobrado))+tile('Gastos en '+b.anio, plata(Y.gastado))+
+      tile('Resultado '+b.anio, plata(neto), neto<0?'bad':'good', margen!==null?'margen '+margen+'%':'')+
+      (b.tieneAcuerdos ? tile('Por cobrar', plata(b.debido), '', b.nAtrasados?plural(b.nAtrasados,'caso atrasado','casos atrasados'):'')+tile('Atrasado', plata(b.atrasado), b.atrasado>0?'bad':'')+tile('Próximos 3 meses', plata(prox3), '', 'según las cuotas') : '')+
+      '</div>';
+    // Caja mes a mes
+    var M=b.meses||[];
+    body+='<h2 class="sec-t">Caja mes a mes</h2><p class="sec-sub">Lo que entró y lo que se gastó cada mes (últimos 12). Gastos: solo la parte de '+(r==='TODAS'?'cada rama':esc(lbl(r)))+'.</p>';
+    body+='<div class="f2-chart">'+f2Barras(M.map(function(m){ return {l:idxLbl(m.idx), v:[{m:m.cobrado, c:'f2-in'},{m:m.gastado, c:'f2-out'}]}; }), {titulo:'Caja mes a mes'})+'<p class="f2-lg"><span class="f2-in">Cobrado</span><span class="f2-out">Gastos</span></p></div>';
+    var conMov=M.filter(function(m){ return m.cobrado || m.gastado; }).slice().reverse();
+    if (conMov.length) body+='<div class="f2t-wrap"><table class="f2t"><thead><tr><th>Mes</th><th>Cobrado</th><th>Gastos</th><th>Resultado</th></tr></thead><tbody>'+conMov.map(function(m){ var n2=m.cobrado-m.gastado; return '<tr><td>'+idxLbl(m.idx,true)+'</td><td class="num">'+plata(m.cobrado)+'</td><td class="num">'+plata(m.gastado)+'</td><td class="num '+(n2<0?'neg':'pos')+'">'+plata(n2)+'</td></tr>'; }).join('')+'</tbody></table></div>';
+    // Por rama (todas juntas)
+    if (b.porRama && b.porRama.length){
+      body+='<h2 class="sec-t">Por rama, en '+b.anio+'</h2><div class="f2t-wrap"><table class="f2t"><thead><tr><th>Rama</th><th>Cobrado</th><th>Gastos</th><th>Resultado</th><th>Por cobrar</th><th>Atrasado</th></tr></thead><tbody>'+
+        b.porRama.map(function(x){ var n3=x.cobrado-x.gastado; return '<tr><td><b>'+esc(lbl(x.rama))+'</b></td><td class="num">'+plata(x.cobrado)+'</td><td class="num">'+plata(x.gastado)+'</td><td class="num '+(n3<0?'neg':'pos')+'">'+plata(n3)+'</td><td class="num">'+plata(x.debido)+'</td><td class="num'+(x.atrasado>0?' neg':'')+'">'+plata(x.atrasado)+'</td></tr>'; }).join('')+'</tbody></table></div>';
+    }
+    // Lo que debería entrar
+    if (b.tieneAcuerdos){
+      var P2=b.proyeccion||[];
+      body+='<h2 class="sec-t">Lo que debería entrar</h2><p class="sec-sub">Cuotas de '+(r==='ART'?'las homologaciones':'los acuerdos')+' que faltan cobrar, mes a mes. En rojo, lo que ya venció y no entró.'+(b.despues>0?' Después de '+idxLbl(b.hoyIdx+5)+': '+plata(b.despues)+'.':'')+'</p>';
+      body+='<div class="f2-chart">'+f2Barras([{l:'vencido', v:[{m:b.atrasado, c:'f2-out'}]}].concat(P2.map(function(q,i){ return {l:i===0?'este mes':idxLbl(q.idx), v:[{m:q.m, c:'f2-prox'}]}; })), {titulo:'Lo que debería entrar', valores:true, h:140})+'</div>';
+      var A=b.atrasados||[];
+      body+=f2Sec('Atrasados', b.nAtrasados||0, b.atrasado||null, '', A.length?'Cuotas vencidas sin cobrar. Para cargar lo que entró, andá a Mes.':'');
+      body+= A.length ? '<ul class="todo">'+A.map(function(x){ return f2Fila('at','⏰', x.caso, [x.rama&&r==='TODAS'?lbl(x.rama):'', x.desde>=0?'desde '+idxLbl(x.desde,true):'', x.cobra?'cobra '+x.cobra:''].filter(Boolean).join(' · '), plata(x.atrasado), 'disabled'); }).join('')+'</ul>' : '<p class="hint">Nada atrasado. 👌</p>';
+      if ((b.sinPlan||[]).length) body+='<p class="hint">Sin mes de primera cuota (no se pueden proyectar): '+b.sinPlan.map(function(x){ return esc(x.caso)+' '+plata(x.debido); }).join(' · ')+'.</p>';
+    }
+    if (b.tieneFacturas){
+      var SF=b.sinFacturar||[];
+      body+=f2Sec('Sin facturar a la ART', b.nSinFacturar||0, null, '', 'Homologaciones con parte de la ART que todavía no aparecen en Facturación.');
+      body+= SF.length ? '<ul class="todo">'+SF.map(function(x){ return f2Fila('sf','🧾', x.caso, [x.fecha?shortDate(x.fecha):'', 'parte ART'].filter(Boolean).join(' · '), plata(x.monto), 'disabled'); }).join('')+'</ul>' : '<p class="hint">Todo facturado.</p>';
+    }
+    // Casos
+    if (b.tieneClientes || b.tieneAcuerdos){
+      var ult=M.slice(-6).reverse();
+      body+='<h2 class="sec-t">Casos</h2><p class="sec-sub">Clientes que firmaron y '+(r==='ART'?'homologaciones':'acuerdos')+' por mes (últimos 6).'+(b.ticket?' Honorarios promedio por '+(r==='ART'?'homologación':'acuerdo')+': <b>'+plata(b.ticket)+'</b>.':'')+'</p>';
+      body+='<div class="f2t-wrap"><table class="f2t"><thead><tr><th>Mes</th><th>Clientes</th><th>'+(r==='ART'?'Homolog.':'Acuerdos')+'</th><th>Honorarios</th></tr></thead><tbody>'+ult.map(function(m){ return '<tr><td>'+idxLbl(m.idx,true)+'</td><td class="num">'+m.clientes+'</td><td class="num">'+m.acuerdos+'</td><td class="num">'+plata(m.honorarios)+'</td></tr>'; }).join('')+
+        '<tr class="tot"><td>'+b.anio+'</td><td class="num">'+(Y.clientes||0)+'</td><td class="num">'+(Y.acuerdos||0)+'</td><td class="num">'+plata(Y.honorarios)+'</td></tr></tbody></table></div>';
+    }
+    body+='<h2 class="sec-t">Gastos por categoría, en '+b.anio+'</h2>'+f2Lista(b.gastosCat||[], Y.gastado);
+    body+='<h2 class="sec-t">Dónde entró la plata, en '+b.anio+'</h2>'+f2Lista(b.entro||[], Y.cobrado);
+    if ((b.paga||[]).length) body+='<h2 class="sec-t">Quién pagó, en '+b.anio+'</h2>'+f2Lista(b.paga, Y.cobrado);
+    body+='<p class="hint" style="text-align:center;margin-top:18px">Armado a las '+esc(b.generado||'')+' con las planillas contables. <button class="lk" data-f2pfresco>Actualizar</button></p>';
+    titulo.body=body; return titulo;
+  }
   function viewFin2(){
+    if (f2Per()==='panel') return viewF2Panel();
     var rs=(state.data && state.data.finRamas)||[], r=f2Rama(), d=f2Data(), carga=f2Modo(r)==='carga', sem=f2Per()==='semana';
     if (!d) { f2Load(state.finFresco); state.finFresco=false; d=f2Data(); }
     var nav='<div class="wk-nav"><button class="chip" data-f2mes="-1" aria-label="Anterior">‹</button><b>'+esc(f2PerTxt())+'</b><button class="chip" data-f2mes="1" aria-label="Siguiente">›</button></div>';
-    var per='<div class="seg2 f2-per" role="tablist"><button data-f2per="semana" class="'+(sem?'on':'')+'" role="tab" aria-selected="'+sem+'">Semana</button><button data-f2per="mes" class="'+(!sem?'on':'')+'" role="tab" aria-selected="'+(!sem)+'">Mes</button></div>';
+    var per='<div class="seg2 f2-per" role="tablist"><button data-f2per="semana" class="'+(sem?'on':'')+'" role="tab" aria-selected="'+sem+'">Semana</button><button data-f2per="mes" class="'+(!sem?'on':'')+'" role="tab" aria-selected="'+(!sem)+'">Mes</button>'+(f2PRamas().length?'<button data-f2per="panel" role="tab" aria-selected="false">📊 Panel</button>':'')+'</div>';
     var chips=rs.length>1 ? '<div class="chips" role="group" aria-label="Rama">'+rs.map(function(x){ return '<button class="chip'+(x===r?' on':'')+'" data-f2rama="'+x+'">'+F2_RAMA[x]+'</button>'; }).join('')+'</div>' : '';
     var b=f2Base();
     var titulo={ h1:(carga?(sem?'Reporte semanal':'Reporte del mes'):'Finanzas'), p:F2_RAMA[r]+' · '+f2PerTxt().toLowerCase(), extra:per+nav+chips };
@@ -3648,10 +3772,12 @@ a.save.wa-go svg{width:20px;height:20px}
     }).catch(function(e){ state.f2Pend=Math.max(0,(state.f2Pend||1)-1); reabrir(null); toast((e&&e.message)||'No se pudo guardar.', true); if (enFinanzas()) render(); });
   }
   document.addEventListener('click', function(ev){
-    var t=ev.target.closest('[data-f2mes],[data-f2per],[data-f2rama],[data-f2retry],[data-f2nuevo],[data-f2edit],[data-f2cobrar],[data-f2mios],[data-f2pick],[data-f2save],[data-f2borrar],[data-f2forzar],[data-f2share]'); if (!t) return;
+    var t=ev.target.closest('[data-f2prama],[data-f2pfresco],[data-f2mes],[data-f2per],[data-f2rama],[data-f2retry],[data-f2nuevo],[data-f2edit],[data-f2cobrar],[data-f2mios],[data-f2pick],[data-f2save],[data-f2borrar],[data-f2forzar],[data-f2share]'); if (!t) return;
     if (t.hasAttribute('data-f2mes')){ f2Mover(+t.getAttribute('data-f2mes')); render(); return; }
-    if (t.hasAttribute('data-f2per')){ var np=t.getAttribute('data-f2per'); if (np===f2Per()) return; if (np==='semana'){ var hoy=nowBA().date; state.f2Sem = f2Mes()===hoy.slice(0,7) ? mondayOf(hoy) : mondayOf(f2Mes()+'-01'); } else state.f2Mes=f2Sem().slice(0,7); state.f2Per=np; render(); return; }
+    if (t.hasAttribute('data-f2per')){ var np=t.getAttribute('data-f2per'); if (np===f2Per()) return; if (np==='panel' || f2Per()==='panel'){ state.f2Per=np; render(); window.scrollTo(0,0); return; } if (np==='semana'){ var hoy=nowBA().date; state.f2Sem = f2Mes()===hoy.slice(0,7) ? mondayOf(hoy) : mondayOf(f2Mes()+'-01'); } else state.f2Mes=f2Sem().slice(0,7); state.f2Per=np; render(); return; }
     if (t.hasAttribute('data-f2rama')){ state.f2Rama=t.getAttribute('data-f2rama'); render(); return; }
+    if (t.hasAttribute('data-f2prama')){ state.f2PRama=t.getAttribute('data-f2prama'); render(); return; }
+    if (t.hasAttribute('data-f2pfresco')){ f2PLoad(true); render(); return; }
     if (t.hasAttribute('data-f2retry')){ f2Load(true); render(); return; }
     if (t.hasAttribute('data-f2mios')){ state.f2Mios=!state.f2Mios; render(); return; }
     if (t.hasAttribute('data-f2share')){ f2Compartir(); return; }
