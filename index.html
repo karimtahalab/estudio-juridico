@@ -674,8 +674,16 @@ a.save.wa-go svg{width:20px;height:20px}
 .ftile span{display:block;font-size:13px;font-weight:700;color:var(--ink-2)}
 .ftile b{display:block;font-size:20px;font-weight:800;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ftile.bad b{color:var(--red)}
-.f2-acts{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 4px}
-.f2-acts .btn2{flex:1 1 auto}
+.f2-acts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0 4px}
+.f2-acts .btn2{width:100%;justify-content:center}
+.sec-tot{font-size:15px;font-weight:800;color:var(--ink-2)}
+.sec-t .sec-tot + .lk{margin-left:12px}
+.sec-t .cnt + .sec-tot{margin-left:auto}
+.f2-share{width:100%;margin-top:18px}
+.f2-pend{text-align:center;font-weight:700}
+.pin-dots{display:flex;justify-content:center;gap:14px;margin:4px 0 10px}
+.pin-dots i{width:14px;height:14px;border-radius:50%;box-shadow:0 0 0 2px var(--line) inset}
+.pin-dots i.on{background:var(--ink);box-shadow:none}
 .btn3.danger{color:var(--red)}
 </style>
 </head>
@@ -1669,7 +1677,7 @@ a.save.wa-go svg{width:20px;height:20px}
       btns[i].hidden = k===-1; btns[i].style.order = k; btns[i].classList.toggle('on',on); btns[i].setAttribute('aria-current', on?'page':'false');
     }
     var fb=nav.querySelector('button[data-view="finanzas"]'), fm=(state.data&&state.data.finModo)||{}, fks=Object.keys(fm);
-    if (fb && fb.lastChild && fb.lastChild.nodeType===3) fb.lastChild.nodeValue=(fks.length && fks.every(function(x){ return fm[x]==='carga'; })) ? 'Clientes' : 'Finanzas';
+    if (fb && fb.lastChild && fb.lastChild.nodeType===3) fb.lastChild.nodeValue=(fks.length && fks.every(function(x){ return fm[x]==='carga'; })) ? 'Reporte' : 'Finanzas';
     var n=faltaItems().length, b=$('badge'); b.hidden=!n; b.textContent=n;
     var t=tareasUrgentes(), bt=$('badgeT'); bt.hidden=!t; bt.textContent=t>99?'99+':t;
   }
@@ -1704,8 +1712,15 @@ a.save.wa-go svg{width:20px;height:20px}
   }
   /* ---------- Ingreso con PIN ---------- */
   function yoElegir(n){
-    var L=state.login={n:n}; renderSheet(); focusPin();
-    call('tienePin', {nombre:n}).then(function(t){ if (state.login!==L) return; L.crear=!t; L.paso2=false; renderSheet(); focusPin(); }).catch(function(){});
+    // La lista del equipo ya dice si cada uno tiene PIN: la pantalla correcta aparece al instante
+    var e=((state.equipo||[]).filter(function(x){ return x.nombre===n; })[0])||{}, L=state.login={n:n};
+    if (typeof e.tiene==='boolean'){ L.crear=!e.tiene; L.paso2=false; renderSheet(); focusPin(); return; }
+    renderSheet(); focusPin();
+    call('tienePin', {nombre:n}).then(function(t){
+      if (state.login!==L || L.busy || L.crear===!t) return;
+      var p=$('pin'), v=p?p.value:''; L.crear=!t; L.paso2=false; renderSheet();
+      var p2=$('pin'); if (p2){ p2.value=v; p2.focus(); } // lo que ya escribió no se borra
+    }).catch(function(){});
   }
   function focusPin(){ setTimeout(function(){ var p=$('pin'); if (p){ p.value=''; p.focus(); } }, 60); }
   function pinOk(){
@@ -1724,8 +1739,14 @@ a.save.wa-go svg{width:20px;height:20px}
   function abrirIngreso(){
     if (state.sheet && state.sheet.type==='yo') return;
     var go=function(){ state.login={}; openSheet({type:'yo', first:true}); };
-    if ((state.data&&state.data.equipo)||state.equipo) return go();
-    call('equipoLogin', {}).then(function(eq){ state.equipo=eq; go(); }).catch(function(e){ toast((e&&e.message)||'No se pudo abrir la app.', true); });
+    if (!state.equipo){ try{ state.equipo=JSON.parse(store('equipo')||'null'); }catch(e){} }
+    if (!state.equipo && state.data && state.data.equipo) state.equipo=state.data.equipo;
+    var abierto=false;
+    if (state.equipo){ go(); abierto=true; } // los nombres aparecen al instante (guardados en el celular)
+    call('equipoLogin', {}).then(function(eq){
+      state.equipo=eq; try{ store('equipo', JSON.stringify(eq)); }catch(e){}
+      if (!abierto) go(); else if (state.sheet && state.sheet.type==='yo' && !(state.login&&state.login.n)) renderSheet();
+    }).catch(function(e){ if (!abierto) toast((e&&e.message)||'No se pudo abrir la app.', true); });
   }
   function sinSesion(){
     if (state.sinSes) return; state.sinSes=true;
@@ -1742,10 +1763,23 @@ a.save.wa-go svg{width:20px;height:20px}
     abrirIngreso();
   }
   function resetPinUI(n){
-    var L=state.login||(state.login={}); if (L.reset!==n){ L.reset=n; renderSheet(); return; } L.reset=null;
-    call('resetPin', {nombre:n}).then(function(p){ if (state.data) state.data.pines=p; renderSheet(); toast('Listo: '+n+' crea un PIN nuevo la próxima vez que entre.'); })
-      .catch(function(e){ renderSheet(); toast((e&&e.message)||'No se pudo resetear.', true); });
+    var L=state.login||(state.login={});
+    if (L.reset!==n){ L.reset=n; renderSheet(); setTimeout(function(){ if (L.reset===n){ L.reset=null; if (state.sheet && state.sheet.type==='yo') renderSheet(); } }, 5000); return; }
+    L.reset=null;
+    // Se ve reseteado al instante; si el servidor dice que no, vuelve como estaba
+    var P=(state.data&&state.data.pines)||[], x=P.filter(function(q){ return q.nombre===n; })[0], antes=x?{tiene:x.tiene, bloqueado:x.bloqueado, fijo:x.fijo}:null;
+    if (x){ x.tiene=false; x.bloqueado=false; }
+    renderSheet(); toast('Reseteando el PIN de '+n+'…');
+    call('resetPin', {nombre:n}).then(function(p){ if (state.data) state.data.pines=p; if (state.sheet && state.sheet.type==='yo') renderSheet(); render(); toast('Listo: '+n+' crea un PIN nuevo la próxima vez que entre.'); })
+      .catch(function(e){ if (x && antes){ x.tiene=antes.tiene; x.bloqueado=antes.bloqueado; x.fijo=antes.fijo; } if (state.sheet && state.sheet.type==='yo') renderSheet(); toast((e&&e.message)||'No se pudo resetear.', true); });
   }
+  // PIN: al llegar a 4 números sigue solo (sin tocar "Entrar")
+  document.addEventListener('input', function(ev){
+    if (!ev.target || ev.target.id!=='pin') return;
+    var v=String(ev.target.value||'').replace(/\D/g,'').slice(0,4); if (v!==ev.target.value) ev.target.value=v;
+    var L=state.login||{}; if (L.err && v.length){ L.err=null; var er=document.querySelector('#sheet .pin-err'); if (er) er.remove(); }
+    if (v.length===4 && !L.busy) setTimeout(pinOk, 120);
+  });
   function pickYo(n){
     var e=equipoBy(n); if (!e) return;
     state.me=e; store('yo', n);
@@ -2178,7 +2212,7 @@ a.save.wa-go svg{width:20px;height:20px}
   var FIN_TIPO_CLS={'Accidente':'acc','Accidente in itinere':'iti','Enfermedad profesional':'enf'};
   function finKey(sem){ return (sem||state.finSem||'')+'|'+(state.finRama||'ART'); }
   function enFinanzas(){ return state.view==='finanzas' || (state.view==='reportes' && state.repModo==='finanzas'); }
-  function plata(n){ n=Number(n)||0; return '$ '+n.toLocaleString('es-AR',{maximumFractionDigits:2}); }
+  function plata(n){ n=Math.round((Number(n)||0)*100)/100; var dec=Math.abs(n%1)>0.0001; return '$ '+n.toLocaleString('es-AR',{minimumFractionDigits:dec?2:0, maximumFractionDigits:2}); }
   function finNum(v){ var s=String(v==null?'':v).replace(/[^0-9,.\-]/g,''); if (s.indexOf(',')!==-1) s=s.replace(/\./g,'').replace(',','.'); else if (/^\d{1,3}(\.\d{3})+$/.test(s)) s=s.replace(/\./g,''); var n=Number(s); return s && isFinite(n) ? n : NaN; }
   function montoTxt(v){ var n=finNum(v); return isFinite(n) && n>0 ? '= '+plata(n) : ''; }
   function finSuma(xs){ return xs.reduce(function(a,x){ return a+(Number(x.monto)||0); },0); }
@@ -2824,7 +2858,7 @@ a.save.wa-go svg{width:20px;height:20px}
   document.addEventListener('click', function(ev){
     var t = ev.target.closest('[data-pindesbloq],[data-fin],[data-equipo],[data-view],[data-undo],[data-agotra],[data-agbuscartodo],[data-ficha],[data-pinok],[data-pinback],[data-pinreset],[data-salir],[data-fimodo],[data-fase],[data-notasave],[data-datosave],[data-mnfase],[data-mnsin],[data-dupfase],[data-derivar],[data-dvsel],[data-dvhora],[data-dvsave],[data-deon],[data-debrush],[data-decopia],[data-deamplio],[data-dedia],[data-dequick],[data-decopy],[data-devolver],[data-defijo],[data-definde],[data-demodo],[data-desave],[data-decancel],[data-repweek],[data-reprow],[data-repmodo],[data-repretry],[data-agmode],[data-wgday],[data-agrama],[data-agfase],[data-agmas],[data-agclr],[data-agnuevo],[data-mnrama],[data-mnorigen],[data-mnsig],[data-mncrear],[data-open],[data-result],[data-bloq],[data-nuevo],[data-week],[data-day],[data-sum],[data-chip],[data-abog],[data-close],[data-res],[data-motivo],[data-save],[data-bqwho],[data-bqtodo],[data-savebq],[data-delbq],[data-retry],[data-pastefor],[data-pasteall],[data-rvcheck],[data-rvtoggle],[data-rvsave],[data-rvback],[data-yo],[data-yocambiar],[data-visto],[data-conf],[data-escribir],[data-agendar],[data-agdia],[data-slot],[data-saveag],[data-savecampos]');
     if (!t) return;
-    if (t.hasAttribute('data-pindesbloq')){ var nd=t.getAttribute('data-pindesbloq'); t.disabled=true; call('desbloquearPin', {nombre:nd}).then(function(p){ if (state.data) state.data.pines=p; if (state.sheet) renderSheet(); render(); toast('Listo: '+nd+' ya puede entrar de nuevo.'); }).catch(function(e){ t.disabled=false; toast((e&&e.message)||'No se pudo desbloquear.', true); }); return; }
+    if (t.hasAttribute('data-pindesbloq')){ var nd=t.getAttribute('data-pindesbloq'); t.disabled=true; t.textContent='Desbloqueando…'; call('desbloquearPin', {nombre:nd}).then(function(p){ if (state.data) state.data.pines=p; if (state.sheet) renderSheet(); render(); toast('Listo: '+nd+' ya puede entrar de nuevo.'); }).catch(function(e){ t.disabled=false; toast((e&&e.message)||'No se pudo desbloquear.', true); }); return; }
     if (t.hasAttribute('data-fin')){ finClick(t); return; }
     if (t.hasAttribute('data-equipo')){ state.login={}; openSheet({type:'yo', pines:true}); return; }
     if (t.hasAttribute('data-undo')){ var fu=state.undo; state.undo=null; clearTimeout(toast._t); $('toast').className='toast'; if (fu) fu(); return; }
@@ -3215,18 +3249,25 @@ a.save.wa-go svg{width:20px;height:20px}
 
   /* ---------- Finanzas: escribe en la planilla contable de cada rama ---------- */
   var F2_RAMA={ART:'ART', LABORAL:'Laboral', TRANSITO:'Tránsito'};
+  function f2Modo(r){ return ((state.data&&state.data.finModo)||{})[r||f2Rama()]||'full'; }
+  // Período: semana (lo del reporte semanal) o mes. Quien solo carga arranca en semana.
+  function f2Per(){ if (!state.f2Per) state.f2Per = f2Modo()==='carga' ? 'semana' : 'mes'; return state.f2Per; }
   function f2Mes(){ if (!state.f2Mes) state.f2Mes=nowBA().date.slice(0,7); return state.f2Mes; }
-  function f2MoverMes(n){ var p=f2Mes().split('-'), y=+p[0], m=+p[1]-1+n; y+=Math.floor(m/12); m=((m%12)+12)%12; state.f2Mes=y+'-'+pad2(m+1); }
+  function f2Sem(){ if (!state.f2Sem) state.f2Sem=mondayOf(nowBA().date); return state.f2Sem; }
+  function f2Mover(n){
+    if (f2Per()==='semana'){ state.f2Sem=addDays(f2Sem(), 7*n); return; }
+    var p=f2Mes().split('-'), y=+p[0], m=+p[1]-1+n; y+=Math.floor(m/12); m=((m%12)+12)%12; state.f2Mes=y+'-'+pad2(m+1);
+  }
   function f2Rama(){ var rs=(state.data && state.data.finRamas)||[]; if (!state.f2Rama || rs.indexOf(state.f2Rama)===-1) state.f2Rama=rs[0]||'ART'; return state.f2Rama; }
-  function f2Key(){ return f2Rama()+'|'+f2Mes(); }
+  function f2Key(){ return f2Rama()+'|'+(f2Per()==='semana' ? 's'+f2Sem() : f2Mes()); }
   function f2Data(){ return (state.f2||{})[f2Key()]; }
   function f2Load(fresco){
     var k=f2Key(), C=state.f2||(state.f2={}); if (C[k] && C[k].cargando) return;
     var prev=C[k] && !C[k].error && !C[k].cargando ? C[k] : (C[k] && C[k].prev) || f2Guardado(k);
     C[k]={cargando:true, prev:prev};
-    var pm=f2Mes(), pr=f2Rama();
-    call('getFin2', {rama:pr, mes:pm, fresco:!!fresco}).then(function(d){ C[pr+'|'+pm]=d; guardar('f2:', pr+'|'+pm, d); if (enFinanzas()) render(); if (state.sheet && state.sheet.type==='fin2') renderSheet(); })
-      .catch(function(e){ C[pr+'|'+pm]={error:(e&&e.message)||'No se pudieron cargar las finanzas.', prev:prev}; if (enFinanzas()) render(); });
+    var arg={rama:f2Rama(), fresco:!!fresco}; if (f2Per()==='semana') arg.semana=f2Sem(); else arg.mes=f2Mes();
+    call('getFin2', arg).then(function(d){ C[k]=d; guardar('f2:', k, d); if (enFinanzas()) render(); if (state.sheet && state.sheet.type==='fin2') renderSheet(); })
+      .catch(function(e){ C[k]={error:(e&&e.message)||'No se pudieron cargar las finanzas.', prev:prev}; if (enFinanzas()) render(); });
   }
   // Lo último que se cargó en este celular se muestra al instante mientras llega lo nuevo (solo si coincide con lo que hoy puede ver esa persona)
   function f2Guardado(k){ var x=guardado('f2:', k), modo=((state.data&&state.data.finModo)||{})[k.split('|')[0]]; return (x && x.d && modo && x.d.modo===modo) ? x.d : null; }
@@ -3236,104 +3277,164 @@ a.save.wa-go svg{width:20px;height:20px}
   function f2Fila(t, icon, tit, sub, monto, attr){
     return '<li><button '+attr+'><span class="w"><b>'+icon+' '+esc(tit)+'</b><span>'+esc(sub)+'</span></span><span class="go2 num">'+esc(monto)+'</span></button></li>';
   }
+  function f2DM(s){ return s ? dnum(s)+'/'+(mnum(s)+1) : ''; }
+  function f2PerTxt(){ if (f2Per()==='semana'){ var a=f2Sem(); return 'Semana del '+f2DM(a)+' al '+f2DM(addDays(a,6)); } var p=f2Mes().split('-'); return MESES_L[+p[1]-1]+' '+p[0]; }
+  function f2Sec(tit, n, total, nuevo, sub){
+    return '<h2 class="sec-t">'+tit+' <span class="cnt num">'+n+'</span>'+(total!=null?'<span class="sec-tot num">'+plata(total)+'</span>':'')+(nuevo?'<button class="lk" data-f2nuevo="'+nuevo+'">＋ Cargar</button>':'')+'</h2>'+(sub?'<p class="sec-sub">'+sub+'</p>':'');
+  }
   function viewFin2(){
-    var p=f2Mes().split('-'), rs=(state.data && state.data.finRamas)||[], r=f2Rama(), d=f2Data();
+    var rs=(state.data && state.data.finRamas)||[], r=f2Rama(), d=f2Data(), carga=f2Modo(r)==='carga', sem=f2Per()==='semana';
     if (!d) { f2Load(state.finFresco); state.finFresco=false; d=f2Data(); }
-    var nav='<div class="wk-nav"><button class="chip" data-f2mes="-1" aria-label="Mes anterior">‹</button><b>'+MESES_L[+p[1]-1]+' '+p[0]+'</b><button class="chip" data-f2mes="1" aria-label="Mes siguiente">›</button></div>';
+    var nav='<div class="wk-nav"><button class="chip" data-f2mes="-1" aria-label="Anterior">‹</button><b>'+esc(f2PerTxt())+'</b><button class="chip" data-f2mes="1" aria-label="Siguiente">›</button></div>';
+    var per='<div class="seg2 f2-per" role="tablist"><button data-f2per="semana" class="'+(sem?'on':'')+'" role="tab" aria-selected="'+sem+'">Semana</button><button data-f2per="mes" class="'+(!sem?'on':'')+'" role="tab" aria-selected="'+(!sem)+'">Mes</button></div>';
     var chips=rs.length>1 ? '<div class="chips" role="group" aria-label="Rama">'+rs.map(function(x){ return '<button class="chip'+(x===r?' on':'')+'" data-f2rama="'+x+'">'+F2_RAMA[x]+'</button>'; }).join('')+'</div>' : '';
     var b=f2Base();
-    var titulo={ h1:(((state.data&&state.data.finModo)||{})[r]==='carga'?'Clientes':'Finanzas'), p:F2_RAMA[r]+' · '+MESES_L[+p[1]-1].toLowerCase()+' '+p[0], extra:nav+chips };
+    var titulo={ h1:(carga?(sem?'Reporte semanal':'Reporte del mes'):'Finanzas'), p:F2_RAMA[r]+' · '+f2PerTxt().toLowerCase(), extra:per+nav+chips };
     if (!b){ titulo.body = d && d.error ? emptyBox('No se pudieron cargar', esc(d.error), '<button class="btn3" data-f2retry>Reintentar</button>') : '<div class="skel"></div><div class="skel"></div>'; return titulo; }
-    var R=b.resumen||{}, body='';
-    if (d && d.cargando) body+='<p class="hint" style="text-align:center">Actualizando…</p>';
+    var R=b.resumen||{}, F=b.forms||{}, body='', hom=r==='ART';
+    if ((state.f2Pend||0)>0) body+='<p class="hint f2-pend">Guardando en la planilla…</p>';
+    else if (d && d.cargando) body+='<p class="hint" style="text-align:center">Actualizando…</p>';
     if (d && d.error) body+='<div class="warn">'+esc(d.error)+'</div>';
-    if (b.modo==='carga'){
-      var Fc=b.forms||{}, cl=b.clientes||[];
-      titulo.h1='Clientes';
-      body+='<div class="f2-acts">'+(Fc.cliente?'<button class="btn2" data-f2nuevo="cliente">＋ Cargar cliente</button>':'')+'</div>';
-      body+='<h2 class="sec-t">Clientes del mes <span class="cnt num">'+cl.length+'</span></h2><p class="sec-sub">Los que firmaron entran solos desde la agenda. Tocá uno para completar '+(r==='ART'?'la lesión':'el detalle')+' y lo que falte.</p>';
-      body+=cl.length ? '<ul class="todo">'+cl.map(function(c){ return f2Fila('cl','👤', c.nombre, [shortDate(c.fecha), c.atiende, c.tipo, c.lesion].filter(Boolean).join(' · '), c.lesion?'':'Completar', 'data-f2edit="cliente|'+c.fila+'"'); }).join('')+'</ul>' : emptyBox('Todavía no hay clientes este mes');
-      body+='<p class="hint" style="text-align:center;margin-top:14px">Se guarda en la pestaña Clientes de la planilla contable de '+F2_RAMA[r]+' (copia de prueba).</p>';
-      titulo.body=body; return titulo;
+    // Números arriba
+    var tiles='<div class="ftile"><span>Cobrado</span><b class="num">'+plata(R.cobrado)+'</b></div>';
+    if (b.tieneFacturas) tiles+='<div class="ftile"><span>Facturado</span><b class="num">'+plata(R.facturado)+'</b></div>';
+    if (!carga){
+      tiles+='<div class="ftile"><span>Gastos ('+F2_RAMA[r]+')</span><b class="num">'+plata(R.gastado)+'</b></div>';
+      if (b.tieneAcuerdos && !sem) tiles+='<div class="ftile"><span>Esperado este mes</span><b class="num">'+plata(R.esperado)+'</b></div><div class="ftile'+(R.atrasado>0?' bad':'')+'"><span>Atrasado</span><b class="num">'+plata(R.atrasado)+'</b></div>';
     }
-    body+='<div class="fin-tabs"><div class="ftile"><span>Cobrado</span><b class="num">'+plata(R.cobrado)+'</b></div><div class="ftile"><span>Gastos ('+F2_RAMA[r]+')</span><b class="num">'+plata(R.gastado)+'</b></div>'+
-      (b.tieneAcuerdos ? '<div class="ftile"><span>Esperado este mes</span><b class="num">'+plata(R.esperado)+'</b></div><div class="ftile'+(R.atrasado>0?' bad':'')+'"><span>Atrasado</span><b class="num">'+plata(R.atrasado)+'</b></div>' : '')+'</div>';
-    var F=b.forms||{};
-    body+='<div class="f2-acts">'+(F.cobro?'<button class="btn2" data-f2nuevo="cobro">＋ Cobro</button>':'')+(F.gasto?'<button class="btn2" data-f2nuevo="gasto">＋ Gasto</button>':'')+(F.acuerdo?'<button class="btn2" data-f2nuevo="acuerdo">＋ '+esc(b.acuerdoNombre)+'</button>':'')+'</div>';
-    if (b.tieneAcuerdos){
+    body+='<div class="fin-tabs">'+tiles+'</div>';
+    // Cargar: los botones de lo que se carga más seguido
+    var acts=[];
+    if (F.cobro) acts.push('<button class="btn2" data-f2nuevo="cobro">＋ Cobro</button>');
+    if (F.factura) acts.push('<button class="btn2" data-f2nuevo="factura">＋ Facturado</button>');
+    if (F.acuerdo) acts.push('<button class="btn2" data-f2nuevo="acuerdo">＋ '+esc(b.acuerdoNombre||'Acuerdo')+'</button>');
+    if (F.gasto) acts.push('<button class="btn2" data-f2nuevo="gasto">＋ Gasto</button>');
+    else if (F.cliente) acts.push('<button class="btn2" data-f2nuevo="cliente">＋ Cliente</button>');
+    body+='<div class="f2-acts">'+acts.join('')+'</div>';
+    // Por cobrar (solo quien ve todo, por mes)
+    if (!carga && b.tieneAcuerdos && !sem){
       var solo=!!state.f2Mios, xs=(b.porCobrar||[]).filter(function(x){ return !solo || f2Esmio(x.cobra); });
-      body+='<h2 class="sec-t">Por cobrar <span class="cnt num">'+xs.length+'</span><button class="lk" data-f2mios>'+(solo?'Ver todos':'Solo los míos')+'</button></h2><p class="sec-sub">Cuotas de este mes según '+(r==='ART'?'las homologaciones':'los acuerdos')+', y lo atrasado. Tocá uno para cargar lo que entró.</p>';
+      body+='<h2 class="sec-t">Por cobrar <span class="cnt num">'+xs.length+'</span><button class="lk" data-f2mios>'+(solo?'Ver todos':'Solo los míos')+'</button></h2><p class="sec-sub">Cuotas de este mes según '+(hom?'las homologaciones':'los acuerdos')+', y lo atrasado. Tocá uno para cargar lo que entró.</p>';
       body+= xs.length ? '<ul class="todo">'+xs.map(function(x,i){ return f2Fila('pc','💵', x.caso, [x.nro?'cuota '+x.nro+' de '+x.cuotas:'', x.estado, x.cobra?'cobra '+x.cobra:'', x.atrasado>0?'atrasado '+plata(x.atrasado):'', x.fin&&x.cuotas>1?'última en '+x.fin:''].filter(Boolean).join(' · '), plata(x.falta), 'data-f2cobrar="'+i+'"'); }).join('')+'</ul>' : emptyBox('Nada por cobrar este mes', solo?'Con el filtro de los tuyos.':'');
     }
-    if (b.tieneClientes){
-      body+='<h2 class="sec-t">Clientes del mes <span class="cnt num">'+(b.clientes||[]).length+'</span>'+(F.cliente?'<button class="lk" data-f2nuevo="cliente">＋ Cargar</button>':'')+'</h2><p class="sec-sub">Los que firmaron entran solos desde la agenda. Tocá uno para completar '+(r==='ART'?'la lesión':'el detalle')+'.</p>';
-      body+=(b.clientes||[]).length ? '<ul class="todo">'+b.clientes.map(function(c){ return f2Fila('cl','👤', c.nombre, [shortDate(c.fecha), c.atiende, c.tipo, c.lesion].filter(Boolean).join(' · '), c.lesion?'':'Completar', 'data-f2edit="cliente|'+c.fila+'"'); }).join('')+'</ul>' : emptyBox('Todavía no hay clientes este mes');
-    } else if ((b.firmados||[]).length){
-      body+='<h2 class="sec-t">Firmaron este mes <span class="cnt num">'+b.firmados.length+'</span></h2><p class="sec-sub">Según la planilla de leads.</p><ul class="todo">'+b.firmados.map(function(c){ return '<li><span class="w" style="padding:10px 4px;display:block"><b>👤 '+esc(c.nombre)+'</b><span>'+esc([shortDate(c.fecha), c.atendio].filter(Boolean).join(' · '))+'</span></span></li>'; }).join('')+'</ul>';
+    // Las cuatro partes del reporte semanal, en el mismo orden
+    var co=b.cobros||[];
+    body+=f2Sec('Cobrado', co.length, co.length?R.cobrado:null, '', '');
+    body+=co.length ? '<ul class="todo">'+co.map(function(c){ return f2Fila('co','💰', c.caso, [shortDate(c.fecha), c.paga?'pagó '+(c.paga==='Cliente'?'el cliente':c.paga):'', c.entro?'entró a '+c.entro:'', c.detalle].filter(Boolean).join(' · '), plata(c.monto), 'data-f2edit="cobro|'+c.fila+'"'); }).join('')+'</ul>' : emptyBox('Sin cobros cargados');
+    if (b.tieneFacturas){
+      var fa=b.facturas||[];
+      body+=f2Sec('Facturado', fa.length, fa.length?R.facturado:null, '', '');
+      body+=fa.length ? '<ul class="todo">'+fa.map(function(x){ return f2Fila('fa','🧾', x.caso, [shortDate(x.fecha), x.quien?'facturó '+x.quien:'', x.a?'a '+x.a:'', x.expte?'expte '+x.expte:''].filter(Boolean).join(' · '), plata(x.monto), 'data-f2edit="factura|'+x.fila+'"'); }).join('')+'</ul>' : emptyBox('Sin facturas cargadas');
     }
-    body+='<h2 class="sec-t">Cobros <span class="cnt num">'+(b.cobros||[]).length+'</span></h2>';
-    body+=(b.cobros||[]).length ? '<ul class="todo">'+b.cobros.map(function(c){ return f2Fila('co','💰', c.caso, [shortDate(c.fecha), c.paga, c.entro?'entró a '+c.entro:'', c.detalle].filter(Boolean).join(' · '), plata(c.monto), 'data-f2edit="cobro|'+c.fila+'"'); }).join('')+'</ul>' : emptyBox('Sin cobros cargados este mes');
-    body+='<h2 class="sec-t">Gastos <span class="cnt num">'+(b.gastos||[]).length+'</span></h2>';
-    body+=(b.gastos||[]).length ? '<ul class="todo">'+b.gastos.map(function(g){ return f2Fila('ga','💸', g.categoria||'Gasto', [shortDate(g.fecha), g.pago?'pagó '+g.pago:'', g.reparto && g.propio!==g.monto ? g.reparto+' (total '+plata(g.monto)+')' : '', g.detalle].filter(Boolean).join(' · '), plata(g.propio), 'data-f2edit="gasto|'+g.fila+'"'); }).join('')+'</ul>' : emptyBox('Sin gastos cargados este mes');
+    if (b.tieneClientes){
+      var cl=b.clientes||[];
+      body+=f2Sec('Clientes nuevos', cl.length, null, (F.cliente && F.gasto)?'cliente':'', 'Los que firmaron entran solos desde la agenda. Tocá uno para completar '+(hom?'el tipo y la lesión':'el detalle')+'.');
+      body+=cl.length ? '<ul class="todo">'+cl.map(function(c){ var falta=!c.lesion || (hom && !c.tipo); return f2Fila('cl','👤', c.nombre, [shortDate(c.fecha), c.tipo, c.lesion, c.atiende?'atendió '+c.atiende:''].filter(Boolean).join(' · '), falta?'Completar':'', 'data-f2edit="cliente|'+c.fila+'"'); }).join('')+'</ul>' : emptyBox('Todavía no hay clientes nuevos');
+    } else if ((b.firmados||[]).length){
+      body+='<h2 class="sec-t">Firmaron <span class="cnt num">'+b.firmados.length+'</span></h2><p class="sec-sub">Según la planilla de leads.</p><ul class="todo">'+b.firmados.map(function(c){ return '<li><span class="w" style="padding:10px 4px;display:block"><b>👤 '+esc(c.nombre)+'</b><span>'+esc([shortDate(c.fecha), c.atendio].filter(Boolean).join(' · '))+'</span></span></li>'; }).join('')+'</ul>';
+    }
+    if (b.tieneAcuerdos){
+      var ac=b.acuerdos||[];
+      body+=f2Sec(hom?'Homologaciones':'Acuerdos', ac.length, null, '', '');
+      body+=ac.length ? '<ul class="todo">'+ac.map(function(a){ return f2Fila('ac','⚖️', a.caso, [shortDate(a.fecha), a.estado, a.expte?'expte '+a.expte:'', a.cobroAprox?'cobro aprox. '+f2DM(a.cobroAprox):'', hom&&a.total?'honorarios '+plata(a.total):''].filter(Boolean).join(' · '), plata(hom&&a.homologado?a.homologado:a.total), 'data-f2edit="acuerdo|'+a.fila+'"'); }).join('')+'</ul>' : emptyBox(hom?'Sin homologaciones cargadas':'Sin acuerdos cargados');
+    }
+    if (!carga){
+      var ga=b.gastos||[];
+      body+=f2Sec('Gastos', ga.length, ga.length?R.gastado:null, '', '');
+      body+=ga.length ? '<ul class="todo">'+ga.map(function(g){ return f2Fila('ga','💸', g.categoria||'Gasto', [shortDate(g.fecha), g.pago?'pagó '+g.pago:'', g.reparto && g.propio!==g.monto ? g.reparto+' (total '+plata(g.monto)+')' : '', g.detalle].filter(Boolean).join(' · '), plata(g.propio), 'data-f2edit="gasto|'+g.fila+'"'); }).join('')+'</ul>' : emptyBox('Sin gastos cargados');
+    }
+    if (sem) body+='<button class="btn3 f2-share" data-f2share>Compartir el reporte de la semana</button>';
     body+='<p class="hint" style="text-align:center;margin-top:14px">Todo se guarda en la planilla contable de '+F2_RAMA[r]+' (copia de prueba).</p>';
     titulo.body=body; return titulo;
+  }
+  // Texto del reporte semanal (el mismo formato que el PDF de Sol), para mandar por WhatsApp o copiar
+  function f2TextoReporte(){
+    var b=f2Base()||{}, R=b.resumen||{}, a=f2Sem(), yy=function(s){ return pad2(dnum(s))+'/'+pad2(mnum(s)+1)+'/'+s.slice(2,4); };
+    var L=['*'+F2_RAMA[f2Rama()].toUpperCase()+' · SEMANA DEL '+yy(a)+' AL '+yy(addDays(a,4))+'*', ''];
+    L.push('*COBRADO:*'); (b.cobros||[]).forEach(function(c){ L.push('- '+plata(c.monto)+' ('+[c.caso, c.paga?'pagó '+(c.paga==='Cliente'?'el cliente':c.paga):'', c.entro?'entró a '+c.entro:''].filter(Boolean).join(' · ')+')'); }); if (!(b.cobros||[]).length) L.push('-');
+    L.push('TOTAL: '+((b.cobros||[]).length?plata(R.cobrado):'-'), '');
+    if (b.tieneFacturas){ L.push('*FACTURADO:*'); (b.facturas||[]).forEach(function(x){ L.push('- '+plata(x.monto)+' ('+[x.caso, x.expte?'expte '+x.expte:'', x.a?'a '+x.a:''].filter(Boolean).join(' · ')+')'+(x.quien?' facturó '+x.quien:'')); }); if (!(b.facturas||[]).length) L.push('-'); L.push('TOTAL: '+((b.facturas||[]).length?plata(R.facturado):'-'), ''); }
+    if (b.tieneClientes){ L.push('*CLIENTES NUEVOS:*'); (b.clientes||[]).forEach(function(c){ L.push('- '+String(c.nombre||'').toUpperCase()+(c.tipo?' ('+c.tipo+')':'')+(c.lesion?': '+c.lesion:'')); }); if (!(b.clientes||[]).length) L.push('-'); L.push(''); }
+    if (b.tieneAcuerdos){ L.push('*'+(f2Rama()==='ART'?'HOMOLOGACIONES REALIZADAS':'ACUERDOS')+':*'); (b.acuerdos||[]).forEach(function(x){ L.push('- '+yy(x.fecha)+' '+x.caso+' '+plata(x.homologado||x.total)+(x.estado?' '+x.estado.toLowerCase():'')+(x.expte?' (expte '+x.expte+')':'')+(x.cobroAprox?' · cobro aprox. '+f2DM(x.cobroAprox):'')+(x.notas?' · '+x.notas:'')); }); if (!(b.acuerdos||[]).length) L.push('-'); }
+    return L.join('\n');
+  }
+  function f2Compartir(){
+    var t=f2TextoReporte();
+    if (navigator.share){ navigator.share({text:t}).catch(function(){}); return; }
+    var ok=function(){ toast('Reporte copiado: pegalo donde quieras.'); };
+    try{ navigator.clipboard.writeText(t).then(ok, function(){ window.open('https://wa.me/?text='+encodeURIComponent(t), '_blank'); }); }catch(e){ window.open('https://wa.me/?text='+encodeURIComponent(t), '_blank'); }
   }
   function f2Campos(tipo){ var b=f2Base(); return ((b&&b.forms)||{})[tipo]||[]; }
   function f2Draft(sh){
     var b=f2Base()||{}, v={}, hoy=nowBA().date;
     f2Campos(sh.tipo).forEach(function(c){
-      if (c.tipo==='fecha') v[c.k]=hoy;
+      if (c.tipo==='fecha' && !c.vacio) v[c.k]=hoy;
       if (c.quien) v[c.k]=f2Alias(state.me&&state.me.nombre, c.ops)||'';
       if (c.k==='reparto') v[c.k]=(c.ops||[])[0]||'';
       if (c.k==='cuotas') v[c.k]='1';
       if (c.k==='mes1') v[c.k]=(c.ops||[])[+hoy.slice(5,7)-1]||'';
+      if (c.def!=null) v[c.k]=String(c.def);
     });
+    // Una fecha dentro de la semana o el mes que se está mirando (si hoy no cae ahí)
+    var pd=b.periodo; if (pd && v.fecha && (hoy<pd.desde || hoy>pd.hasta)) v.fecha=pd.desde;
     var src=null;
-    if (sh.fila){ var lista={cobro:b.cobros, gasto:b.gastos, cliente:b.clientes}[sh.tipo]||[]; src=lista.filter(function(x){ return x.fila===sh.fila; })[0]||null; }
+    if (sh.fila){ var lista={cobro:b.cobros, gasto:b.gastos, cliente:b.clientes, factura:b.facturas, acuerdo:b.acuerdos}[sh.tipo]||[]; src=lista.filter(function(x){ return x.fila===sh.fila; })[0]||null; }
     if (src) Object.keys(src).forEach(function(k){ if (k!=='fila' && src[k]!=='' && src[k]!=null) v[k]=String(src[k]); });
     if (sh.pre) Object.keys(sh.pre).forEach(function(k){ v[k]=sh.pre[k]; });
     return { v:v, borrar:false, dup:null };
   }
-  function f2Titulo(sh){ var b=f2Base()||{}; return ({cobro:'Cargar cobro', gasto:'Cargar gasto', acuerdo:'Cargar '+(b.acuerdoNombre||'acuerdo').toLowerCase(), cliente:'Cliente'})[sh.tipo]+(sh.fila && sh.tipo!=='cliente'?' (corregir)':''); }
+  function f2Titulo(sh){ var b=f2Base()||{}; return ({cobro:'Cargar cobro', gasto:'Cargar gasto', factura:'Cargar facturado', acuerdo:'Cargar '+(b.acuerdoNombre||'acuerdo').toLowerCase(), cliente:'Cliente'})[sh.tipo]+(sh.fila && sh.tipo!=='cliente'?' (corregir)':''); }
+  // Honorarios que salen de lo homologado (se ven mientras se escribe)
+  function f2HonTxt(c, v){ var n=finNum(v); if (!(isFinite(n) && n>0) || !c.pct) return montoTxt(v); var cli=n*c.pct[0], art=n*c.pct[1]; return '= '+plata(n)+' · honorarios '+plata(Math.round((cli+art)*100)/100)+' (cliente '+plata(Math.round(cli*100)/100)+' + ART '+plata(Math.round(art*100)/100)+')'; }
   function sheetFin2(){
     var sh=state.sheet, d=state.draft||(state.draft=f2Draft(sh)), cs=f2Campos(sh.tipo), r=f2Rama();
     var html='<div class="grab"></div><div class="sh-head"><div class="sh-who"><h2>'+esc(f2Titulo(sh))+'</h2><div class="mt"><span class="rama r-'+ramaKey(r)+'">'+F2_RAMA[r]+'</span></div></div><button class="close" data-close aria-label="Cerrar">'+I.x+'</button></div>';
     if (!cs.length) return html+'<div class="note">Cargando…</div>';
-    if (d.dup) html+='<div class="warn">Ya hay '+(r==='ART'?'una homologación':'un acuerdo')+' con el nombre "'+esc(d.dup.caso)+'". Si es otro caso, cambiá el nombre; si es el mismo, corregilo en la planilla.</div><button class="btn3" data-f2forzar>Es otro caso: cargar igual</button>';
+    if (d.dup) html+='<div class="warn">Ya hay '+(r==='ART'?'una homologación':'un acuerdo')+' con el nombre "'+esc(d.dup.caso)+'". Si es otro caso, cambiá el nombre; si es el mismo, tocalo en la lista para corregirlo.</div><button class="btn3" data-f2forzar>Es otro caso: cargar igual</button>';
     cs.forEach(function(c,i){
       var val=d.v[c.k]==null?'':d.v[c.k], id='f2c'+i, lab='<label for="'+id+'">'+esc(c.label)+(c.req?'':' <small>(opcional)</small>')+'</label>';
+      var ayuda=c.ayuda?'<p class="hint" style="margin:4px 2px 0">'+esc(c.ayuda)+'</p>':'';
       if (c.tipo==='opcion' && (c.ops||[]).length && (c.ops||[]).length<=6){
-        html+='<div class="field"><span class="lbl">'+esc(c.label)+(c.req?'':' <small>(opcional)</small>')+'</span><div class="pick">'+c.ops.map(function(o){ var on=val===o; return '<button class="'+(on?'on':'')+'" data-f2pick="'+c.k+'|'+esc(o)+'" aria-pressed="'+on+'">'+esc(o)+'</button>'; }).join('')+'</div></div>';
+        html+='<div class="field"><span class="lbl">'+esc(c.label)+(c.req?'':' <small>(opcional)</small>')+'</span><div class="pick">'+c.ops.map(function(o){ var on=val===o; return '<button class="'+(on?'on':'')+'" data-f2pick="'+c.k+'|'+esc(o)+'" aria-pressed="'+on+'">'+esc(o)+'</button>'; }).join('')+'</div>'+ayuda+'</div>';
       } else if (c.tipo==='opcion'){
-        html+='<div class="field">'+lab+'<select class="inp" id="'+id+'" data-f2k="'+c.k+'"><option value="">Elegí…</option>'+(c.ops||[]).map(function(o){ return '<option'+(o===val?' selected':'')+'>'+esc(o)+'</option>'; }).join('')+'</select></div>';
+        html+='<div class="field">'+lab+'<select class="inp" id="'+id+'" data-f2k="'+c.k+'"><option value="">Elegí…</option>'+(c.ops||[]).map(function(o){ return '<option'+(o===val?' selected':'')+'>'+esc(o)+'</option>'; }).join('')+'</select>'+ayuda+'</div>';
       } else {
         var ty=c.tipo==='fecha'?'date':(c.tipo==='numero'?'number':'text'), im=c.tipo==='monto'?' inputmode="decimal"':'', dl=(c.tipo==='caso' || (c.sug||[]).length) ? ' list="dl'+id+'"' : '';
-        html+='<div class="field">'+lab+'<input class="inp" id="'+id+'" type="'+ty+'"'+im+dl+' data-f2k="'+c.k+'" autocomplete="off" value="'+esc(val)+'">'+
-          (c.tipo==='monto'?'<p class="hint" id="'+id+'h" style="margin:4px 2px 0">'+esc(montoTxt(val))+'</p>':'')+
+        html+='<div class="field">'+lab+'<input class="inp'+(c.tipo==='monto'?' num':'')+'" id="'+id+'" type="'+ty+'"'+im+dl+' data-f2k="'+c.k+'" autocomplete="off" value="'+esc(val)+'"'+(c.tipo==='monto'?' placeholder="Ej.: 1.500.000"':'')+'>'+
+          (c.tipo==='monto'?'<p class="hint" id="'+id+'h" style="margin:4px 2px 0">'+esc(c.pct?f2HonTxt(c, val):montoTxt(val))+'</p>':'')+ayuda+
           (dl?'<datalist id="dl'+id+'">'+((c.ops||c.sug||[]).slice(0,300)).map(function(o){ return '<option value="'+esc(o)+'">'; }).join('')+'</datalist>':'')+'</div>';
       }
     });
     if (sh.tipo==='gasto' && d.v.reparto && !/100%|^Solo/.test(d.v.reparto)) html+='<p class="hint">El gasto compartido se anota también en las planillas de las otras ramas, cada una con su parte.</p>';
     html+='<div class="save-wrap"><button class="save" data-f2save>Guardar</button>';
-    if (sh.fila && (sh.tipo==='cobro' || sh.tipo==='gasto')) html+= d.borrar ? '<button class="btn3 danger" data-f2borrar="2">Sí, borrar esta fila de la planilla</button>' : '<button class="link" data-f2borrar="1">Borrar</button>';
+    if (sh.fila && (sh.tipo==='cobro' || sh.tipo==='gasto' || sh.tipo==='factura')) html+= d.borrar ? '<button class="btn3 danger" data-f2borrar="2">Sí, borrar esta fila de la planilla</button>' : '<button class="link" data-f2borrar="1">Borrar</button>';
     html+='</div>';
     return html;
   }
+  // Guardar sin esperar: el formulario se cierra al instante y la planilla se actualiza atrás; si algo falla, se vuelve a abrir con lo escrito
   function f2Guardar(opts){
     var sh=state.sheet, d=state.draft, cs=f2Campos(sh.tipo); opts=opts||{};
     if (!opts.borrar){ for (var i=0;i<cs.length;i++){ var c=cs[i]; if (c.req && !String(d.v[c.k]||'').trim()){ toast('Completá '+c.label.toLowerCase()+'.', true); return; } } }
-    busySheet(true, opts.borrar?'Borrando…':'Guardando…');
-    call('saveFin2', {rama:f2Rama(), tipo:sh.tipo, datos:d.v, fila:sh.fila||0, borrar:!!opts.borrar, forzar:!!opts.forzar}).then(function(r){
-      if (r && r.duplicado){ d.dup=r.duplicado; renderSheet(); return; }
-      closeSheet(); toast(opts.borrar?'Borrado de la planilla':('✔ Guardado en la planilla'+(r && r.ramas && r.ramas.length>1?' de '+r.ramas.map(function(x){ return F2_RAMA[x]; }).join(', '):''))); var C2=state.f2||{}, kk=f2Key(); Object.keys(C2).forEach(function(x){ if (x!==kk) delete C2[x]; }); f2Load(true); render();
-    }).catch(function(e){ renderSheet(); toast((e&&e.message)||'No se pudo guardar.', true); });
+    var shC=JSON.parse(JSON.stringify(sh)), dC=JSON.parse(JSON.stringify(d)), rama=f2Rama(), kk=f2Key();
+    closeSheet(); toast(opts.borrar?'Borrando…':'Guardando…');
+    state.f2Pend=(state.f2Pend||0)+1; if (enFinanzas()) render();
+    var reabrir=function(dup){ state.f2Rama=rama; openSheet(shC); dC.borrar=false; if (dup) dC.dup=dup; state.draft=dC; renderSheet(); };
+    call('saveFin2', {rama:rama, tipo:shC.tipo, datos:dC.v, fila:shC.fila||0, borrar:!!opts.borrar, forzar:!!opts.forzar}).then(function(r){
+      state.f2Pend=Math.max(0,(state.f2Pend||1)-1);
+      if (r && r.duplicado){ reabrir(r.duplicado); if (enFinanzas()) render(); return; }
+      toast(opts.borrar?'Borrado de la planilla':('✔ Guardado en la planilla'+(r && r.ramas && r.ramas.length>1?' de '+r.ramas.map(function(x){ return F2_RAMA[x]; }).join(', '):'')));
+      var C2=state.f2||{}, mira=f2Key()===kk; Object.keys(C2).forEach(function(x){ if (x!==kk || !mira || (C2[x] && C2[x].cargando)) delete C2[x]; });
+      if (f2Key()===kk) f2Load(true); if (enFinanzas()) render();
+    }).catch(function(e){ state.f2Pend=Math.max(0,(state.f2Pend||1)-1); reabrir(null); toast((e&&e.message)||'No se pudo guardar.', true); if (enFinanzas()) render(); });
   }
   document.addEventListener('click', function(ev){
-    var t=ev.target.closest('[data-f2mes],[data-f2rama],[data-f2retry],[data-f2nuevo],[data-f2edit],[data-f2cobrar],[data-f2mios],[data-f2pick],[data-f2save],[data-f2borrar],[data-f2forzar]'); if (!t) return;
-    if (t.hasAttribute('data-f2mes')){ f2MoverMes(+t.getAttribute('data-f2mes')); render(); return; }
+    var t=ev.target.closest('[data-f2mes],[data-f2per],[data-f2rama],[data-f2retry],[data-f2nuevo],[data-f2edit],[data-f2cobrar],[data-f2mios],[data-f2pick],[data-f2save],[data-f2borrar],[data-f2forzar],[data-f2share]'); if (!t) return;
+    if (t.hasAttribute('data-f2mes')){ f2Mover(+t.getAttribute('data-f2mes')); render(); return; }
+    if (t.hasAttribute('data-f2per')){ var np=t.getAttribute('data-f2per'); if (np===f2Per()) return; if (np==='semana'){ var hoy=nowBA().date; state.f2Sem = f2Mes()===hoy.slice(0,7) ? mondayOf(hoy) : mondayOf(f2Mes()+'-01'); } else state.f2Mes=f2Sem().slice(0,7); state.f2Per=np; render(); return; }
     if (t.hasAttribute('data-f2rama')){ state.f2Rama=t.getAttribute('data-f2rama'); render(); return; }
     if (t.hasAttribute('data-f2retry')){ f2Load(true); render(); return; }
     if (t.hasAttribute('data-f2mios')){ state.f2Mios=!state.f2Mios; render(); return; }
+    if (t.hasAttribute('data-f2share')){ f2Compartir(); return; }
     if (t.hasAttribute('data-f2nuevo')){ openSheet({type:'fin2', tipo:t.getAttribute('data-f2nuevo')}); return; }
     if (t.hasAttribute('data-f2edit')){ var q=t.getAttribute('data-f2edit').split('|'); openSheet({type:'fin2', tipo:q[0], fila:+q[1]}); return; }
     if (t.hasAttribute('data-f2cobrar')){ var b=f2Base(), x=((b&&b.porCobrar)||[])[+t.getAttribute('data-f2cobrar')]; if (!x) return; openSheet({type:'fin2', tipo:'cobro', pre:{caso:x.caso, monto:String(x.falta||x.cuota||x.debido)}}); return; }
@@ -3345,7 +3446,13 @@ a.save.wa-go svg{width:20px;height:20px}
   });
   function f2Input(ev){
     var k=ev.target.getAttribute && ev.target.getAttribute('data-f2k'); if (!k || !state.draft || !state.sheet || state.sheet.type!=='fin2') return;
-    state.draft.v[k]=ev.target.value; var h=$(ev.target.id+'h'); if (h) h.textContent=montoTxt(ev.target.value);
+    state.draft.v[k]=ev.target.value;
+    var c=f2Campos(state.sheet.tipo).filter(function(x){ return x.k===k; })[0]||{}, h=$(ev.target.id+'h'); if (h) h.textContent=c.pct?f2HonTxt(c, ev.target.value):montoTxt(ev.target.value);
+    // Facturado: al elegir el caso, se completa la parte de la ART de esa homologación
+    if (state.sheet.tipo==='factura' && k==='caso'){
+      var pa=((f2Base()||{}).parteArtCaso||{})[ev.target.value], m=document.querySelector('#sheet [data-f2k="monto"]');
+      if (pa && m && !String(m.value||'').trim()){ m.value=String(pa); state.draft.v.monto=String(pa); var mh=$(m.id+'h'); if (mh) mh.textContent=montoTxt(String(pa)); }
+    }
   }
   document.addEventListener('input', f2Input); document.addEventListener('change', f2Input);
   $('btnRefresh').addEventListener('click', function(){ if (enFinanzas()){ state.f2={}; state.finFresco=true; render(); } });
