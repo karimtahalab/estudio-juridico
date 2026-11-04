@@ -1997,11 +1997,11 @@ a.save.wa-go svg{width:20px;height:20px}
   // El número en la pestaña: confirmaciones pendientes y consultas de hoy o mañana sin resumen
   function tareasUrgentes(){ if (!puede('confirmar')) return 0; var t=tareasDe(), lim=nextHabil(nowBA().date); return t.hoy.length+t.previa.length+t.sinRes.filter(function(l){ return l.fecha<=lim; }).length; }
   /* ---------- Agendar (intakers): leads por agendar con buscador y filtros ---------- */
-  var AG_FASES=[{k:'sin',l:'Sin clasificar'},{k:'A',l:'A'},{k:'Llamada pendiente',l:'Llamada pendiente'},{k:'B',l:'B'}];
+  var AG_FASES=[{k:'sindia',l:'Agendadas sin día'},{k:'sin',l:'Sin clasificar'},{k:'A',l:'A'},{k:'Llamada pendiente',l:'Llamada pendiente'},{k:'B',l:'B'}];
   function agState(){ return state.ag || (state.ag={q:'', marca:'todas', rama:'todas', fase:'todas', n:40}); }
   function ramaPasa(l, s){ return (!s.marca || s.marca==='todas' || marcaDe(l.rama)===s.marca) && (s.rama==='todas' || ramaKey(l.rama)===s.rama); }
   function leadsRamas(){ var x=P().leads; return (x && x.length) ? x : ['ART','LABORAL','TRANSITO']; }
-  function agPrio(l){ return !l.fase ? 0 : (l.fase==='B' ? 2 : 1); } // primero A y Llamada pendiente
+  function agPrio(l){ return l.sinDia ? -1 : (!l.fase ? 0 : (l.fase==='B' ? 2 : 1)); } // primero las agendadas sin día, después A y Llamada pendiente
   function agMatch(l, q){
     q=String(q||'').trim(); if (!q) return true;
     var d=q.replace(/\D/g,'');
@@ -2009,19 +2009,19 @@ a.save.wa-go svg{width:20px;height:20px}
     var t=normTxt(q).replace(/[^a-zñ ]/g,' ').replace(/\s+/g,' ').trim();
     return t.length>=2 && normTxt(l.nombre).indexOf(t)!==-1;
   }
-  function agBase(){ return (state.data.porAgendar||[]).filter(function(l){ return !l.fase || ['A','B','Llamada pendiente'].indexOf(l.fase)!==-1; }).sort(function(a,b){ return agPrio(a)-agPrio(b) || String(b.ingreso||'').localeCompare(String(a.ingreso||'')) || b.row-a.row; }); }
-  function agPasa(l, s, sinRama, sinFase){ return (sinRama || ramaPasa(l, s)) && (sinFase || s.fase==='todas' || l.fase===s.fase || (s.fase==='sin' && !l.fase)) && agMatch(l, s.q); }
+  function agBase(){ return (state.data.porAgendar||[]).filter(function(l){ return l.sinDia || !l.fase || ['A','B','Llamada pendiente'].indexOf(l.fase)!==-1; }).sort(function(a,b){ return agPrio(a)-agPrio(b) || String(b.ingreso||'').localeCompare(String(a.ingreso||'')) || b.row-a.row; }); }
+  function agPasa(l, s, sinRama, sinFase){ return (sinRama || ramaPasa(l, s)) && (sinFase || s.fase==='todas' || (s.fase==='sindia' ? !!l.sinDia : (!l.sinDia && (l.fase===s.fase || (s.fase==='sin' && !l.fase))))) && agMatch(l, s.q); }
   function agChipsHtml(){
     var s=agState(), base=agBase();
     var vista=s.otra ? ((((state.otras||{})[s.otra])||{}).leads||[]) : base; var nR=function(r){ return vista.filter(function(l){ return agPasa(l,s,true,false) && (!s.marca || s.marca==='todas' || marcaDe(l.rama)===s.marca) && (r==='todas' || ramaKey(l.rama)===r); }).length; };
     var nM=function(m){ return vista.filter(function(l){ return agPasa(l,s,true,false) && (m==='todas' || marcaDe(l.rama)===m); }).length; };
     var lr=leadsRamas(), hayRec=lr.indexOf('ART')!==-1 || lr.indexOf('LABORAL')!==-1, hayTra=lr.indexOf('TRANSITO')!==-1;
-    var nF=function(f){ return base.filter(function(l){ return agPasa(l,s,false,true) && (f==='todas' || l.fase===f || (f==='sin' && !l.fase)); }).length; };
+    var nF=function(f){ return base.filter(function(l){ return agPasa(l,s,false,true) && (f==='todas' || (f==='sindia' ? !!l.sinDia : (!l.sinDia && (l.fase===f || (f==='sin' && !l.fase))))); }).length; };
     var chip=function(attr,val,label,n,on){ return '<button class="chip'+(on?' on':'')+'" '+attr+'="'+esc(val)+'" aria-pressed="'+on+'">'+esc(label)+' <b class="num">'+n+'</b></button>'; };
     var marcaRow=(hayRec && hayTra) ? '<div class="chips ag marca" role="group" aria-label="Marca">'+chip('data-agmarca','todas','Todas',nM('todas'),!s.marca || s.marca==='todas')+chip('data-agmarca','reclama','Reclamá',nM('reclama'),s.marca==='reclama')+chip('data-agmarca','transito','Derecho en Tránsito',nM('transito'),s.marca==='transito')+'</div>' : '';
     var ramaRow=(s.marca==='reclama' || !hayTra) ? '<div class="chips ag" role="group" aria-label="Rama">'+chip('data-agrama','todas','ART y Laboral',nR('todas'),s.rama==='todas')+chip('data-agrama','art','ART',nR('art'),s.rama==='art')+chip('data-agrama','laboral','Laboral',nR('laboral'),s.rama==='laboral')+'</div>' : '';
     return marcaRow+ramaRow+
-      '<div class="chips ag" role="group" aria-label="Fase">'+chip('data-agfase','todas','Todas las fases',nF('todas'),s.fase==='todas' && !s.otra)+AG_FASES.map(function(f){ return chip('data-agfase',f.k,f.l,nF(f.k),s.fase===f.k && !s.otra); }).join('')+
+      '<div class="chips ag" role="group" aria-label="Fase">'+chip('data-agfase','todas','Todas las fases',nF('todas'),s.fase==='todas' && !s.otra)+AG_FASES.filter(function(f){ return f.k!=='sindia' || base.some(function(l){ return l.sinDia; }); }).map(function(f){ return chip('data-agfase',f.k,f.l,nF(f.k),s.fase===f.k && !s.otra); }).join('')+
         '<button class="chip" data-agotras aria-expanded="'+!!(state.agOtrasAbiertas||s.otra)+'">'+((state.agOtrasAbiertas||s.otra)?'Menos ▴':'Otras fases ▾')+'</button></div>'+otrasChipsHtml(s);
   }
   function agHead(){
@@ -2078,7 +2078,7 @@ a.save.wa-go svg{width:20px;height:20px}
     if (xs.length>shown.length) html+='<button class="btn3" data-agmas>Mostrar más ('+(xs.length-shown.length)+')</button>';
     return html;
   }
-  function yaEnLista(id){ return (state.data.porAgendar||[]).some(function(p){ return p.id===id && (!p.fase || ['A','B','Llamada pendiente'].indexOf(p.fase)!==-1); }) || (state.data.leads||[]).some(function(p){ return p.id===id; }); }
+  function yaEnLista(id){ return (state.data.porAgendar||[]).some(function(p){ return p.id===id && (p.sinDia || !p.fase || ['A','B','Llamada pendiente'].indexOf(p.fase)!==-1); }) || (state.data.leads||[]).some(function(p){ return p.id===id; }); }
   // Lo que ya está en el celular (otras fases precargadas al abrir Agendar): aparece mientras se escribe
   function otrasLocales(q){
     q=String(q||'').trim(); var vis={}, xs=[]; if (q.length<3) return xs;
@@ -2111,6 +2111,7 @@ a.save.wa-go svg{width:20px;height:20px}
     return '<li class="pa" data-ficha="'+esc(l.id)+'"><div class="pa-top"><div class="pa-who"><b>'+esc(l.nombre||'Sin nombre')+'</b><span>'+ramaLabel(l.rama)+(when?' · '+when:'')+((l.intaker||l.inicioChat)?' · '+esc(l.intaker||l.inicioChat):'')+(l.tel?' · '+esc(l.tel):'')+'</span></div>'+faseTag(l.fase)+'</div>'+
       (form?'<div class="pa-form">'+esc(form)+'</div>':'')+
       (ultima?'<div class="pa-note">💬 '+esc(ultima)+'</div>':'')+
+      (l.sinDia?'<div class="pa-note">📅 En la planilla figura '+esc(faseLbl(l.fase))+' pero sin día ni hora: cargale el turno con Agendar.</div>':'')+
       '<div class="pa-acts">'+acts+'<button class="btn2" data-agendar="'+esc(l.id)+'">'+I.cal+' Agendar</button></div></li>';
   }
   /* ---------- Ficha del lead: todo lo que se ve en la planilla, ordenado ---------- */
@@ -2260,8 +2261,8 @@ a.save.wa-go svg{width:20px;height:20px}
       else if (!ya.length) html+='<div class="empty"><b>'+(s.q?'No aparece en Por agendar':'No hay leads para agendar')+'</b>'+(s.q?'Puede estar en otra fase (BC, C), tener otra rama elegida arriba o haber entrado hace más de '+(state.data.diasPorAgendar||90)+' días.':'Con estos filtros no queda nadie.')+'</div>';
       return html + busqHtml(s);
     }
-    var sinc=shown.filter(function(l){ return agPrio(l)===0; }), prio=shown.filter(function(l){ return agPrio(l)===1; }), resto=shown.filter(function(l){ return agPrio(l)===2; });
-    html+=grupoHtml('Sin clasificar', sinc, s)+grupoHtml('A y Llamada pendiente', prio, s)+grupoHtml('B', resto, s);
+    var sdia=shown.filter(function(l){ return agPrio(l)===-1; }), sinc=shown.filter(function(l){ return agPrio(l)===0; }), prio=shown.filter(function(l){ return agPrio(l)===1; }), resto=shown.filter(function(l){ return agPrio(l)===2; });
+    html+=grupoHtml('Agendadas sin día ni hora', sdia, s)+grupoHtml('Sin clasificar', sinc, s)+grupoHtml('A y Llamada pendiente', prio, s)+grupoHtml('B', resto, s);
     if (all.length>shown.length) html+='<button class="btn3" data-agmas>Mostrar más ('+(all.length-shown.length)+')</button>';
     return html + busqHtml(s);
   }
@@ -3001,7 +3002,7 @@ a.save.wa-go svg{width:20px;height:20px}
     var dC=JSON.parse(JSON.stringify(d)), copia=l?JSON.parse(JSON.stringify(l)):null;
     var msg=(dvz?'↪ Derivada':'📅 '+(reag?'Reagendada':'Agendada'))+': '+(l?l.nombre:'')+', '+diaCorto(d.fecha).toLowerCase()+' '+d.hora+' con '+d.abogada;
     // Se ve agendada al instante; si el servidor no puede (por ejemplo, alguien tomó ese horario), vuelve como estaba y se reabre
-    if (copia){ var n0=JSON.parse(JSON.stringify(copia)); n0.fecha=d.fecha; n0.hora=d.hora; n0.abogada=d.abogada; if (!dvz){ n0.fase='Consulta agendada'; if (n0.fecha!==copia.fecha || n0.hora!==copia.hora){ n0.confPrev=''; n0.confDia=''; } } replaceLead(n0); markSeen(id); }
+    if (copia){ var n0=JSON.parse(JSON.stringify(copia)); n0.fecha=d.fecha; n0.hora=d.hora; n0.abogada=d.abogada; if (n0.sinDia){ delete n0.sinDia; } else if (!dvz){ n0.fase='Consulta agendada'; if (n0.fecha!==copia.fecha || n0.hora!==copia.hora){ n0.confPrev=''; n0.confDia=''; } } replaceLead(n0); markSeen(id); }
     closeSheet(); if (copia) openSheet({type:'lead', id:id}); render(); toast(msg);
     call('agendar',{id:id, fecha:d.fecha, hora:d.hora, abogada:d.abogada}).then(function(nl){
       replaceLead(nl); markSeen(id); render(); if (state.sheet && state.sheet.type==='lead' && state.sheet.id===id) renderSheet();
