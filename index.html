@@ -3680,13 +3680,23 @@ a.save.wa-go svg{width:20px;height:20px}
     for (var i=0;i<A.length;i++) if (A[i].id===nl.id){ if (intAbiertaMia(nl).length) A[i]=nl; else A.splice(i,1); return; }
     if (intAbiertaMia(nl).length) A.push(nl);
   }
+  // Se ve respondida al instante y la planilla se actualiza atrás; si falla, vuelve como estaba
   function responderInternaUI(v){
-    var p=v.split('|'), resp=p.pop(), i=p.pop(), id=p.join('|'), nt=$('intResp');
-    busySheet(true, 'Guardando…');
-    call('responderInterna', {id:id, i:+i, respuesta:resp, nota:nt?nt.value:''}).then(function(nl){
+    var p=v.split('|'), resp=p.pop(), i=+p.pop(), id=p.join('|'), nt=$('intResp'), nota=nt?nt.value:'';
+    var l=findLead(id), antes=l?JSON.parse(JSON.stringify(l)):null;
+    if (l){
+      var tmp=JSON.parse(JSON.stringify(l));
+      (tmp.internas||[]).forEach(function(x){ if (x.i===i){ x.estado=resp; x.abierta=resp==='Lo llamo yo'; x.resp=nowBA().date.slice(8,10)+'/'+nowBA().date.slice(5,7)+(nota.trim()?': '+nota.trim():''); } });
+      actualizarParaMi(tmp); replaceAny(tmp); renderSheet(); render();
+    } else busySheet(true, 'Guardando…');
+    toast('✔ '+resp);
+    call('responderInterna', {id:id, i:i, respuesta:resp, nota:nota}).then(function(nl){
       if (nl){ actualizarParaMi(nl); replaceAny(nl); }
-      renderSheet(); render(); toast('Respuesta enviada: '+resp);
-    }).catch(function(e){ renderSheet(); toast((e&&e.message)||'No se pudo guardar.', true); });
+      if (state.sheet) renderSheet(); render();
+    }).catch(function(e){
+      if (antes){ actualizarParaMi(antes); replaceAny(antes); }
+      if (state.sheet) renderSheet(); render(); toast((e&&e.message)||'No se pudo guardar. Probá de nuevo.', true);
+    });
   }
 
   /* ---------- Pasar un lead a otra rama (queda asentado en las dos planillas) ---------- */
