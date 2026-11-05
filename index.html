@@ -420,6 +420,7 @@ textarea:focus,.inp:focus,select:focus{outline:none;box-shadow:0 0 0 2.5px var(-
 .todo li.pa-li{display:flex;align-items:center}
 .est-n{color:var(--blue);background:color-mix(in srgb,var(--blue) 10%,transparent)}
 .blk.est{border-radius:16px;transition:box-shadow .15s}
+.est-tabs{margin:6px 0 4px}
 .blk.est.drag{box-shadow:0 0 0 2px var(--mint) inset;background:color-mix(in srgb,var(--mint) 8%,transparent)}
 .est-l li{display:flex;align-items:center}
 .est-l li > button[data-estver]{flex:1;min-width:0}
@@ -1720,8 +1721,11 @@ a.save.wa-go svg{width:20px;height:20px}
     }).catch(function(e){ renderSheet(); toast(e.message||'No se pudo eliminar.', true); });
   }
 
-  /* ---------- Estudios médicos (ART): se suben desde la app y quedan en una carpeta privada del Drive del estudio ---------- */
-  var EST_RAMAS=['ART'];
+  /* ---------- Estudios médicos (ART y Tránsito) y acta vial (Tránsito): se suben desde la app y quedan en una carpeta privada del Drive del estudio ---------- */
+  var EST_RAMAS=['ART','TRANSITO'];
+  var EST_CATS={ART:[['estudios','Estudios médicos']], TRANSITO:[['estudios','Estudios médicos'],['acta','Acta vial']]};
+  function estCats(l){ return EST_CATS[String(l.rama||'').toUpperCase()]||EST_CATS.ART; }
+  function estCatDe(l){ var cs=estCats(l), c=(state.estCat||{})[l.id]; return cs.some(function(x){ return x[0]===c; }) ? c : cs[0][0]; }
   function estAplica(l){ return !!l && !l.parcial && EST_RAMAS.indexOf(String(l.rama||'').toUpperCase())!==-1; }
   function estTag(l){ var n=(state.data && state.data.estudios||{})[l.id]; return n ? '<span class="cp est-n">📎 '+n+'</span>' : ''; }
   function estKb(kb){ kb=+kb||0; if (kb<1) return 'menos de 1 KB'; return kb>=1024 ? String(Math.round(kb/102.4)/10).replace('.',',')+' MB' : kb+' KB'; }
@@ -1744,8 +1748,12 @@ a.save.wa-go svg{width:20px;height:20px}
   function estBlk(l){
     if (!estAplica(l)) return '';
     state.est=state.est||{}; var c=state.est[l.id]; if (!c){ estLoad(l.id); c=state.est[l.id]; }
-    var xs=c.lista||[], n=xs.length, up=c.subiendo;
-    var h='<div class="blk est" data-estdrop="'+esc(l.id)+'"><h3 class="blk-t">📎 Estudios médicos'+(n?' ('+n+')':'')+'<small>'+(n?'Tocá uno para verlo.':(c.cargando?'Buscando…':'Todavía no hay estudios cargados.'))+'</small></h3>';
+    var cs=estCats(l), cat=estCatDe(l), todos=c.lista||[], xs=todos.filter(function(f){ return (f.cat||'estudios')===cat; }), n=xs.length, up=c.subiendo;
+    var catL=cs.filter(function(x){ return x[0]===cat; })[0][1], vacio=cat==='acta'?'Todavía no hay acta vial cargada.':'Todavía no hay estudios cargados.';
+    var h='<div class="blk est" data-estdrop="'+esc(l.id)+'"><h3 class="blk-t">📎 '+(cs.length>1?'Documentos del caso':catL)+(cs.length===1&&n?' ('+n+')':'')+'<small>'+(n?'Tocá uno para verlo.':(c.cargando?'Buscando…':(cs.length>1?'':vacio)))+'</small></h3>';
+    if (cs.length>1) h+='<div class="seg2 est-tabs" role="tablist">'+cs.map(function(x){ var k=todos.filter(function(f){ return (f.cat||'estudios')===x[0]; }).length;
+      return '<button data-estcat="'+esc(l.id)+'|'+x[0]+'" class="'+(cat===x[0]?'on':'')+'" role="tab" aria-selected="'+(cat===x[0])+'">'+(x[0]==='acta'?'🚗 ':'🩺 ')+x[1]+(k?' ('+k+')':'')+'</button>'; }).join('')+'</div>'+
+      (!n && !c.cargando ? '<p class="hint" style="margin:8px 2px 0">'+vacio+'</p>' : '');
     if (c.error) h+='<div class="err-box">'+esc(c.error)+'<br><button data-estretry="'+esc(l.id)+'">Reintentar</button></div>';
     if (n) h+='<ul class="todo est-l">'+xs.map(function(f){
       var pdf=/pdf/.test(f.tipo), k=esc(l.id)+'|'+esc(f.fid);
@@ -1754,7 +1762,7 @@ a.save.wa-go svg{width:20px;height:20px}
     }).join('')+'</ul>';
     if (c.puede || (!c.lista && estPuedeLocal(l))){
       h+= up ? '<div class="est-up"><span class="spin-dot"></span><span>Subiendo '+up.i+' de '+up.n+': '+esc(up.nombre||'')+'</span></div>' :
-        '<button class="est-drop" data-estpick="'+esc(l.id)+'"><b>＋ Subir estudios</b><span>Arrastrá acá los PDF o las fotos, o tocá para elegirlos. Hasta '+(c.max||10)+' MB cada uno.</span></button>';
+        '<button class="est-drop" data-estpick="'+esc(l.id)+'"><b>＋ Subir '+(cat==='acta'?'acta vial':'estudios')+'</b><span>Arrastrá acá los PDF o las fotos, o tocá para elegirlos. Hasta '+(c.max||10)+' MB cada uno.</span></button>';
     }
     return h+'</div>';
   }
@@ -1776,19 +1784,21 @@ a.save.wa-go svg{width:20px;height:20px}
   function estB64(blob){ return new Promise(function(res, rej){ var r=new FileReader(); r.onload=function(){ res(String(r.result).split(',')[1]||''); }; r.onerror=function(){ rej(new Error('No pude leer el archivo.')); }; r.readAsDataURL(blob); }); }
   function estSubir(id, files){
     files=[].slice.call(files||[]).filter(Boolean); if (!files.length) return;
+    var lx=findLead(id), cat=lx ? estCatDe(lx) : 'estudios';
     state.est=state.est||{}; if (!state.est[id]) state.est[id]={lista:[]};
     if (state.est[id].subiendo){ toast('Esperá a que termine de subir lo anterior.', true); return; }
     var malos=[], ok=0, i=0, C=function(){ return state.est[id]; };
     var sig=function(){
       if (i>=files.length){ C().subiendo=null; estRender(); render();
-        if (malos.length) toast((ok?plural(ok,'estudio subido','estudios subidos')+'. ':'')+'No se subió: '+malos.join(' · '), true); else toast('✔ '+plural(ok,'estudio subido','estudios subidos'));
+        var qu=cat==='acta'?['archivo del acta subido','archivos del acta subidos']:['estudio subido','estudios subidos'];
+        if (malos.length) toast((ok?plural(ok,qu[0],qu[1])+'. ':'')+'No se subió: '+malos.join(' · '), true); else toast('✔ '+plural(ok,qu[0],qu[1]));
         return; }
       var f=files[i++], tipo=estTipo(f), max=(C().max||10)*1024*1024;
       C().subiendo={i:i, n:files.length, nombre:f.name}; estRender();
       if (!/^(application\/pdf|image\/)/.test(tipo)){ malos.push(f.name+' (solo PDF o fotos)'); return sig(); }
       estComprimir(f, tipo).then(function(x){
         if (x.b.size>max) throw new Error('pesa más de '+(C().max||10)+' MB');
-        return estB64(x.b).then(function(b64){ return call('subirEstudio',{id:id, nombre:x.nombre, tipo:x.tipo, b64:b64}); });
+        return estB64(x.b).then(function(b64){ return call('subirEstudio',{id:id, nombre:x.nombre, tipo:x.tipo, b64:b64, cat:cat}); });
       }).then(function(r){ ok++; estSet(id, r); sig(); })
         .catch(function(e){ malos.push(f.name+' ('+((e&&e.message)||'no se pudo subir')+')'); sig(); });
     };
@@ -1825,13 +1835,15 @@ a.save.wa-go svg{width:20px;height:20px}
     var l=d.estFor?findLead(d.estFor):null;
     if (l) return '<button class="link" data-estotra style="margin-top:10px">‹ Elegir otra consulta</button><div class="pa-has" style="margin:8px 2px 0"><b>'+esc(l.nombre)+'</b> · '+esc(diaCorto(l.fecha))+' '+esc(l.hora||'')+(l.abogada?' con '+esc(l.abogada):'')+'</div>'+estBlk(l);
     var xs=estConsultas(), cnt=(state.data.estudios||{});
-    return '<div class="blk"><h3 class="blk-t">Consultas de ART<small>Elegí a quién le cargás los estudios. La abogada los ve en la consulta.</small></h3><ul class="todo">'+xs.map(function(x){
-      return '<li><button data-estpara="'+esc(x.id)+'"><span class="h num">'+esc(x.hora||'--:--')+'</span><span class="w"><b>'+esc(x.nombre)+'</b><span>'+shortDate(x.fecha)+(x.abogada?', con '+esc(x.abogada):'')+(cnt[x.id]?' · 📎 '+cnt[x.id]:'')+'</span></span>'+I.chev+'</button></li>';
+    var hayTra=xs.some(function(x){ return ramaKey(x.rama)==='transito'; }), hayArt=xs.some(function(x){ return ramaKey(x.rama)==='art'; });
+    return '<div class="blk"><h3 class="blk-t">Consultas de '+(hayArt&&hayTra?'ART y Tránsito':(hayTra?'Tránsito':'ART'))+'<small>Elegí a quién le cargás '+(hayTra?'los estudios o el acta vial':'los estudios')+'. Quien atiende los ve en la consulta.</small></h3><ul class="todo">'+xs.map(function(x){
+      return '<li><button data-estpara="'+esc(x.id)+'"><span class="h num">'+esc(x.hora||'--:--')+'</span><span class="w"><b>'+esc(x.nombre)+'</b><span>'+shortDate(x.fecha)+', '+ramaLabel(x.rama)+(x.abogada?', con '+esc(x.abogada):'')+(cnt[x.id]?' · 📎 '+cnt[x.id]:'')+'</span></span>'+I.chev+'</button></li>';
     }).join('')+'</ul></div>';
   }
   document.addEventListener('click', function(ev){
-    var t=ev.target.closest('[data-estver],[data-estborrar],[data-estretry],[data-estcerrar],[data-estpick],[data-pgmodo],[data-estpara],[data-estotra]'); if (!t) return;
+    var t=ev.target.closest('[data-estver],[data-estborrar],[data-estretry],[data-estcerrar],[data-estcat],[data-estpick],[data-pgmodo],[data-estpara],[data-estotra]'); if (!t) return;
     if (t.hasAttribute('data-estcerrar')){ estCerrar(); return; }
+    if (t.hasAttribute('data-estcat')){ var ec=t.getAttribute('data-estcat').split('|'), ck=ec.pop(); (state.estCat||(state.estCat={}))[ec.join('|')]=ck; state.estBorrar=null; estRender(); return; }
     // Un solo selector de archivos fuera de la ficha: si la ficha se vuelve a dibujar mientras eligen, no se pierde lo elegido
     if (t.hasAttribute('data-estpick')){ var inp=$('estInput'); if (!inp){ inp=document.createElement('input'); inp.type='file'; inp.multiple=true; inp.accept='application/pdf,image/*'; inp.id='estInput'; inp.setAttribute('aria-hidden','true'); inp.tabIndex=-1; inp.style.cssText='position:fixed;left:-9999px;top:0;opacity:0;width:1px;height:1px'; document.body.appendChild(inp); } inp.setAttribute('data-estfile', t.getAttribute('data-estpick')); inp.value=''; inp.click(); return; }
     if (t.hasAttribute('data-estretry')){ estLoad(t.getAttribute('data-estretry'), true); estRender(); return; }
@@ -1964,7 +1976,7 @@ a.save.wa-go svg{width:20px;height:20px}
       '<button class="close" data-close aria-label="Cerrar">'+I.x+'</button></div>';
     if (d.step==='review') return html + reviewHtml(!!tgt);
     if (!tgt && estConsultas().length){
-      html += '<div class="seg2" role="tablist" style="margin-top:12px"><button data-pgmodo="res" class="'+(d.modo!=='est'?'on':'')+'" role="tab" aria-selected="'+(d.modo!=='est')+'">Resúmenes</button><button data-pgmodo="est" class="'+(d.modo==='est'?'on':'')+'" role="tab" aria-selected="'+(d.modo==='est')+'">📎 Estudios médicos</button></div>';
+      html += '<div class="seg2" role="tablist" style="margin-top:12px"><button data-pgmodo="res" class="'+(d.modo!=='est'?'on':'')+'" role="tab" aria-selected="'+(d.modo!=='est')+'">Resúmenes</button><button data-pgmodo="est" class="'+(d.modo==='est'?'on':'')+'" role="tab" aria-selected="'+(d.modo==='est')+'">📎 '+(estConsultas().some(function(x){ return ramaKey(x.rama)==='transito'; })?'Estudios y actas':'Estudios médicos')+'</button></div>';
       if (d.modo==='est') return html + estPegar(d);
     }
     html += '<div class="field"><textarea id="pasteTxt" class="paste" placeholder="'+(tgt?'ART: …\nResumen: …':'Nombre: …\nTel: …\nConsulta: …\nResumen: …')+'">'+esc(d.text)+'</textarea></div>';
