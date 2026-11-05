@@ -1982,16 +1982,24 @@ a.save.wa-go svg{width:20px;height:20px}
   function sheetRecibo(){
     var d=state.draft, t=trLista().filter(function(x){ return x.id===d.tid; })[0]; if (!t) return null;
     var ida=d.tramo==='ida';
-    var html='<div class="grab"></div><div class="sh-head"><div class="sh-who"><h2>🧾 Recibo de la '+(ida?'ida':'vuelta')+'</h2><p class="hint" style="margin:4px 0 0">'+esc(t.cliente)+' · '+esc(diaCorto(t.fecha))+'. Cuando estén los recibos de todos los viajes, a los socios les aparece para transferirte.</p></div><button class="close" data-close aria-label="Cerrar">'+I.x+'</button></div>';
+    var html='<div class="grab"></div><div class="sh-head"><div class="sh-who"><h2>🧾 Recibo de la '+(ida?'ida':'vuelta')+'</h2><p class="hint" style="margin:4px 0 0">'+esc(t.cliente)+' · '+esc(diaCorto(t.fecha))+'. Cuando estén los recibos de todos los viajes, a los socios les aparece para transferirle a quien lo pagó.</p></div><button class="close" data-close aria-label="Cerrar">'+I.x+'</button></div>';
     html+='<div class="field"><label for="trMonto">¿Cuánto salió?</label><input class="inp" id="trMonto" inputmode="decimal" autocomplete="off" value="'+esc(d.monto||'')+'" placeholder="Ej.: 8500"></div>';
-    html+='<div class="field"><label for="trPago">¿Quién lo pagó?</label><input class="inp" id="trPago" autocomplete="off" value="'+esc(d.pago||'')+'"></div>';
+    var ns=trPagadores(), otro=d.pagoOtro || (!!d.pago && ns.indexOf(d.pago)===-1);
+    html+='<div class="field"><span class="lbl">¿Quién lo pagó? <small style="font-weight:500;color:var(--ink-3)">A esa persona le transfieren los socios</small></span><div class="chips" role="group" aria-label="Quién lo pagó" style="flex-wrap:wrap;overflow:visible;margin:6px 0 0;padding:0">'+
+      ns.map(function(n){ var on=!otro && d.pago===n; return '<button class="chip'+(on?' on':'')+'" data-trpago="'+esc(n)+'" aria-pressed="'+on+'">'+esc(n)+'</button>'; }).join('')+
+      '<button class="chip'+(otro?' on':'')+'" data-trpago="" aria-pressed="'+otro+'">Otra persona</button></div>'+
+      (otro?'<input class="inp" id="trPago" autocomplete="off" style="margin-top:8px" placeholder="Nombre de quien lo pagó" value="'+esc(ns.indexOf(d.pago)===-1?(d.pago||''):'')+'">':'')+'</div>';
     html+='<div class="field"><span class="lbl">Foto del recibo</span><button class="est-drop" data-trfoto><b>'+(d.archivo?'✓ '+esc(d.archivo.name||'Foto elegida'):'📷 Sacar o elegir la foto')+'</b><span>'+(d.archivo?'Tocá para cambiarla.':(t[ida?'recIda':'recVuelta']?'Ya tiene una; elegí otra si querés cambiarla.':'Captura del resumen del viaje de Uber.'))+'</span></button></div>';
     html+='<div class="save-wrap"><button class="save" data-trrecsave>Guardar recibo</button></div>';
     return html;
   }
+  // Quién pudo pagar el Uber: intakers, socios y abogadas (en ese orden)
+  function trPagadores(){ var eq=(state.data&&state.data.equipo)||state.equipo||[], ord={intaker:0, admin:1, abogada:2};
+    return eq.filter(function(e){ return e && e.nombre && ord[e.rol]!==undefined; }).sort(function(a,b){ return ord[a.rol]-ord[b.rol]; }).map(function(e){ return e.nombre; }); }
   function trReciboGuardar(){
-    var d=state.draft, m=$('trMonto'), pg=$('trPago'); d.monto=m?m.value:d.monto; d.pago=pg?pg.value:d.pago;
+    var d=state.draft, m=$('trMonto'), pg=$('trPago'); d.monto=m?m.value:d.monto; d.pago=String(pg?pg.value:(d.pago||'')).trim();
     if (!(finNum(d.monto)>0)){ toast('Poné cuánto salió el viaje.', true); return; }
+    if (!d.pago){ toast('Elegí quién pagó el Uber, así le transfieren a esa persona.', true); return; }
     var t=trLista().filter(function(x){ return x.id===d.tid; })[0];
     if (!d.archivo && !(t && t[d.tramo==='ida'?'recIda':'recVuelta'])){ toast('Sacale una foto al recibo.', true); return; }
     busySheet(true,'Subiendo…');
@@ -2018,7 +2026,7 @@ a.save.wa-go svg{width:20px;height:20px}
   // Reintegros para los socios
   function sheetReintegros(){
     var xs=trLista().filter(function(t){ return t.reintegro==='pendiente' && t.socio; });
-    var html='<div class="grab"></div><div class="sh-head"><div class="sh-who"><h2>💸 Reintegros de traslados</h2><p class="hint" style="margin:4px 0 0">Uber que pagaron los intakers. Transferile a quien pagó y marcalo.</p></div><button class="close" data-close aria-label="Cerrar">'+I.x+'</button></div>';
+    var html='<div class="grab"></div><div class="sh-head"><div class="sh-who"><h2>💸 Reintegros de traslados</h2><p class="hint" style="margin:4px 0 0">Uber que pagó alguien del equipo. Transferile a quien lo pagó y marcalo.</p></div><button class="close" data-close aria-label="Cerrar">'+I.x+'</button></div>';
     if (!xs.length) return html+emptyBox('No hay reintegros pendientes');
     var por={}; xs.forEach(function(t){ [['ida','Ida'],['vuelta','Vuelta']].forEach(function(k){ var m=t['monto'+k[1]]; if (!t[k[0]] || !m) return; var q=t['pago'+k[1]]||'Sin dato'; por[q]=(por[q]||0)+m; }); });
     html+='<div class="note" style="margin-top:12px">'+Object.keys(por).map(function(q){ return 'A <b>'+esc(q)+'</b>: '+plata(por[q]); }).join('<br>')+'</div>';
@@ -2069,7 +2077,8 @@ a.save.wa-go svg{width:20px;height:20px}
   function trPintarAviso(){ var e=$('trAviso'); if (e) e.innerHTML=trAvisoHtml()+sinEnvHtml(); }
   setInterval(trPintarAviso, 30000);
   document.addEventListener('click', function(ev){
-    var t=ev.target.closest('[data-trnuevo],[data-tredit],[data-trchk],[data-trguardar],[data-tracc],[data-trcancel],[data-trrecibo],[data-trrecsave],[data-trfoto],[data-trver],[data-trreint],[data-trcopiar]'); if (!t) return;
+    var t=ev.target.closest('[data-trnuevo],[data-tredit],[data-trchk],[data-trguardar],[data-tracc],[data-trcancel],[data-trrecibo],[data-trrecsave],[data-trfoto],[data-trver],[data-trreint],[data-trcopiar],[data-trpago]'); if (!t) return;
+    if (t.hasAttribute('data-trpago')){ var m0=$('trMonto'); if (m0) state.draft.monto=m0.value; var v=t.getAttribute('data-trpago'); state.draft.pagoOtro=!v; state.draft.pago=v; renderSheet(); if (!v){ var i0=$('trPago'); if (i0) i0.focus(); } return; }
     if (t.hasAttribute('data-trnuevo') || t.hasAttribute('data-tredit')){ trAbrirForm(t.getAttribute('data-trnuevo')||t.getAttribute('data-tredit')); return; }
     if (t.hasAttribute('data-trchk')){ trSync(); var k=t.getAttribute('data-trchk'); state.draft[k]=!state.draft[k]; renderSheet(); return; }
     if (t.hasAttribute('data-trguardar')){ trGuardar(); return; }
