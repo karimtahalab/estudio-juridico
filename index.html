@@ -417,6 +417,31 @@ textarea:focus,.inp:focus,select:focus{outline:none;box-shadow:0 0 0 2.5px var(-
 .cbtn.no.on{background:var(--red-bg);box-shadow:0 0 0 2px var(--red) inset}
 .cbs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}
 .todo .go2{font-size:14px;font-weight:700;color:var(--blue);flex:none}
+.todo li.pa-li{display:flex;align-items:center}
+.est-n{color:var(--blue);background:color-mix(in srgb,var(--blue) 10%,transparent)}
+.blk.est{border-radius:16px;transition:box-shadow .15s}
+.blk.est.drag{box-shadow:0 0 0 2px var(--mint) inset;background:color-mix(in srgb,var(--mint) 8%,transparent)}
+.est-l li{display:flex;align-items:center}
+.est-l li > button[data-estver]{flex:1;min-width:0}
+.est-l .w b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.est-ic{font-size:20px;flex:none}
+.est-l .est-x{width:auto;flex:none;margin-right:8px;padding:6px 10px;border-radius:9px;font-size:13px;font-weight:700;color:var(--ink-3)}
+.est-l .est-x.on{color:#fff;background:var(--red)}
+.est-drop{position:relative;display:flex;flex-direction:column;gap:3px;align-items:center;text-align:center;margin-top:8px;padding:16px 14px;border:2px dashed var(--line);border-radius:14px;background:var(--paper);cursor:pointer}
+.est-drop b{font-size:15.5px;color:var(--blue)} .est-drop span{font-size:13px;color:var(--ink-3)}
+.est-drop{width:100%}
+.est-up{display:flex;align-items:center;gap:10px;margin-top:8px;padding:12px 14px;border-radius:14px;background:var(--paper);box-shadow:0 0 0 1px var(--line) inset;font-size:14px;color:var(--ink-2)}
+.est-visor{position:fixed;inset:0;z-index:300;background:rgba(10,14,25,.92);display:flex;flex-direction:column;padding:max(10px,env(safe-area-inset-top)) 10px max(10px,env(safe-area-inset-bottom))}
+.est-vh{display:flex;align-items:center;gap:8px;color:#fff;padding:4px 2px 10px}
+.est-vh b{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:15px}
+.est-vh .mini{color:#fff;background:rgba(255,255,255,.14);border-radius:9px;padding:7px 10px;font-size:13px;font-weight:700;text-decoration:none}
+.est-vh .close{color:#fff;background:rgba(255,255,255,.14)}
+.est-vb{flex:1;width:100%;border:0;border-radius:12px;background:#fff}
+.est-img{display:flex;align-items:center;justify-content:center;overflow:auto;background:transparent}
+.est-img img{max-width:100%;max-height:100%;object-fit:contain;border-radius:8px}
+.todo li.pa-li > button[data-ficha]{flex:1;min-width:0}
+.todo li.pa-li .pa-ag{width:auto;flex:none;gap:6px;margin-right:10px;padding:8px 12px;border-radius:10px;font-size:14px;font-weight:700;color:var(--blue);background:color-mix(in srgb,var(--blue) 10%,transparent)}
+.todo li.pa-li .pa-ag svg{width:16px;height:16px}
 .btn3{width:100%;height:46px;margin-top:10px;border-radius:14px;background:var(--paper);box-shadow:0 0 0 1px var(--line) inset;font-weight:700;font-size:15px;display:flex;align-items:center;justify-content:center;gap:8px}
 .btn3 svg{width:18px;height:18px}
 .nov{background:var(--paper);border-radius:var(--r-lg);box-shadow:0 0 0 2px var(--mint) inset;padding:10px 6px 6px;margin-top:8px}
@@ -1168,7 +1193,7 @@ a.save.wa-go svg{width:20px;height:20px}
       '<button class="it-main" data-open="'+esc(l.id)+'" aria-label="Abrir ficha de '+esc(l.nombre)+'">'+
         '<span class="tm num">'+(o.showDate?'<small>'+shortDate(l.fecha)+'</small>':'')+esc(l.hora||'--:--')+'</span>'+
         '<span class="tx"><span class="nm">'+esc(l.nombre||'Sin nombre')+'</span>'+
-          '<span class="mt"><span class="rama r-'+ramaKey(l.rama)+'">'+ramaLabel(l.rama)+'</span><span class="st">'+st.i+' '+st.l+'</span>'+reag+solapaTag(l)+derivTag(l)+'</span>'+
+          '<span class="mt"><span class="rama r-'+ramaKey(l.rama)+'">'+ramaLabel(l.rama)+'</span><span class="st">'+st.i+' '+st.l+'</span>'+reag+solapaTag(l)+derivTag(l)+estTag(l)+'</span>'+
           confPills(l)+
         '</span>'+
       '</button>'+
@@ -1550,6 +1575,7 @@ a.save.wa-go svg{width:20px;height:20px}
     } else if (isPend(s) || needsResult(l)){
       html += '<div class="blk"><h3 class="blk-t">Resumen del caso</h3><div class="missing"><span>Todavía no hay resumen.</span><button class="btn2" data-escribir="'+esc(l.id)+'">'+I.pen+'Escribir</button></div><button class="link" data-pastefor="'+esc(l.id)+'">O pegá el mensaje de WhatsApp</button></div>';
     }
+    html += estBlk(l);
     if (l.comentarios && l.comentarios.length){
       html += '<div class="blk"><h3 class="blk-t">Notas de los intakers</h3><div class="notes">'+
         l.comentarios.map(function(c){ return '<div class="kv stack"><span>'+esc(c.label)+'</span><b>'+esc(c.text)+'</b></div>'; }).join('')+'</div></div>';
@@ -1694,6 +1720,134 @@ a.save.wa-go svg{width:20px;height:20px}
     }).catch(function(e){ renderSheet(); toast(e.message||'No se pudo eliminar.', true); });
   }
 
+  /* ---------- Estudios médicos (ART): se suben desde la app y quedan en una carpeta privada del Drive del estudio ---------- */
+  var EST_RAMAS=['ART'];
+  function estAplica(l){ return !!l && !l.parcial && EST_RAMAS.indexOf(String(l.rama||'').toUpperCase())!==-1; }
+  function estTag(l){ var n=(state.data && state.data.estudios||{})[l.id]; return n ? '<span class="cp est-n">📎 '+n+'</span>' : ''; }
+  function estKb(kb){ kb=+kb||0; if (kb<1) return 'menos de 1 KB'; return kb>=1024 ? String(Math.round(kb/102.4)/10).replace('.',',')+' MB' : kb+' KB'; }
+  function estPuedeLocal(l){ return rol()==='admin' || puede('confirmar') || ((P().leads||[]).indexOf(l.rama)!==-1) || !!(state.me && state.me.nombre===l.abogada); }
+  function estPuedeBorrar(f){ return rol()==='admin' || !!(state.me && f.por===state.me.nombre); }
+  function estRender(){ if (state.sheet && ['lead','ficha','pegar'].indexOf(state.sheet.type)!==-1 && !escribiendo()) renderSheet(); }
+  function estLoad(id, fresco){
+    state.est=state.est||{}; var c=state.est[id];
+    if (c && (c.cargando || (!fresco && c.lista))) return;
+    state.est[id]={cargando:true, lista:c&&c.lista, puede:c&&c.puede, max:c&&c.max};
+    call('getEstudios',{id:id}).then(function(r){ estSet(id, r); })
+      .catch(function(e){ state.est[id]={error:(e&&e.message)||'No se pudieron leer los estudios.'}; estRender(); });
+  }
+  function estSet(id, r){
+    var prev=(state.est||{})[id]||{};
+    state.est[id]={lista:r.lista||[], puede:!!r.puedeSubir, max:r.maxMB||10, subiendo:prev.subiendo};
+    if (state.data){ var m=state.data.estudios||(state.data.estudios={}); if ((r.lista||[]).length) m[id]=r.lista.length; else delete m[id]; }
+    estRender(); render();
+  }
+  function estBlk(l){
+    if (!estAplica(l)) return '';
+    state.est=state.est||{}; var c=state.est[l.id]; if (!c){ estLoad(l.id); c=state.est[l.id]; }
+    var xs=c.lista||[], n=xs.length, up=c.subiendo;
+    var h='<div class="blk est" data-estdrop="'+esc(l.id)+'"><h3 class="blk-t">📎 Estudios médicos'+(n?' ('+n+')':'')+'<small>'+(n?'Tocá uno para verlo.':(c.cargando?'Buscando…':'Todavía no hay estudios cargados.'))+'</small></h3>';
+    if (c.error) h+='<div class="err-box">'+esc(c.error)+'<br><button data-estretry="'+esc(l.id)+'">Reintentar</button></div>';
+    if (n) h+='<ul class="todo est-l">'+xs.map(function(f){
+      var pdf=/pdf/.test(f.tipo), k=esc(l.id)+'|'+esc(f.fid);
+      return '<li><button data-estver="'+k+'"><span class="est-ic">'+(pdf?'📄':'🖼️')+'</span><span class="w"><b>'+esc(f.nombre)+'</b><span>'+estKb(f.kb)+(f.por?' · '+esc(f.por):'')+(f.fecha?' · '+esc(String(f.fecha).slice(0,10)):'')+'</span></span><span class="go2">Ver</span></button>'+
+        (estPuedeBorrar(f)?'<button class="est-x'+(state.estBorrar===f.fid?' on':'')+'" data-estborrar="'+k+'" aria-label="Sacar '+esc(f.nombre)+'">'+(state.estBorrar===f.fid?'¿Sacar?':'✕')+'</button>':'')+'</li>';
+    }).join('')+'</ul>';
+    if (c.puede || (!c.lista && estPuedeLocal(l))){
+      h+= up ? '<div class="est-up"><span class="spin-dot"></span><span>Subiendo '+up.i+' de '+up.n+': '+esc(up.nombre||'')+'</span></div>' :
+        '<button class="est-drop" data-estpick="'+esc(l.id)+'"><b>＋ Subir estudios</b><span>Arrastrá acá los PDF o las fotos, o tocá para elegirlos. Hasta '+(c.max||10)+' MB cada uno.</span></button>';
+    }
+    return h+'</div>';
+  }
+  function estTipo(f){ var t=String(f.type||'').toLowerCase(); if (t) return t; var n=String(f.name||'').toLowerCase(); return /\.pdf$/.test(n)?'application/pdf':(/\.hei[cf]$/.test(n)?'image/heic':(/\.jpe?g$/.test(n)?'image/jpeg':(/\.png$/.test(n)?'image/png':''))); }
+  // Las fotos grandes se achican antes de subir (2200 px, JPG): se leen igual y suben mucho más rápido
+  function estComprimir(file, tipo){
+    return new Promise(function(res){
+      if (!/^image\/(jpeg|png|webp)$/.test(tipo) || file.size<700*1024) return res({b:file, tipo:tipo, nombre:file.name});
+      var u=URL.createObjectURL(file), img=new Image();
+      img.onload=function(){
+        var M=2200, w=img.naturalWidth, h=img.naturalHeight, k=Math.min(1, M/Math.max(w,h)), cv=document.createElement('canvas');
+        cv.width=Math.round(w*k); cv.height=Math.round(h*k); cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height); URL.revokeObjectURL(u);
+        cv.toBlob(function(b){ if (b && b.size<file.size) res({b:b, tipo:'image/jpeg', nombre:String(file.name||'foto').replace(/\.(png|webp|jpe?g)$/i,'')+'.jpg'}); else res({b:file, tipo:tipo, nombre:file.name}); }, 'image/jpeg', 0.85);
+      };
+      img.onerror=function(){ URL.revokeObjectURL(u); res({b:file, tipo:tipo, nombre:file.name}); };
+      img.src=u;
+    });
+  }
+  function estB64(blob){ return new Promise(function(res, rej){ var r=new FileReader(); r.onload=function(){ res(String(r.result).split(',')[1]||''); }; r.onerror=function(){ rej(new Error('No pude leer el archivo.')); }; r.readAsDataURL(blob); }); }
+  function estSubir(id, files){
+    files=[].slice.call(files||[]).filter(Boolean); if (!files.length) return;
+    state.est=state.est||{}; if (!state.est[id]) state.est[id]={lista:[]};
+    if (state.est[id].subiendo){ toast('Esperá a que termine de subir lo anterior.', true); return; }
+    var malos=[], ok=0, i=0, C=function(){ return state.est[id]; };
+    var sig=function(){
+      if (i>=files.length){ C().subiendo=null; estRender(); render();
+        if (malos.length) toast((ok?plural(ok,'estudio subido','estudios subidos')+'. ':'')+'No se subió: '+malos.join(' · '), true); else toast('✔ '+plural(ok,'estudio subido','estudios subidos'));
+        return; }
+      var f=files[i++], tipo=estTipo(f), max=(C().max||10)*1024*1024;
+      C().subiendo={i:i, n:files.length, nombre:f.name}; estRender();
+      if (!/^(application\/pdf|image\/)/.test(tipo)){ malos.push(f.name+' (solo PDF o fotos)'); return sig(); }
+      estComprimir(f, tipo).then(function(x){
+        if (x.b.size>max) throw new Error('pesa más de '+(C().max||10)+' MB');
+        return estB64(x.b).then(function(b64){ return call('subirEstudio',{id:id, nombre:x.nombre, tipo:x.tipo, b64:b64}); });
+      }).then(function(r){ ok++; estSet(id, r); sig(); })
+        .catch(function(e){ malos.push(f.name+' ('+((e&&e.message)||'no se pudo subir')+')'); sig(); });
+    };
+    sig();
+  }
+  function estVer(id, fid){
+    toast('Abriendo el estudio…');
+    call('verEstudio',{id:id, fid:fid}).then(function(r){
+      var bin=atob(r.b64||''), arr=new Uint8Array(bin.length); for (var k=0;k<bin.length;k++) arr[k]=bin.charCodeAt(k);
+      var tipo=r.tipo||'application/pdf', url=URL.createObjectURL(new Blob([arr],{type:tipo}));
+      estVisor(url, r.nombre||'Estudio', tipo);
+    }).catch(function(e){ toast((e&&e.message)||'No se pudo abrir el estudio.', true); });
+  }
+  function estVisor(url, nombre, tipo){
+    estCerrar();
+    var v=document.createElement('div'); v.id='estVisor'; v.className='est-visor'; v.setAttribute('role','dialog'); v.setAttribute('aria-label', nombre); v.dataset.url=url;
+    v.innerHTML='<div class="est-vh"><b>'+esc(nombre)+'</b><a class="mini" href="'+url+'" target="_blank" rel="noopener">Abrir</a><a class="mini" href="'+url+'" download="'+esc(nombre)+'">Descargar</a><button class="close" data-estcerrar aria-label="Cerrar">'+I.x+'</button></div>'+
+      (/^image\//.test(tipo) ? '<div class="est-vb est-img"><img src="'+url+'" alt="'+esc(nombre)+'"></div>' : '<iframe class="est-vb" src="'+url+'" title="'+esc(nombre)+'"></iframe>');
+    document.body.appendChild(v);
+  }
+  function estCerrar(){ var v=document.getElementById('estVisor'); if (!v) return; try{ URL.revokeObjectURL(v.dataset.url); }catch(e){} v.remove(); }
+  function estBorrar(id, fid){
+    if (state.estBorrar!==fid){ state.estBorrar=fid; estRender(); return; }
+    state.estBorrar=null; toast('Sacando el estudio…');
+    call('borrarEstudio',{id:id, fid:fid}).then(function(r){ estSet(id, r); toast('Estudio sacado (queda en la papelera del Drive 30 días).'); })
+      .catch(function(e){ toast((e&&e.message)||'No se pudo sacar.', true); });
+  }
+  // Pestaña "Estudios médicos" en Cargar resúmenes: las consultas de ART que vienen (y las de los últimos días)
+  function estConsultas(){
+    var desde=addDays(nowBA().date,-3);
+    return (state.data && state.data.leads||[]).filter(function(l){ return estAplica(l) && l.fecha && l.fecha>=desde && ['Consulta agendada','Reagenda'].indexOf(l.fase)!==-1; }).sort(byTime);
+  }
+  function estPegar(d){
+    var l=d.estFor?findLead(d.estFor):null;
+    if (l) return '<button class="link" data-estotra style="margin-top:10px">‹ Elegir otra consulta</button><div class="pa-has" style="margin:8px 2px 0"><b>'+esc(l.nombre)+'</b> · '+esc(diaCorto(l.fecha))+' '+esc(l.hora||'')+(l.abogada?' con '+esc(l.abogada):'')+'</div>'+estBlk(l);
+    var xs=estConsultas(), cnt=(state.data.estudios||{});
+    return '<div class="blk"><h3 class="blk-t">Consultas de ART<small>Elegí a quién le cargás los estudios. La abogada los ve en la consulta.</small></h3><ul class="todo">'+xs.map(function(x){
+      return '<li><button data-estpara="'+esc(x.id)+'"><span class="h num">'+esc(x.hora||'--:--')+'</span><span class="w"><b>'+esc(x.nombre)+'</b><span>'+shortDate(x.fecha)+(x.abogada?', con '+esc(x.abogada):'')+(cnt[x.id]?' · 📎 '+cnt[x.id]:'')+'</span></span>'+I.chev+'</button></li>';
+    }).join('')+'</ul></div>';
+  }
+  document.addEventListener('click', function(ev){
+    var t=ev.target.closest('[data-estver],[data-estborrar],[data-estretry],[data-estcerrar],[data-estpick],[data-pgmodo],[data-estpara],[data-estotra]'); if (!t) return;
+    if (t.hasAttribute('data-estcerrar')){ estCerrar(); return; }
+    // Un solo selector de archivos fuera de la ficha: si la ficha se vuelve a dibujar mientras eligen, no se pierde lo elegido
+    if (t.hasAttribute('data-estpick')){ var inp=$('estInput'); if (!inp){ inp=document.createElement('input'); inp.type='file'; inp.multiple=true; inp.accept='application/pdf,image/*'; inp.id='estInput'; inp.setAttribute('aria-hidden','true'); inp.tabIndex=-1; inp.style.cssText='position:fixed;left:-9999px;top:0;opacity:0;width:1px;height:1px'; document.body.appendChild(inp); } inp.setAttribute('data-estfile', t.getAttribute('data-estpick')); inp.value=''; inp.click(); return; }
+    if (t.hasAttribute('data-estretry')){ estLoad(t.getAttribute('data-estretry'), true); estRender(); return; }
+    if (t.hasAttribute('data-estver')){ var a=t.getAttribute('data-estver').split('|'); var fid=a.pop(); estVer(a.join('|'), fid); return; }
+    if (t.hasAttribute('data-estborrar')){ var b=t.getAttribute('data-estborrar').split('|'); var fb=b.pop(); estBorrar(b.join('|'), fb); return; }
+    if (!state.draft) return;
+    if (t.hasAttribute('data-pgmodo')){ var ta=$('pasteTxt'); if (ta) state.draft.text=ta.value; state.draft.modo=t.getAttribute('data-pgmodo'); renderSheet(); return; }
+    if (t.hasAttribute('data-estpara')){ state.draft.estFor=t.getAttribute('data-estpara'); renderSheet(); return; }
+    if (t.hasAttribute('data-estotra')){ state.draft.estFor=null; renderSheet(); return; }
+  });
+  document.addEventListener('change', function(ev){ var t=ev.target; if (!t || !t.hasAttribute || !t.hasAttribute('data-estfile')) return; var fs=[].slice.call(t.files||[]); t.value=''; estSubir(t.getAttribute('data-estfile'), fs); });
+  ['dragenter','dragover'].forEach(function(n){ document.addEventListener(n, function(ev){ var z=ev.target.closest && ev.target.closest('[data-estdrop]'); if (!z) return; ev.preventDefault(); z.classList.add('drag'); }); });
+  document.addEventListener('dragleave', function(ev){ var z=ev.target.closest && ev.target.closest('[data-estdrop]'); if (z && !z.contains(ev.relatedTarget)) z.classList.remove('drag'); });
+  document.addEventListener('drop', function(ev){ var z=ev.target.closest && ev.target.closest('[data-estdrop]'); if (!z) return; ev.preventDefault(); z.classList.remove('drag'); estSubir(z.getAttribute('data-estdrop'), ev.dataTransfer && ev.dataTransfer.files); });
+  document.addEventListener('keydown', function(ev){ if (ev.key==='Escape' && document.getElementById('estVisor')) estCerrar(); });
+
   /* ---------- resúmenes de los intakers ---------- */
   var K_NOMBRE = ['nombre','nombre y apellido','nombre completo','apellido y nombre','cliente'];
   var K_TEL = ['tel','telefono','cel','celular','whatsapp','wsp','numero','contacto','telefono de contacto'];
@@ -1809,6 +1963,10 @@ a.save.wa-go svg{width:20px;height:20px}
         : 'Pegá uno o varios mensajes tal como los mandan por WhatsApp. La app busca cada consulta por el teléfono.')+'</p></div>'+
       '<button class="close" data-close aria-label="Cerrar">'+I.x+'</button></div>';
     if (d.step==='review') return html + reviewHtml(!!tgt);
+    if (!tgt && estConsultas().length){
+      html += '<div class="seg2" role="tablist" style="margin-top:12px"><button data-pgmodo="res" class="'+(d.modo!=='est'?'on':'')+'" role="tab" aria-selected="'+(d.modo!=='est')+'">Resúmenes</button><button data-pgmodo="est" class="'+(d.modo==='est'?'on':'')+'" role="tab" aria-selected="'+(d.modo==='est')+'">📎 Estudios médicos</button></div>';
+      if (d.modo==='est') return html + estPegar(d);
+    }
     html += '<div class="field"><textarea id="pasteTxt" class="paste" placeholder="'+(tgt?'ART: …\nResumen: …':'Nombre: …\nTel: …\nConsulta: …\nResumen: …')+'">'+esc(d.text)+'</textarea></div>';
     html += '<button class="save" style="margin-top:12px" data-rvcheck '+(d.text.trim()?'':'disabled')+'>Revisar antes de guardar</button>';
     if (tgt){
@@ -2251,6 +2409,7 @@ a.save.wa-go svg{width:20px;height:20px}
     if (puedeMarca(l)) html += '<button class="btn3" data-marcanueva="'+esc(l.id)+'">'+I.swap+'Pasar a otra rama</button>';
     html += '<div class="blk"><h3 class="blk-t">Contacto</h3><div class="box">'+fkv('Teléfono', l.tel||'—', 'num')+fkv('Email', l.email)+'</div></div>';
     if (l.info && l.info.length) html += '<div class="blk"><h3 class="blk-t">Lo que contó en el formulario</h3><div class="box">'+l.info.map(function(c){ return fkv(c.label, c.text, 'pre'); }).join('')+'</div></div>';
+    html += estBlk(l);
     html += '<div class="blk"><h3 class="blk-t">Notas y seguimiento</h3>'+((l.comentarios && l.comentarios.length) ?
       '<div class="notes">'+l.comentarios.map(function(c){ return fkv(c.label, c.text, 'pre'); }).join('')+'</div>' :
       '<div class="note">Todavía no hay notas. Tocá "＋ Nota" para dejar una.</div>')+'</div>';
@@ -2943,7 +3102,8 @@ a.save.wa-go svg{width:20px;height:20px}
   function paRow(l){
     var dd = l.ingreso ? diffDays(nowBA().date, l.ingreso) : null;
     var when = dd===null ? '' : (dd<=0?'entró hoy':(dd===1?'entró ayer':'entró hace '+dd+' días'));
-    return '<li><button data-agendar="'+esc(l.id)+'"><span class="w"><b>'+esc(l.nombre||'Sin nombre')+'</b><span>'+ramaLabel(l.rama)+(l.fase?', fase '+esc(l.fase):'')+(when?', '+when:'')+'</span></span><span class="go2">Agendar</span></button></li>';
+    // Tocar a la persona abre la ficha (fase, notas, datos, agendar); el botón de la derecha agenda directo
+    return '<li class="pa-li"><button data-ficha="'+esc(l.id)+'" aria-label="Abrir ficha de '+esc(l.nombre||'Sin nombre')+'"><span class="w"><b>'+esc(l.nombre||'Sin nombre')+'</b><span>'+ramaLabel(l.rama)+(l.fase?', fase '+esc(l.fase):'')+(when?', '+when:'')+'</span></span>'+I.chev+'</button><button class="pa-ag" data-agendar="'+esc(l.id)+'">'+I.cal+'Agendar</button></li>';
   }
   function srRow(l){
     return '<li><button data-escribir="'+esc(l.id)+'"><span class="h num">'+esc(l.hora||'--:--')+'</span><span class="w"><b>'+esc(l.nombre)+'</b><span>'+diaCorto(l.fecha)+', '+ramaLabel(l.rama)+(l.abogada?', con '+esc(l.abogada):'')+'</span></span><span class="go2">Escribir</span></button></li>';
@@ -2957,7 +3117,7 @@ a.save.wa-go svg{width:20px;height:20px}
     body += secTarea('Mensaje previo', t.previa.length, 'Consultas de los próximos días que todavía no tienen la confirmación previa.', '<ol class="dk">'+t.previa.map(function(l){ return tkRow(l,'confPrev'); }).join('')+'</ol>');
     body += respuestasHtml();
     body += secTarea('Sin resumen', t.sinRes.length, 'Escribí el resumen para que la abogada lo tenga antes de la consulta.', '<ul class="todo">'+t.sinRes.map(srRow).join('')+'</ul>');
-    body += secTarea('Por agendar', pa.length, 'Leads que todavía no tienen consulta. Tocá uno para elegir día, horario y abogada.',
+    body += secTarea('Por agendar', pa.length, 'Leads que todavía no tienen consulta. Tocá el nombre para ver la ficha (cambiar fase, notas, datos) o Agendar para elegir día y horario.',
       '<ul class="todo">'+agBase().slice(0,5).map(paRow).join('')+'</ul>'+(pa.length?'<button class="btn3" data-view="agendar">Ver todos en Agendar ('+pa.length+')</button>':''));
     return { h1:'Tareas', p: total ? plural(total,'cosa para hacer','cosas para hacer')+(pa.length?', '+pa.length+' por agendar':'') : (pa.length?pa.length+' por agendar':'Todo al día'), extra:seg(), body:body };
   }
