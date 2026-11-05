@@ -249,7 +249,7 @@ main{padding:4px 16px 8px}
 .tbl td{text-align:right;padding:9px 4px;border-top:1px solid var(--line);font-weight:700}
 
 /* ===== Navegación inferior ===== */
-.nav{position:fixed;left:0;right:0;bottom:0;z-index:30;background:color-mix(in srgb,var(--paper) 94%,transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 -1px 0 var(--line);display:grid;grid-template-columns:repeat(5,1fr);padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:30;-webkit-transform:translateZ(0);transform:translateZ(0);background:color-mix(in srgb,var(--paper) 94%,transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 -1px 0 var(--line);display:grid;grid-template-columns:repeat(5,1fr);padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
 .nav button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0 4px;font-size:11.5px;font-weight:700;color:var(--ink-3);position:relative;border-radius:12px}
 .nav button svg{width:24px;height:24px}
 .nav button.on{color:var(--ink)}
@@ -3226,7 +3226,11 @@ a.save.wa-go svg{width:20px;height:20px}
     if (state.view!=='agendar' || state.sheet || !document.querySelector('[data-agmas]')) return;
     if (window.innerHeight+window.scrollY >= document.body.scrollHeight-300){ agState().n+=40; renderAg(); }
   }, {passive:true});
-  document.addEventListener('visibilitychange', function(){ if (!document.hidden) load(true); });
+  document.addEventListener('visibilitychange', function(){ if (!document.hidden){ load(true); navFix(); } });
+  // iPhone: a veces, al volver a la app, la barra de abajo queda dibujada en el medio de la pantalla; se la vuelve a ubicar
+  function navFix(){ var n=document.querySelector('.nav'); if (!n) return; requestAnimationFrame(function(){ n.style.display='none'; void n.offsetHeight; n.style.display=''; }); }
+  window.addEventListener('pageshow', navFix); window.addEventListener('orientationchange', function(){ setTimeout(navFix, 300); });
+  if (window.visualViewport) window.visualViewport.addEventListener('resize', function(){ clearTimeout(navFix._t); navFix._t=setTimeout(navFix, 150); });
   setInterval(function(){ if (!document.hidden && !state.sheet && state.data && !$('search').classList.contains('on')) render(); }, 60000);
   setInterval(function(){ if (!document.hidden && !state.sheet) load(true); }, 120000);
   (function(){ // deslizar hacia abajo para cerrar la hoja
