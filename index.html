@@ -2074,8 +2074,10 @@ a.save.wa-go svg{width:20px;height:20px}
     var lr=leadsRamas(), hayRec=lr.indexOf('ART')!==-1 || lr.indexOf('LABORAL')!==-1, hayTra=lr.indexOf('TRANSITO')!==-1;
     var nF=function(f){ return base.filter(function(l){ return agPasa(l,s,false,true) && (f==='todas' || (f==='sindia' ? !!l.sinDia : (!l.sinDia && (l.fase===f || (f==='sin' && !l.fase))))); }).length; };
     var chip=function(attr,val,label,n,on){ return '<button class="chip'+(on?' on':'')+'" '+attr+'="'+esc(val)+'" aria-pressed="'+on+'">'+esc(label)+' <b class="num">'+n+'</b></button>'; };
-    var marcaRow=(hayRec && hayTra) ? '<div class="chips ag marca" role="group" aria-label="Marca">'+chip('data-agmarca','todas','Todas',nM('todas'),!s.marca || s.marca==='todas')+chip('data-agmarca','reclama','Reclamá',nM('reclama'),s.marca==='reclama')+chip('data-agmarca','transito','Derecho en Tránsito',nM('transito'),s.marca==='transito')+'</div>' : '';
-    var ramaRow=(s.marca==='reclama' || !hayTra) ? '<div class="chips ag" role="group" aria-label="Rama">'+chip('data-agrama','todas','ART y Laboral',nR('todas'),s.rama==='todas')+chip('data-agrama','art','ART',nR('art'),s.rama==='art')+chip('data-agrama','laboral','Laboral',nR('laboral'),s.rama==='laboral')+'</div>' : '';
+    // Una sola fila: Todas · ART · Laboral · Tránsito (sin el paso intermedio de Reclamá)
+    var rs=[['art','ART','ART'],['laboral','Laboral','LABORAL'],['transito','Tránsito','TRANSITO']].filter(function(x){ return lr.indexOf(x[2])!==-1; });
+    var nR1=function(r){ return vista.filter(function(l){ return agPasa(l,s,true,false) && (r==='todas' || ramaKey(l.rama)===r); }).length; };
+    var marcaRow='', ramaRow=rs.length>1 ? '<div class="chips ag" role="group" aria-label="Rama">'+chip('data-agrama','todas','Todas',nR1('todas'),s.rama==='todas')+rs.map(function(x){ return chip('data-agrama',x[0],x[1],nR1(x[0]),s.rama===x[0]); }).join('')+'</div>' : '';
     var meses={}; vista.forEach(function(l){ var m=mesDe(l); if (m) meses[m]=1; });
     var ms=Object.keys(meses).sort().reverse().slice(0,6); if (s.mes!=='todos' && ms.indexOf(s.mes)===-1) ms.unshift(s.mes);
     var nMes=function(m){ return vista.filter(function(l){ return agPasa(l,s,false,!!s.otra,true) && (m==='todos' || mesDe(l)===m); }).length; };
@@ -2349,7 +2351,7 @@ a.save.wa-go svg{width:20px;height:20px}
   var NUEVO_ID='__nuevo__';
   function abrirManual(){
     var q=String(agState().q||'').trim(), dig=q.replace(/\D/g,''), r=agState().rama, mk=agState().marca;
-    var lr=leadsRamas(), r0=r==='laboral' ? 'LABORAL' : (r==='art' ? 'ART' : (mk==='transito' ? 'TRANSITO' : (lr.length===1 ? lr[0] : '')));
+    var lr=leadsRamas(), r0=r==='laboral' ? 'LABORAL' : (r==='art' ? 'ART' : ((mk==='transito' || r==='transito') ? 'TRANSITO' : (lr.length===1 ? lr[0] : '')));
     state.manual={ nombre: dig.length>=6 ? '' : q, tel: dig.length>=6 ? q : '', rama: r0, origen:'', nota:'' };
     state.nuevoLead=null; closeSearch(); openSheet({type:'manual'});
   }
@@ -3140,7 +3142,7 @@ a.save.wa-go svg{width:20px;height:20px}
     if (t.hasAttribute('data-equipo')){ state.login={}; openSheet({type:'yo', pines:true}); return; }
     if (t.hasAttribute('data-undo')){ var fu=state.undo; state.undo=null; clearTimeout(toast._t); $('toast').className='toast'; if (fu) fu(); return; }
     if (t.hasAttribute('data-retry')){ load(false); return; }
-    if (t.hasAttribute('data-agrama')){ agState().rama=t.getAttribute('data-agrama'); agState().n=40; renderAg(); return; }
+    if (t.hasAttribute('data-agrama')){ agState().marca='todas'; agState().rama=t.getAttribute('data-agrama'); agState().n=40; renderAg(); return; }
     if (t.hasAttribute('data-agfase')){ agState().fase=t.getAttribute('data-agfase'); agState().otra=null; agState().n=40; renderAg(); return; }
     if (t.hasAttribute('data-agotra')){ var ao=t.getAttribute('data-agotra'); agState().otra = agState().otra===ao ? null : ao; agState().fase='todas'; agState().n=40; renderAg(); return; }
     if (t.hasAttribute('data-agbuscartodo')){ buscarTodo(); return; }
