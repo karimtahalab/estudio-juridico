@@ -1077,7 +1077,14 @@ a.save.wa-go svg{width:20px;height:20px}
     if (!nuevos.length) return;
     try{ if (navigator.vibrate && rol()==='intaker') navigator.vibrate([70,50,70]); }catch(e){}
     var msg='🔔 '+(nuevos.length===1 ? 'Lead nuevo: '+(nuevos[0].nombre||'sin nombre')+' · '+ramaLabel(nuevos[0].rama) : plural(nuevos.length,'lead nuevo','leads nuevos'));
-    toastAccion(msg, 'Ver', function(){ if (state.sheet) closeSheet(); closeSearch(); state.view=navList().indexOf('agendar')!==-1?'agendar':state.view; render(); window.scrollTo(0,0); });
+    nuevos.forEach(function(l){ (state.agNuevos||(state.agNuevos={}))[l.id]=Date.now(); });
+    // "Ver": con uno, se abre su ficha para llamarlo o agendarlo; con varios, Agendar sin filtros y los nuevos marcados arriba
+    toastAccion(msg, 'Ver', function(){
+      if (state.sheet) closeSheet(); closeSearch();
+      if (navList().indexOf('agendar')!==-1){ state.view='agendar'; state.ag={q:'', marca:'todas', rama:'todas', fase:'todas', n:40}; }
+      render(); window.scrollTo(0,0);
+      if (nuevos.length===1) openSheet({type:'ficha', id:nuevos[0].id});
+    });
   }
   // Número en el ícono de la app instalada: resultados que faltan (abogadas) o tareas urgentes (intakers)
   function badgeApp(n){
@@ -2016,7 +2023,8 @@ a.save.wa-go svg{width:20px;height:20px}
   function agState(){ return state.ag || (state.ag={q:'', marca:'todas', rama:'todas', fase:'todas', n:40}); }
   function ramaPasa(l, s){ return (!s.marca || s.marca==='todas' || marcaDe(l.rama)===s.marca) && (s.rama==='todas' || ramaKey(l.rama)===s.rama); }
   function leadsRamas(){ var x=P().leads; return (x && x.length) ? x : ['ART','LABORAL','TRANSITO']; }
-  function agPrio(l){ return l.sinDia ? -1 : (!l.fase ? 0 : (l.fase==='B' ? 2 : 1)); } // primero las agendadas sin día, después A y Llamada pendiente
+  function esNuevoAviso(l){ var t=(state.agNuevos||{})[l.id]; return !!(t && Date.now()-t < 30*60000); }
+  function agPrio(l){ return esNuevoAviso(l) ? -2 : (l.sinDia ? -1 : (!l.fase ? 0 : (l.fase==='B' ? 2 : 1))); } // primero las agendadas sin día, después A y Llamada pendiente
   function agMatch(l, q){
     q=String(q||'').trim(); if (!q) return true;
     var d=q.replace(/\D/g,'');
@@ -2123,7 +2131,7 @@ a.save.wa-go svg{width:20px;height:20px}
     var nt=(l.comentarios||[]).map(function(c){ return String(c.text||''); }).join('\n').split('\n').filter(function(x){ return x.trim(); });
     var ultima=nt.length ? nt[nt.length-1] : '';
     var acts=phone(l.tel) ? '<a class="ib wa" href="'+waHref(l.tel)+'" target="_blank" rel="noopener" aria-label="WhatsApp a '+esc(l.nombre)+'">'+I.chat+'</a><a class="ib" href="'+telHref(l.tel)+'" target="_top" aria-label="Llamar a '+esc(l.nombre)+'">'+I.call+'</a>' : '<span></span><span></span>';
-    return '<li class="pa" data-ficha="'+esc(l.id)+'"><div class="pa-top"><div class="pa-who"><b>'+esc(l.nombre||'Sin nombre')+'</b><span>'+ramaLabel(l.rama)+(when?' · '+when:'')+((l.intaker||l.inicioChat)?' · '+esc(l.intaker||l.inicioChat):'')+(l.tel?' · '+esc(l.tel):'')+'</span></div>'+faseTag(l.fase)+'</div>'+
+    return '<li class="pa" data-ficha="'+esc(l.id)+'"><div class="pa-top"><div class="pa-who"><b>'+(esNuevoAviso(l)?'🔔 ':'')+esc(l.nombre||'Sin nombre')+'</b><span>'+ramaLabel(l.rama)+(when?' · '+when:'')+((l.intaker||l.inicioChat)?' · '+esc(l.intaker||l.inicioChat):'')+(l.tel?' · '+esc(l.tel):'')+'</span></div>'+faseTag(l.fase)+'</div>'+
       (form?'<div class="pa-form">'+esc(form)+'</div>':'')+
       (ultima?'<div class="pa-note">💬 '+esc(ultima)+'</div>':'')+
       (l.sinDia?'<div class="pa-note">'+(l.fase==='Reagenda'?'↻ Pidió reagendar y todavía no eligió día: cuando avise, cargale el turno con Agendar.':'📅 En la planilla figura '+esc(faseLbl(l.fase))+' pero sin día ni hora: cargale el turno con Agendar.')+'</div>':'')+
@@ -2268,16 +2276,19 @@ a.save.wa-go svg{width:20px;height:20px}
     var s=agState(), all=agBase().filter(function(l){ return agPasa(l,s); }), shown=all.slice(0,s.n);
     var html='<button class="btn3 ag-new" data-agnuevo>＋ Cargar a alguien nuevo</button>';
     if (s.otra) return html + otraListHtml(s);
-    var ya=s.q ? (state.data.leads||[]).filter(function(l){ return agMatch(l,s.q) && (l.fase==='Consulta agendada' || l.fase==='Reagenda') && l.fecha>=nowBA().date; }).slice(0,5) : [];
+    var yaT=s.q ? (state.data.leads||[]).filter(function(l){ return agMatch(l,s.q) && (l.fase==='Consulta agendada' || l.fase==='Reagenda') && l.fecha>=nowBA().date; }) : [];
+    // Solo las de la marca/rama elegida arriba; si hay en otras, se avisa en una línea
+    var ya=yaT.filter(function(l){ return ramaPasa(l,s); }).slice(0,5), yaOtras=yaT.filter(function(l){ return !ramaPasa(l,s); });
     if (ya.length) html+='<p class="grp-lbl">Ya tienen consulta</p><ul class="pa-list">'+ya.map(agYaRow).join('')+'</ul>';
+    if (yaOtras.length) html+='<p class="hint" style="margin:6px 2px 10px">Con esa búsqueda también hay '+plural(yaOtras.length,'consulta agendada','consultas agendadas')+' en '+yaOtras.map(function(l){ return ramaLabel(l.rama); }).filter(function(x,i,a){ return a.indexOf(x)===i; }).join(' y ')+'. Tocá "Todas" para '+(yaOtras.length===1?'verla':'verlas')+'.</p>';
     if (!all.length){
       // Si ya aparece en otras fases (abajo), alcanza con una línea; si no, la explicación completa
       if (!ya.length && s.q && otrasLocales(s.q).length) html+='<p class="hint" style="margin:14px 2px 0">No está en Por agendar.</p>';
       else if (!ya.length) html+='<div class="empty"><b>'+(s.q?'No aparece en Por agendar':'No hay leads para agendar')+'</b>'+(s.q?'Puede estar en otra fase (BC, C), tener otra rama elegida arriba o haber entrado hace más de '+(state.data.diasPorAgendar||90)+' días.':'Con estos filtros no queda nadie.')+'</div>';
       return html + busqHtml(s);
     }
-    var sdia=shown.filter(function(l){ return agPrio(l)===-1; }), sinc=shown.filter(function(l){ return agPrio(l)===0; }), prio=shown.filter(function(l){ return agPrio(l)===1; }), resto=shown.filter(function(l){ return agPrio(l)===2; });
-    html+=grupoHtml('Agendadas sin día ni hora', sdia, s)+grupoHtml('Sin clasificar', sinc, s)+grupoHtml('A y Llamada pendiente', prio, s)+grupoHtml('B', resto, s);
+    var nuevosAv=shown.filter(function(l){ return agPrio(l)===-2; }), sdia=shown.filter(function(l){ return agPrio(l)===-1; }), sinc=shown.filter(function(l){ return agPrio(l)===0; }), prio=shown.filter(function(l){ return agPrio(l)===1; }), resto=shown.filter(function(l){ return agPrio(l)===2; });
+    html+=grupoHtml('🔔 Recién llegados', nuevosAv, s)+grupoHtml('Agendadas sin día ni hora', sdia, s)+grupoHtml('Sin clasificar', sinc, s)+grupoHtml('A y Llamada pendiente', prio, s)+grupoHtml('B', resto, s);
     if (all.length>shown.length) html+='<button class="btn3" data-agmas>Mostrar más ('+(all.length-shown.length)+')</button>';
     return html + busqHtml(s);
   }
@@ -3262,6 +3273,7 @@ a.save.wa-go svg{width:20px;height:20px}
     var ops=((state.data.respuestas||{})[x.tipo]||[]).filter(function(o){ return o!==x.estado; });
     return '<div class="blk int-ask"><h3 class="blk-t">'+esc(x.de)+(x.tipo==='llamada'?' te derivó la llamada':' te pregunta si es caso')+'<small>'+esc(x.cuando)+(x.estado!=='Pendiente'?' · ahora: '+esc(x.estado):'')+'</small></h3>'+
       (x.nota?'<div class="note">'+esc(x.nota)+'</div>':'')+
+      '<p class="hint" style="margin:6px 2px 8px">Tocá lo que hiciste y se saca de tus pendientes. '+(x.estado==='Lo llamo yo'?'La marcaste "Lo llamo yo": cuando ya lo hayas resuelto, tocá cómo terminó o "Listo".':'"Lo llamo yo" la deja abierta hasta que la resuelvas.')+'</p>'+
       '<textarea id="intResp" placeholder="Comentario para '+esc(x.de)+' (opcional)"></textarea>'+
       '<div class="pick int-ops">'+ops.map(function(o){ return '<button data-intresp="'+esc(l.id)+'|'+x.i+'|'+esc(o)+'">'+esc(o)+'</button>'; }).join('')+'</div></div>';
   }
