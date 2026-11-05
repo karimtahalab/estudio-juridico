@@ -421,6 +421,28 @@ textarea:focus,.inp:focus,select:focus{outline:none;box-shadow:0 0 0 2.5px var(-
 .est-n{color:var(--blue);background:color-mix(in srgb,var(--blue) 10%,transparent)}
 .blk.est{border-radius:16px;transition:box-shadow .15s}
 .est-tabs{margin:6px 0 4px}
+.tr-blk .box{padding:12px}
+.tr-tramo{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:8px 0;border-top:1px solid var(--line)}
+.tr-tramo:first-child{border-top:0;padding-top:0}
+.tr-l{flex:1;min-width:180px;display:flex;flex-direction:column}
+.tr-l b{font-size:15px} .tr-l span{font-size:13.5px;color:var(--ink-2);word-break:break-word}
+.tr-st{font-size:12.5px;font-weight:700;color:var(--amber);background:var(--amber-bg);border-radius:8px;padding:3px 8px}
+.tr-st.ok{color:var(--green);background:var(--green-bg)}
+.tr-rec{font-size:13px;font-weight:700;color:var(--blue);background:color-mix(in srgb,var(--blue) 10%,transparent);border-radius:9px;padding:6px 10px;margin:4px 6px 0 0}
+.tr-acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.tr-acts .btn2{flex:1 1 auto}
+.tr-rein{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--line);font-size:14.5px}
+.tr-rein .save{width:auto;margin:0 0 0 auto;padding:0 16px;height:38px}
+.tr-rein small{width:100%;color:var(--ink-3)}
+.tr-rein.ok{color:var(--green)}
+.tr-aviso{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:10px 0 0;padding:10px 12px;border-radius:14px;background:var(--amber-bg);color:var(--ink);box-shadow:0 0 0 1.5px var(--amber) inset;font-size:14.5px}
+.tr-aviso span{flex:1 1 220px}
+.tr-aviso button{font-weight:700;font-size:13.5px;padding:7px 11px;border-radius:9px;background:var(--paper);box-shadow:0 0 0 1px var(--line) inset}
+.tr-aviso.plata{background:var(--green-bg);box-shadow:0 0 0 1.5px var(--green) inset}
+.tr-acts .tr-x{color:var(--red)}
+.tr-aviso.rojo{background:var(--red-bg);box-shadow:0 0 0 1.5px var(--red) inset}
+.rep-w{margin-top:12px} .rep-n{color:var(--amber);font-weight:600}
+.todo li.tr-urg{background:color-mix(in srgb,var(--amber) 12%,transparent)}
 .blk.est.drag{box-shadow:0 0 0 2px var(--mint) inset;background:color-mix(in srgb,var(--mint) 8%,transparent)}
 .est-l li{display:flex;align-items:center}
 .est-l li > button[data-estver]{flex:1;min-width:0}
@@ -1485,7 +1507,7 @@ a.save.wa-go svg{width:20px;height:20px}
     $('ttl').innerHTML = '<h1>'+v.h1+'</h1><p>'+v.p+'</p>';
     $('headExtra').innerHTML = v.extra || '';
     $('offline').classList.toggle('on', state.offline);
-    $('main').innerHTML = pinBanner() + dupBanner() + internasBanner() + v.body + '<div class="foot">'+(state.snapT?'Mostrando lo guardado a las '+state.snapT+'. Actualizando…':'Actualizado a las '+nowBA().hm)+(state.me?'. Usás la app como '+esc(state.me.nombre)+' ('+({abogada:'parte de abogadas', intaker:'parte de intakers', admin:'administración', produccion:'filmación y edición'}[state.me.rol]||state.me.rol)+')'+' <button data-yocambiar>Cambiar</button>':'')+'</div>';
+    $('main').innerHTML = trAvisoBanner() + pinBanner() + dupBanner() + internasBanner() + v.body + '<div class="foot">'+(state.snapT?'Mostrando lo guardado a las '+state.snapT+'. Actualizando…':'Actualizado a las '+nowBA().hm)+(state.me?'. Usás la app como '+esc(state.me.nombre)+' ('+({abogada:'parte de abogadas', intaker:'parte de intakers', admin:'administración', produccion:'filmación y edición'}[state.me.rol]||state.me.rol)+')'+' <button data-yocambiar>Cambiar</button>':'')+'</div>';
     alignRs();
     renderNav();
     // En modo prueba, arriba a la derecha se ve quién está usando la app y se toca para cambiar de persona o rol
@@ -1536,7 +1558,7 @@ a.save.wa-go svg{width:20px;height:20px}
   function renderSheet(){
     if (!state.sheet) return;
     var y=$('sheet').scrollTop;
-    var ty=state.sheet.type, html = ({lead:sheetLead, bloq:sheetBloq, pegar:sheetPegar, nuevo:sheetNuevo, escribir:sheetEscribir, agendar:sheetAgendar, derivar:sheetDerivar, ficha:sheetFicha, yo:sheetYo, manual:sheetManual, dup:sheetDup, fin:sheetFin, interna:sheetInterna, marca:sheetMarca, guion:sheetGuion, creprint:sheetCrePrint, fin2:sheetFin2})[ty]();
+    var ty=state.sheet.type, html = ({lead:sheetLead, bloq:sheetBloq, pegar:sheetPegar, nuevo:sheetNuevo, escribir:sheetEscribir, agendar:sheetAgendar, derivar:sheetDerivar, ficha:sheetFicha, yo:sheetYo, manual:sheetManual, dup:sheetDup, fin:sheetFin, interna:sheetInterna, marca:sheetMarca, guion:sheetGuion, creprint:sheetCrePrint, fin2:sheetFin2, traslado:sheetTraslado, recibo:sheetRecibo, reintegros:sheetReintegros, sinenv:sheetSinEnv})[ty]();
     if (html===null){ closeSheet(); return; }
     $('sheet').innerHTML = html; $('sheet').scrollTop=y;
   }
@@ -1564,6 +1586,7 @@ a.save.wa-go svg{width:20px;height:20px}
     if (puede('agendar') && puedeCorregir(l)) html += '<button class="btn3" data-agcorregir="'+esc(l.id)+'">✏️ Me equivoqué en el horario: corregir (no cuenta como reagenda)</button>';
     if (puedeDerivar(l)) html += '<button class="btn3" data-derivar="'+esc(l.id)+'">'+I.swap+'Derivar a otra abogada</button>';
     if (puedeSinDia(l)){ var rq=state.rsdConf===l.id; html += '<button class="btn3'+(rq?' on':'')+'" data-reagsindia="'+esc(l.id)+'">'+(rq?'Tocá de nuevo para confirmar: queda en Reagenda y sale de la agenda':'↻ Pidió reagendar, todavía sin día')+'</button>'; }
+    html += trBlk(l);
     html += internasBlk(l);
     var fu=state.fichaUI||(state.fichaUI={});
     html += '<div class="fi-acts dos"><button data-fimodo="nota" class="'+(fu.modo==='nota'?'on':'')+'">＋ Nota</button><button data-fimodo="datos" class="'+(fu.modo==='datos'?'on':'')+'">Corregir datos</button></div>'+fichaPanel(l, fu);
@@ -1859,6 +1882,209 @@ a.save.wa-go svg{width:20px;height:20px}
   document.addEventListener('dragleave', function(ev){ var z=ev.target.closest && ev.target.closest('[data-estdrop]'); if (z && !z.contains(ev.relatedTarget)) z.classList.remove('drag'); });
   document.addEventListener('drop', function(ev){ var z=ev.target.closest && ev.target.closest('[data-estdrop]'); if (!z) return; ev.preventDefault(); z.classList.remove('drag'); estSubir(z.getAttribute('data-estdrop'), ev.dataTransfer && ev.dataTransfer.files); });
   document.addEventListener('keydown', function(ev){ if (ev.key==='Escape' && document.getElementById('estVisor')) estCerrar(); });
+
+  /* ---------- Posibles repetidos (intakers) y agendadas sin "Enviado consulta" (Karim y Julián) ---------- */
+  function repDe(id){ return ((state.data && state.data.posiblesRep)||[]).filter(function(x){ return x.id===id; })[0]||null; }
+  function repTxt(r){ return r.con.map(function(c){ return 'mismo '+c.por+' que <b>'+esc(c.nombre||'Sin nombre')+'</b> (pestaña "'+esc(String(c.tab).trim())+'", fila '+c.fila+(c.fase?', fase '+esc(faseLbl(c.fase)):'')+')'; }).join('; '); }
+  function repBlk(id){
+    var r=repDe(id); if (!r || !(rol()==='admin' || puede('confirmar'))) return '';
+    return '<div class="warn rep-w">⚠ <b>Posible REPETIDO:</b> '+repTxt(r)+'.<div class="tr-acts"><button class="btn2" data-repsi="'+esc(r.id)+'">Marcar REPETIDO</button><button class="btn2" data-repno="'+esc(r.id)+'">No es repetido</button>'+(r.con[0]?'<button class="btn2" data-ficha="'+esc(r.con[0].id)+'">Ver la otra fila</button>':'')+'</div></div>';
+  }
+  function repSacar(id){ if (state.data) state.data.posiblesRep=(state.data.posiblesRep||[]).filter(function(x){ return x.id!==id; }); }
+  function repSecTareas(){
+    var xs=(state.data && state.data.posiblesRep)||[]; if (!xs.length || !(rol()==='admin' || puede('confirmar'))) return '';
+    return '<h2 class="sec-t">⚠ Posibles repetidos <span class="cnt num">'+xs.length+'</span></h2><p class="sec-sub">Mismo email o mismos últimos 10 dígitos del teléfono en las pestañas de este mes y el anterior. Revisá y marcá cuál es REPETIDO.</p><ul class="todo">'+xs.map(function(r){
+      return '<li class="pa-li"><button data-ficha="'+esc(r.id)+'"><span class="w"><b>'+esc(r.nombre||'Sin nombre')+' · '+ramaLabel(r.rama)+'</b><span>Pestaña "'+esc(String(r.tab).trim())+'", fila '+r.fila+': '+repTxt(r).replace(/<\/?b>/g,'')+'</span></span></button><button class="pa-ag" data-repsi="'+esc(r.id)+'">REPETIDO</button></li>';
+    }).join('')+'</ul>';
+  }
+  function sinEnvHtml(){
+    var xs=(state.data && state.data.sinEnviar)||[]; if (!xs.length || rol()!=='admin') return '';
+    return '<div class="tr-aviso rojo"><span>⚠ <b>'+plural(xs.length,'consulta agendada','consultas agendadas')+'</b> hace más de 2 h con "Enviado consulta" vacío: '+xs.slice(0,3).map(function(x){ return esc(x.nombre||'Sin nombre')+' ('+ramaLabel(x.rama)+', desde '+esc(x.desde)+')'; }).join(', ')+(xs.length>3?' y '+(xs.length-3)+' más':'')+'</span><button data-sinenv>Ver</button></div>';
+  }
+  function sheetSinEnv(){
+    var xs=(state.data && state.data.sinEnviar)||[];
+    var html='<div class="grab"></div><div class="sh-head"><div class="sh-who"><h2>⚠ Agendadas sin "Enviado consulta"</h2><p class="hint" style="margin:4px 0 0">Pasaron más de 2 horas desde que quedaron en Consulta Agendada y la columna "Enviado consulta" sigue vacía: revisá el Zap que la manda.</p></div><button class="close" data-close aria-label="Cerrar">'+I.x+'</button></div>';
+    if (!xs.length) return html+emptyBox('Todas las agendadas están enviadas');
+    return html+'<ul class="todo" style="margin-top:12px">'+xs.map(function(x){ return '<li><button data-ficha="'+esc(x.id)+'"><span class="w"><b>'+esc(x.nombre||'Sin nombre')+' · '+ramaLabel(x.rama)+'</b><span>Pestaña "'+esc(String(x.tab).trim())+'", fila '+x.fila+' · agendada '+esc(x.desde)+' (hace '+x.horas+' h)</span></span>'+I.chev+'</button></li>'; }).join('')+'</ul>';
+  }
+  document.addEventListener('click', function(ev){
+    var t=ev.target.closest('[data-repsi],[data-repno],[data-sinenv]'); if (!t) return;
+    if (t.hasAttribute('data-sinenv')){ openSheet({type:'sinenv'}); return; }
+    if (t.hasAttribute('data-repsi')){ var id=t.getAttribute('data-repsi'); repSacar(id); cambiarFaseUI(id, 'Repetido'); return; }
+    if (t.hasAttribute('data-repno')){ var id2=t.getAttribute('data-repno'), r=repDe(id2); if (!r) return; repSacar(id2); if (state.sheet) renderSheet(); render(); toast('Listo: no se vuelve a marcar');
+      r.con.forEach(function(c){ call('noRepetido',{a:id2, b:c.id}).catch(function(e){ toast((e&&e.message)||'No se pudo guardar.', true); }); }); return; }
+  });
+
+  /* ---------- Traslados (Uber de ida y vuelta) para clientes de ART y Tránsito ---------- */
+  var TR_RAMAS=['ART','TRANSITO'];
+  function trLista(){ return (state.data && state.data.traslados)||[]; }
+  function trDe(l){ return trLista().filter(function(t){ return t.lead===l.id && t.estado!=='cancelado'; })[0]||null; }
+  function trPuedeCoord(l){ return rol()==='admin' || puede('confirmar') || ((P().leads||[]).indexOf(String(l.rama||'').toUpperCase())!==-1); }
+  function trAplica(l){ return !!l && !l.parcial && !!l.fecha && TR_RAMAS.indexOf(String(l.rama||'').toUpperCase())!==-1; }
+  function trSet(r){ if (r && r.traslados && state.data){ state.data.traslados=r.traslados; } trPintarAviso(); if (state.sheet) renderSheet(); render(); }
+  function hmSuma(h, min){ var m=hmin(h); if (m===null) return ''; m=Math.max(0, Math.min(23*60+55, m+min)); m=Math.round(m/5)*5; return pad2(m/60|0)+':'+pad2(m%60); }
+  function trTramoTxt(t, k){
+    var ida=k==='ida', est=t[ida?'estIda':'estVuelta'], monto=t[ida?'montoIda':'montoVuelta'], rec=t[ida?'recIda':'recVuelta'];
+    return '<div class="tr-tramo"><div class="tr-l"><b>'+(ida?'Ida':'Vuelta')+' · '+esc(t[ida?'horaIda':'horaVuelta'])+'</b><span>'+(ida?'Buscarlo en: ':'Llevarlo a: ')+esc(t[ida?'dirIda':'dirVuelta'])+'</span></div>'+
+      '<span class="tr-st '+(est==='enviado'?'ok':'')+'">'+(est==='enviado'?'✓ Enviado':'Pendiente')+'</span>'+
+      (monto?'<button class="tr-rec" data-trver="'+esc(t.id)+'|'+k+'">🧾 '+plata(monto)+(t[ida?'pagoIda':'pagoVuelta']?' · '+esc(t[ida?'pagoIda':'pagoVuelta']):'')+'</button>':'')+'</div>'+
+      (t.coord && t.reintegro!=='transferido' ? '<div class="tr-acts">'+(est!=='enviado'?'<button class="btn2" data-tracc="'+esc(t.id)+'|enviado|'+k+'">✔ '+(ida?'Ida':'Vuelta')+' enviada</button>':'')+
+        '<button class="btn2" data-trrecibo="'+esc(t.id)+'|'+k+'">🧾 '+(rec?'Cambiar recibo':'Cargar recibo')+'</button>'+
+        '<button class="btn2" data-trcopiar="'+esc(t[ida?'dirIda':'dirVuelta'])+'">Copiar dirección</button></div>' : '');
+  }
+  function trBlk(l){
+    if (!trAplica(l)) return '';
+    var t=trDe(l);
+    if (!t){
+      if (!trPuedeCoord(l) || ['Consulta agendada','Reagenda'].indexOf(l.fase)===-1) return '';
+      return '<button class="btn3" data-trnuevo="'+esc(l.id)+'">🚗 Coordinar traslado (Uber)</button>';
+    }
+    var h='<div class="blk tr-blk"><h3 class="blk-t">🚗 Traslado'+(t.notas?'<small>'+esc(t.notas)+'</small>':'')+'</h3><div class="box">';
+    if (t.fecha!==l.fecha || t.hora!==l.hora) h+='<div class="warn" style="margin:0 0 8px">La consulta cambió a '+esc(diaCorto(l.fecha))+' '+esc(l.hora||'')+'. Revisá los horarios del traslado (Editar).</div>';
+    if (t.ida) h+=trTramoTxt(t,'ida');
+    if (t.vuelta) h+=trTramoTxt(t,'vuelta');
+    var tot=(t.montoIda||0)+(t.montoVuelta||0);
+    if (t.reintegro==='pendiente') h+='<div class="tr-rein">💸 Reintegro pendiente: <b>'+plata(tot)+'</b>'+(t.socio?'<button class="save" data-tracc="'+esc(t.id)+'|transferido|">Ya lo transferí</button>':'<small>Les aparece a los socios para transferir.</small>')+'</div>';
+    else if (t.reintegro==='transferido') h+='<div class="tr-rein ok">✓ Reintegrado '+plata(tot)+' · '+esc(t.transfPor||'')+' '+esc(t.transfFecha||'')+'</div>';
+    h+='</div>';
+    if (t.coord && t.reintegro!=='transferido') h+='<div class="tr-acts"><button class="btn2" data-tredit="'+esc(l.id)+'">Editar</button>'+(state.trCancel===t.id?'<button class="btn2 tr-x" data-tracc="'+esc(t.id)+'|cancelar|">Tocá de nuevo para cancelar el traslado</button>':'<button class="btn2" data-trcancel="'+esc(t.id)+'">Cancelar traslado</button>')+'</div>';
+    return h+'</div>';
+  }
+  // Formulario: ida y vuelta con dirección y horario (por defecto: 45 min antes y 1 h después de la consulta)
+  function sheetTraslado(){
+    var l=findLead(state.sheet.id); if (!l) return null; var d=state.draft;
+    var chk=function(k,t){ return '<button class="'+(d[k]?'on':'')+'" data-trchk="'+k+'" aria-pressed="'+!!d[k]+'">'+(d[k]?'✓ ':'')+t+'</button>'; };
+    var html='<div class="grab"></div><div class="sh-head"><div class="sh-who"><h2>🚗 Traslado de '+esc(l.nombre)+'</h2><p class="hint" style="margin:4px 0 0">Consulta '+esc(diaCorto(l.fecha))+' '+esc(l.hora||'')+(l.abogada?' con '+esc(l.abogada):'')+'. Una hora antes de cada viaje la app avisa para mandar el Uber.</p></div><button class="close" data-close aria-label="Cerrar">'+I.x+'</button></div>';
+    html+='<div class="field"><span class="lbl">¿Qué viajes?</span><div class="pick">'+chk('ida','Ida')+chk('vuelta','Vuelta')+'</div></div>';
+    if (d.ida) html+='<div class="field"><label for="trDirIda">Ida: dónde lo buscamos</label><input class="inp" id="trDirIda" autocomplete="off" value="'+esc(d.dirIda||'')+'" placeholder="Calle, número, barrio o link de Maps"></div><div class="field"><label for="trHoraIda">Ida: a qué hora sale el Uber</label><input class="inp" id="trHoraIda" type="time" value="'+esc(d.horaIda||'')+'"></div>';
+    if (d.vuelta) html+='<div class="field"><label for="trDirVuelta">Vuelta: a dónde lo llevamos</label><input class="inp" id="trDirVuelta" autocomplete="off" value="'+esc(d.dirVuelta||'')+'" placeholder="Si es la misma, se completa sola"></div><div class="field"><label for="trHoraVuelta">Vuelta: a qué hora sale el Uber</label><input class="inp" id="trHoraVuelta" type="time" value="'+esc(d.horaVuelta||'')+'"></div>';
+    html+='<div class="field"><label for="trNotas">Nota (opcional)</label><input class="inp" id="trNotas" autocomplete="off" value="'+esc(d.notas||'')+'" placeholder="Ej.: va con acompañante, usa muletas"></div>';
+    html+='<div class="save-wrap"><button class="save" data-trguardar>Guardar traslado</button></div>';
+    return html;
+  }
+  function trSync(){ var d=state.draft; if (!d) return; [['dirIda','trDirIda'],['horaIda','trHoraIda'],['dirVuelta','trDirVuelta'],['horaVuelta','trHoraVuelta'],['notas','trNotas']].forEach(function(x){ var e=$(x[1]); if (e) d[x[0]]=e.value; }); }
+  function trAbrirForm(id){
+    var l=findLead(id); if (!l) return; var t=trDe(l);
+    state.draft = t ? {tid:t.id, ida:t.ida, dirIda:t.dirIda, horaIda:t.horaIda, vuelta:t.vuelta, dirVuelta:t.dirVuelta, horaVuelta:t.horaVuelta, notas:t.notas}
+      : {ida:true, vuelta:true, dirIda:'', horaIda:hmSuma(l.hora,-45), dirVuelta:'', horaVuelta:hmSuma(l.hora,60), notas:''};
+    openSheet({type:'traslado', id:id});
+    try{ if (window.Notification && Notification.permission==='default') Notification.requestPermission(); }catch(e){}
+  }
+  function trGuardar(){
+    trSync(); var d=state.draft, id=state.sheet.id;
+    if (d.vuelta && !String(d.dirVuelta||'').trim()) d.dirVuelta=d.dirIda;
+    busySheet(true,'Guardando…');
+    call('saveTraslado',{lead:id, tid:d.tid||'', ida:!!d.ida, dirIda:d.dirIda, horaIda:d.horaIda, vuelta:!!d.vuelta, dirVuelta:d.dirVuelta, horaVuelta:d.horaVuelta, notas:d.notas}).then(function(r){
+      state.data.traslados=r.traslados; toast('🚗 Traslado guardado'); openSheet({type:'lead', id:id}); trPintarAviso(); render();
+    }).catch(function(e){ busySheet(false); renderSheet(); toast((e&&e.message)||'No se pudo guardar.', true); });
+  }
+  // Recibo: cuánto salió y la foto
+  function sheetRecibo(){
+    var d=state.draft, t=trLista().filter(function(x){ return x.id===d.tid; })[0]; if (!t) return null;
+    var ida=d.tramo==='ida';
+    var html='<div class="grab"></div><div class="sh-head"><div class="sh-who"><h2>🧾 Recibo de la '+(ida?'ida':'vuelta')+'</h2><p class="hint" style="margin:4px 0 0">'+esc(t.cliente)+' · '+esc(diaCorto(t.fecha))+'. Cuando estén los recibos de todos los viajes, a los socios les aparece para transferirte.</p></div><button class="close" data-close aria-label="Cerrar">'+I.x+'</button></div>';
+    html+='<div class="field"><label for="trMonto">¿Cuánto salió?</label><input class="inp" id="trMonto" inputmode="decimal" autocomplete="off" value="'+esc(d.monto||'')+'" placeholder="Ej.: 8500"></div>';
+    html+='<div class="field"><label for="trPago">¿Quién lo pagó?</label><input class="inp" id="trPago" autocomplete="off" value="'+esc(d.pago||'')+'"></div>';
+    html+='<div class="field"><span class="lbl">Foto del recibo</span><button class="est-drop" data-trfoto><b>'+(d.archivo?'✓ '+esc(d.archivo.name||'Foto elegida'):'📷 Sacar o elegir la foto')+'</b><span>'+(d.archivo?'Tocá para cambiarla.':(t[ida?'recIda':'recVuelta']?'Ya tiene una; elegí otra si querés cambiarla.':'Captura del resumen del viaje de Uber.'))+'</span></button></div>';
+    html+='<div class="save-wrap"><button class="save" data-trrecsave>Guardar recibo</button></div>';
+    return html;
+  }
+  function trReciboGuardar(){
+    var d=state.draft, m=$('trMonto'), pg=$('trPago'); d.monto=m?m.value:d.monto; d.pago=pg?pg.value:d.pago;
+    if (!(finNum(d.monto)>0)){ toast('Poné cuánto salió el viaje.', true); return; }
+    var t=trLista().filter(function(x){ return x.id===d.tid; })[0];
+    if (!d.archivo && !(t && t[d.tramo==='ida'?'recIda':'recVuelta'])){ toast('Sacale una foto al recibo.', true); return; }
+    busySheet(true,'Subiendo…');
+    var envia=function(extra){ return call('trasladoRecibo', Object.assign({tid:d.tid, tramo:d.tramo, monto:d.monto, pago:d.pago}, extra||{})); };
+    var pr = d.archivo ? estComprimir(d.archivo, estTipo(d.archivo)).then(function(x){ return estB64(x.b).then(function(b64){ return envia({b64:b64, tipo:x.tipo, nombre:x.nombre}); }); }) : envia();
+    var lead=t?t.lead:null;
+    pr.then(function(r){ state.data.traslados=r.traslados; var t2=trLista().filter(function(x){ return x.id===d.tid; })[0];
+      toast(t2 && t2.reintegro==='pendiente' ? '🧾 Recibo guardado. Ya les aparece a los socios para transferir.' : '🧾 Recibo guardado');
+      if (lead && findLead(lead)) openSheet({type:'lead', id:lead}); else closeSheet(); trPintarAviso(); render(); })
+      .catch(function(e){ busySheet(false); renderSheet(); toast((e&&e.message)||'No se pudo guardar el recibo.', true); });
+  }
+  function trVerRecibo(tid, tramo){
+    toast('Abriendo el recibo…');
+    call('verRecibo',{tid:tid, tramo:tramo}).then(function(r){
+      var bin=atob(r.b64||''), arr=new Uint8Array(bin.length); for (var k=0;k<bin.length;k++) arr[k]=bin.charCodeAt(k);
+      estVisor(URL.createObjectURL(new Blob([arr],{type:r.tipo})), r.nombre||'Recibo', r.tipo);
+    }).catch(function(e){ toast((e&&e.message)||'No se pudo abrir.', true); });
+  }
+  function trAccion(tid, accion, tramo){
+    state.trCancel=null;
+    call('trasladoAccion',{tid:tid, accion:accion, tramo:tramo}).then(function(r){ trSet(r); toast(accion==='transferido'?'💸 Marcado como transferido':(accion==='cancelar'?'Traslado cancelado':'✔ Listo')); })
+      .catch(function(e){ toast((e&&e.message)||'No se pudo guardar.', true); });
+  }
+  // Reintegros para los socios
+  function sheetReintegros(){
+    var xs=trLista().filter(function(t){ return t.reintegro==='pendiente' && t.socio; });
+    var html='<div class="grab"></div><div class="sh-head"><div class="sh-who"><h2>💸 Reintegros de traslados</h2><p class="hint" style="margin:4px 0 0">Uber que pagaron los intakers. Transferile a quien pagó y marcalo.</p></div><button class="close" data-close aria-label="Cerrar">'+I.x+'</button></div>';
+    if (!xs.length) return html+emptyBox('No hay reintegros pendientes');
+    var por={}; xs.forEach(function(t){ [['ida','Ida'],['vuelta','Vuelta']].forEach(function(k){ var m=t['monto'+k[1]]; if (!t[k[0]] || !m) return; var q=t['pago'+k[1]]||'Sin dato'; por[q]=(por[q]||0)+m; }); });
+    html+='<div class="note" style="margin-top:12px">'+Object.keys(por).map(function(q){ return 'A <b>'+esc(q)+'</b>: '+plata(por[q]); }).join('<br>')+'</div>';
+    html+=xs.map(function(t){
+      var tot=(t.montoIda||0)+(t.montoVuelta||0);
+      return '<div class="blk"><div class="box"><div class="tr-l"><b>'+esc(t.cliente)+' · '+ramaLabel(t.rama)+'</b><span>Consulta '+esc(diaCorto(t.fecha))+' '+esc(t.hora||'')+'</span></div>'+
+        (t.ida?'<button class="tr-rec" data-trver="'+esc(t.id)+'|ida">🧾 Ida '+plata(t.montoIda)+' · pagó '+esc(t.pagoIda||'?')+'</button>':'')+
+        (t.vuelta?'<button class="tr-rec" data-trver="'+esc(t.id)+'|vuelta">🧾 Vuelta '+plata(t.montoVuelta)+' · pagó '+esc(t.pagoVuelta||'?')+'</button>':'')+
+        '<div class="tr-rein">Total <b>'+plata(tot)+'</b><button class="save" data-tracc="'+esc(t.id)+'|transferido|">Ya lo transferí</button></div></div></div>';
+    }).join('');
+    return html;
+  }
+  // Viajes de hoy que hay que mandar (y los que ya salieron sin recibo)
+  function trTramos(){
+    var hoy=nowBA().date, out=[];
+    trLista().forEach(function(t){ if (!t.coord || t.reintegro==='transferido') return;
+      [['ida','Ida'],['vuelta','Vuelta']].forEach(function(k){ if (!t[k[0]]) return;
+        var est=t['est'+k[1]], h=t['hora'+k[1]];
+        if (t.fecha===hoy && est!=='enviado') out.push({t:t, k:k[0], h:h, tipo:'mandar'});
+        else if (est==='enviado' && !t['monto'+k[1]] && t.fecha<=hoy) out.push({t:t, k:k[0], h:h, tipo:'recibo'});
+      }); });
+    return out.sort(function(a,b){ return (a.tipo===b.tipo?0:(a.tipo==='mandar'?-1:1)) || String(a.h).localeCompare(String(b.h)); });
+  }
+  function trSecTareas(){
+    var xs=trTramos(); if (!xs.length) return '';
+    var n=nowBA().min;
+    return '<h2 class="sec-t">🚗 Traslados <span class="cnt num">'+xs.length+'</span></h2><p class="sec-sub">Uber de hoy para mandar y viajes que todavía no tienen el recibo cargado.</p><ul class="todo">'+xs.map(function(x){
+      var ida=x.k==='ida', falta=hmin(x.h)===null?null:hmin(x.h)-n, urg=x.tipo==='mandar' && falta!==null && falta<=60;
+      return '<li class="pa-li'+(urg?' tr-urg':'')+'"><button data-open="'+esc(x.t.lead)+'"><span class="h num">'+esc(x.h||'--:--')+'</span><span class="w"><b>'+esc(x.t.cliente)+' · '+(ida?'ida':'vuelta')+'</b><span>'+(x.tipo==='mandar'?(urg?(falta>0?'Faltan '+falta+' min · ':'¡Ya es la hora! · '):'')+esc(ida?x.t.dirIda:x.t.dirVuelta):'Falta cargar el recibo')+'</span></span></button>'+
+        (x.tipo==='mandar'?'<button class="pa-ag" data-tracc="'+esc(x.t.id)+'|enviado|'+x.k+'">✔ Enviado</button>':'<button class="pa-ag" data-trrecibo="'+esc(x.t.id)+'|'+x.k+'">🧾 Recibo</button>')+'</li>';
+    }).join('')+'</ul>';
+  }
+  // Aviso arriba: el Uber que hay que mandar en la próxima hora, y los reintegros para los socios
+  function trAvisoHtml(){
+    var n=nowBA().min, ant=(state.data && state.data.trasladoAntes)||60, ya=trTramos().filter(function(x){ var m=hmin(x.h); return x.tipo==='mandar' && m!==null && m-n<=ant && n-m<=180; });
+    var h='';
+    if (ya.length){ var x=ya[0], f=hmin(x.h)-n, ida=x.k==='ida';
+      h+='<div class="tr-aviso"><span>🚗 <b>'+(f>0?'En '+f+' min':'Ya')+'</b> hay que mandar el Uber de '+(ida?'ida':'vuelta')+' de <b>'+esc(x.t.cliente)+'</b> ('+esc(x.h)+', '+esc(ida?x.t.dirIda:x.t.dirVuelta)+')'+(ya.length>1?' y '+(ya.length-1)+' más':'')+'</span>'+
+        '<button data-tracc="'+esc(x.t.id)+'|enviado|'+x.k+'">✔ Ya lo mandé</button><button data-open="'+esc(x.t.lead)+'">Ver</button></div>';
+      ya.forEach(function(y){ var key='trAv:'+y.t.id+':'+y.k; if (!store(key)){ store(key,'1'); try{ if (navigator.vibrate) navigator.vibrate([200,100,200]); }catch(e){} try{ if (window.Notification && Notification.permission==='granted') new Notification('🚗 Mandar el Uber de '+(y.k==='ida'?'ida':'vuelta'), {body:y.t.cliente+' · '+y.h+' · '+(y.k==='ida'?y.t.dirIda:y.t.dirVuelta)}); }catch(e){} } });
+    }
+    var rs=trLista().filter(function(t){ return t.reintegro==='pendiente' && t.socio; });
+    if (rs.length){ var tot=rs.reduce(function(a,t){ return a+(t.montoIda||0)+(t.montoVuelta||0); },0);
+      h+='<div class="tr-aviso plata"><span>💸 '+plural(rs.length,'reintegro','reintegros')+' de traslados para transferir: <b>'+plata(tot)+'</b></span><button data-trreint>Ver</button></div>'; }
+    return h;
+  }
+  function trAvisoBanner(){ return '<div id="trAviso">'+trAvisoHtml()+sinEnvHtml()+'</div>'; }
+  function trPintarAviso(){ var e=$('trAviso'); if (e) e.innerHTML=trAvisoHtml()+sinEnvHtml(); }
+  setInterval(trPintarAviso, 30000);
+  document.addEventListener('click', function(ev){
+    var t=ev.target.closest('[data-trnuevo],[data-tredit],[data-trchk],[data-trguardar],[data-tracc],[data-trcancel],[data-trrecibo],[data-trrecsave],[data-trfoto],[data-trver],[data-trreint],[data-trcopiar]'); if (!t) return;
+    if (t.hasAttribute('data-trnuevo') || t.hasAttribute('data-tredit')){ trAbrirForm(t.getAttribute('data-trnuevo')||t.getAttribute('data-tredit')); return; }
+    if (t.hasAttribute('data-trchk')){ trSync(); var k=t.getAttribute('data-trchk'); state.draft[k]=!state.draft[k]; renderSheet(); return; }
+    if (t.hasAttribute('data-trguardar')){ trGuardar(); return; }
+    if (t.hasAttribute('data-trcancel')){ state.trCancel=t.getAttribute('data-trcancel'); renderSheet(); return; }
+    if (t.hasAttribute('data-tracc')){ var a=t.getAttribute('data-tracc').split('|'); trAccion(a[0], a[1], a[2]); return; }
+    if (t.hasAttribute('data-trrecibo')){ var r=t.getAttribute('data-trrecibo').split('|'); var tt=trLista().filter(function(x){ return x.id===r[0]; })[0]; state.draft={tid:r[0], tramo:r[1], monto:tt&&tt['monto'+(r[1]==='ida'?'Ida':'Vuelta')]||'', pago:(tt&&tt['pago'+(r[1]==='ida'?'Ida':'Vuelta')])||(state.me&&state.me.nombre)||'', archivo:null}; openSheet({type:'recibo'}); return; }
+    if (t.hasAttribute('data-trfoto')){ var m=$('trMonto'), pg=$('trPago'); if (m) state.draft.monto=m.value; if (pg) state.draft.pago=pg.value;
+      var inp=$('trInput'); if (!inp){ inp=document.createElement('input'); inp.type='file'; inp.accept='image/*,application/pdf'; inp.id='trInput'; inp.tabIndex=-1; inp.style.cssText='position:fixed;left:-9999px;top:0;opacity:0;width:1px;height:1px';
+        inp.addEventListener('change', function(){ var f=inp.files&&inp.files[0]; inp.value=''; if (f && state.sheet && state.sheet.type==='recibo'){ state.draft.archivo=f; renderSheet(); } }); document.body.appendChild(inp); }
+      inp.value=''; inp.click(); return; }
+    if (t.hasAttribute('data-trrecsave')){ trReciboGuardar(); return; }
+    if (t.hasAttribute('data-trver')){ var v=t.getAttribute('data-trver').split('|'); trVerRecibo(v[0], v[1]); return; }
+    if (t.hasAttribute('data-trreint')){ openSheet({type:'reintegros'}); return; }
+    if (t.hasAttribute('data-trcopiar')){ copiarTxt(t.getAttribute('data-trcopiar')); return; }
+  });
 
   /* ---------- resúmenes de los intakers ---------- */
   var K_NOMBRE = ['nombre','nombre y apellido','nombre completo','apellido y nombre','cliente'];
@@ -2377,6 +2603,7 @@ a.save.wa-go svg{width:20px;height:20px}
     var ultima=nt.length ? nt[nt.length-1] : '';
     var acts=phone(l.tel) ? '<a class="ib wa" href="'+waHref(l.tel)+'" target="_blank" rel="noopener" aria-label="WhatsApp a '+esc(l.nombre)+'">'+I.chat+'</a><a class="ib" href="'+telHref(l.tel)+'" target="_top" aria-label="Llamar a '+esc(l.nombre)+'">'+I.call+'</a>' : '<span></span><span></span>';
     return '<li class="pa" data-ficha="'+esc(l.id)+'"><div class="pa-top"><div class="pa-who"><b>'+(esNuevoAviso(l)?'🔔 ':'')+esc(l.nombre||'Sin nombre')+'</b><span>'+ramaLabel(l.rama)+(when?' · '+when:'')+((l.intaker||l.inicioChat)?' · '+esc(l.intaker||l.inicioChat):'')+(l.tel?' · '+esc(l.tel):'')+'</span></div>'+faseTag(l.fase)+'</div>'+
+      (repDe(l.id)?'<div class="pa-note rep-n">⚠ Posible REPETIDO: '+repTxt(repDe(l.id))+'</div>':'')+
       (form?'<div class="pa-form">'+esc(form)+'</div>':'')+
       (ultima?'<div class="pa-note">💬 '+esc(ultima)+'</div>':'')+
       (l.sinDia?'<div class="pa-note">'+(l.fase==='Reagenda'?'↻ Pidió reagendar y todavía no eligió día: cuando avise, cargale el turno con Agendar.':'📅 En la planilla figura '+esc(faseLbl(l.fase))+' pero sin día ni hora: cargale el turno con Agendar.')+'</div>':'')+
@@ -2411,9 +2638,11 @@ a.save.wa-go svg{width:20px;height:20px}
       '<div class="fi-meta"><span class="rama r-'+ramaKey(l.rama)+'">'+ramaLabel(l.rama)+'</span>'+faseTag(l.fase)+
       (l.ingreso?'<span class="fi-when">'+esc(haceTxt(l))+(ingresoCorto(l)?' · '+esc(ingresoCorto(l)):'')+'</span>':'')+'</div>'+
       '</div><button class="close" data-close aria-label="Cerrar">'+I.x+'</button></div>';
+    html += repBlk(l.id);
     if (phone(l.tel)) html += '<div class="big-acts"><a href="'+telHref(l.tel)+'" target="_top">'+I.call+'Llamar</a><a class="wa" href="'+waHref(l.tel)+'" target="_blank" rel="noopener">'+I.chat+'WhatsApp</a></div>';
     if (ag) html += '<div class="pa-has" style="margin:12px 2px 0">Ya tiene consulta: '+esc(diaCorto(l.fecha))+' '+esc(l.hora||'')+(l.abogada?' con '+esc(l.abogada):'')+'</div><button class="btn3" data-open="'+esc(l.id)+'">Ver la consulta</button>';
     else if (puede('agendar')) html += '<button class="btn3 fi-ag" data-agendar="'+esc(l.id)+'">'+I.cal+'Agendar consulta</button>';
+    if (ag) html += trBlk(l);
     html += internasBlk(l);
     var b=function(md, t){ var on=u.modo===md; return '<button data-fimodo="'+md+'" class="'+(on?'on':'')+'" aria-pressed="'+on+'">'+t+'</button>'; };
     var conFase=!ag && puede('agendar');
@@ -3124,6 +3353,7 @@ a.save.wa-go svg{width:20px;height:20px}
     var t=tareasDe(), pa=t.porAgendar;
     var total=t.hoy.length+t.previa.length+t.sinRes.length;
     var body='';
+    body += trSecTareas() + repSecTareas();
     var dw=dow(nowBA().date); if (dw===6 || dw===0 || dw===1) body+='<button class="btn3" data-view="reporte" style="margin-top:12px">📊 Armar el reporte de la semana para CARGA SEMANAL</button>';
     body += secTarea('Confirmar hoy', t.hoy.length, 'Mensaje del día para las consultas de hoy. Tocá lo que respondió.', '<ol class="dk">'+t.hoy.map(function(l){ return tkRow(l,'confDia'); }).join('')+'</ol>');
     body += secTarea('Mensaje previo', t.previa.length, 'Consultas de los próximos días que todavía no tienen la confirmación previa.', '<ol class="dk">'+t.previa.map(function(l){ return tkRow(l,'confPrev'); }).join('')+'</ol>');
