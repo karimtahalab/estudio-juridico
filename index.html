@@ -2515,7 +2515,7 @@ a.save.wa-go svg{width:20px;height:20px}
     return '<div class="ag-q"><input class="inp" id="aq" type="search" placeholder="Pegá el teléfono o escribí el nombre" autocomplete="off" enterkeyhint="search" aria-label="Buscar lead por teléfono o nombre" value="'+esc(s.q)+'"><button class="clr" data-agclr aria-label="Borrar búsqueda">'+I.x+'</button></div><div id="agChips">'+agChipsHtml()+'</div>';
   }
   /* ---------- Otras fases (C, BC, REPETIDO…) y búsqueda en todas las fases: se cargan al tocarlas ---------- */
-  var OTRAS_FASES=['Seguimiento','C','BC','Repetido','Numero incorrecto','No show','Caso en proceso'];
+  var OTRAS_FASES=['Consulta agendada','Reagenda','Seguimiento','C','BC','Repetido','Numero incorrecto','No show','Caso en proceso'];
   /* ---------- Listas separadas por rama (cuando arriba está elegido "Todas") ---------- */
   function clRow(l){
     var tel=String(l.tel||'').trim(), em=String(l.email||'').trim(), cuando=ingresoCorto(l);
@@ -2598,7 +2598,7 @@ a.save.wa-go svg{width:20px;height:20px}
   }
   function agRow(l){
     var when=haceTxt(l);
-    var form=resumenForm(l);
+    var form=resumenForm(l), yaTurno=!!l.fecha && (l.fase==='Consulta agendada' || l.fase==='Reagenda');
     var nt=(l.comentarios||[]).map(function(c){ return String(c.text||''); }).join('\n').split('\n').filter(function(x){ return x.trim(); });
     var ultima=nt.length ? nt[nt.length-1] : '';
     var acts=phone(l.tel) ? '<a class="ib wa" href="'+waHref(l.tel)+'" target="_blank" rel="noopener" aria-label="WhatsApp a '+esc(l.nombre)+'">'+I.chat+'</a><a class="ib" href="'+telHref(l.tel)+'" target="_top" aria-label="Llamar a '+esc(l.nombre)+'">'+I.call+'</a>' : '<span></span><span></span>';
@@ -2607,7 +2607,8 @@ a.save.wa-go svg{width:20px;height:20px}
       (form?'<div class="pa-form">'+esc(form)+'</div>':'')+
       (ultima?'<div class="pa-note">💬 '+esc(ultima)+'</div>':'')+
       (l.sinDia?'<div class="pa-note">'+(l.fase==='Reagenda'?'↻ Pidió reagendar y todavía no eligió día: cuando avise, cargale el turno con Agendar.':'📅 En la planilla figura '+esc(faseLbl(l.fase))+' pero sin día ni hora: cargale el turno con Agendar.')+'</div>':'')+
-      '<div class="pa-acts">'+acts+'<button class="btn2" data-agendar="'+esc(l.id)+'">'+I.cal+' Agendar</button></div></li>';
+      (yaTurno?'<div class="pa-has">📅 Consulta: '+esc(diaCorto(l.fecha))+' '+esc(l.hora||'')+(l.abogada?' con '+esc(l.abogada):'')+'</div>':'')+
+      '<div class="pa-acts">'+acts+(yaTurno?'<button class="btn2" data-'+(agendada(l.id)?'open':'ficha')+'="'+esc(l.id)+'">Ver la consulta</button>':'<button class="btn2" data-agendar="'+esc(l.id)+'">'+I.cal+' Agendar</button>')+'</div></li>';
   }
   /* ---------- Ficha del lead: todo lo que se ve en la planilla, ordenado ---------- */
   // En la lista se muestran primero las respuestas que más ayudan a decidir (las de Sí/No solas dicen poco)
