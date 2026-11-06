@@ -4777,9 +4777,9 @@ a.save.wa-go svg{width:20px;height:20px}
     var uno=function(c){ return '<b>'+esc(c.nombre)+'</b> <span>('+esc([shortDate(c.fecha), c.app?'la cargó la app':'cargada a mano', c.lesion].filter(Boolean).join(' · '))+')</span>'; };
     return '<div class="warn f2rep" style="margin:0 0 10px"><b>⚠ '+(xs.length===1?'Puede haber un cliente cargado dos veces':'Puede haber '+xs.length+' clientes cargados dos veces')+'</b>'+
       '<p class="hint" style="margin:4px 0 8px">El nombre está escrito distinto pero se parece y las fechas están cerca. Si es la misma persona, tocá <b>Eliminar repetido</b>: se borra la fila que cargó la app (o la que tiene menos datos), lo que le faltaba a la otra se completa y el cliente se cuenta una sola vez.</p>'+
-      xs.map(function(x){ var busy=(state.f2RepBusy||{})[x.k];
+      xs.map(function(x){ var busy=(state.f2RepBusy||{})[x.k], at=' data-k="'+esc(x.k)+'" data-a="'+x.a.fila+'" data-b="'+x.b.fila+'"';
         return '<div class="f2rep-it"><div>'+uno(x.a)+'<br>'+uno(x.b)+'</div><div class="f2rep-bt">'+(busy?'<span class="hint">'+esc(busy)+'</span>':
-          '<button class="btn3" data-f2rep="unir|'+esc(x.k)+'|'+x.a.fila+'|'+x.b.fila+'">🗑 Eliminar repetido</button><button class="link" data-f2rep="distintos|'+esc(x.k)+'|'+x.a.fila+'|'+x.b.fila+'">Son distintos</button>')+'</div></div>'; }).join('')+'</div>';
+          '<button class="btn3" data-f2rep="unir"'+at+'>🗑 Eliminar repetido</button><button class="link" data-f2rep="distintos"'+at+'>Son distintos</button>')+'</div></div>'; }).join('')+'</div>';
   }
   function f2Rep(acc, k, a, b){
     var busy=state.f2RepBusy||(state.f2RepBusy={}); busy[k]=acc==='unir'?'Eliminando…':'Guardando…'; render();
@@ -4882,12 +4882,12 @@ a.save.wa-go svg{width:20px;height:20px}
     if (t.hasAttribute('data-f2nuevo')){ openSheet({type:'fin2', tipo:t.getAttribute('data-f2nuevo')}); return; }
     if (t.hasAttribute('data-f2edit')){ var q=t.getAttribute('data-f2edit').split('|'); openSheet({type:'fin2', tipo:q[0], fila:+q[1]}); return; }
     if (t.hasAttribute('data-f2cobrar')){ var b=f2Base(), x=((b&&b.porCobrar)||[])[+t.getAttribute('data-f2cobrar')]; if (!x) return; openSheet({type:'fin2', tipo:'cobro', pre:{caso:x.caso, monto:String(x.falta||x.cuota||x.debido)}}); return; }
+    if (t.hasAttribute('data-f2rep')){ f2Rep(t.getAttribute('data-f2rep'), t.getAttribute('data-k'), t.getAttribute('data-a'), t.getAttribute('data-b')); return; }
     if (!state.sheet || state.sheet.type!=='fin2') return;
     if (t.hasAttribute('data-f2pick')){ var pk=t.getAttribute('data-f2pick').split('|'), k=pk.shift(); state.draft.v[k]=pk.join('|'); renderSheet(); return; }
     if (t.hasAttribute('data-f2save')){ f2Guardar(); return; }
     if (t.hasAttribute('data-f2forzar')){ f2Guardar({forzar:true}); return; }
     if (t.hasAttribute('data-f2completar')){ if (state.sheet && state.draft){ state.sheet.fila=+t.getAttribute('data-f2completar'); state.draft.dup=null; f2Guardar(); } return; }
-    if (t.hasAttribute('data-f2rep')){ var q=t.getAttribute('data-f2rep').split('|'); f2Rep(q[0], q[1], q[2], q[3]); return; }
     if (t.hasAttribute('data-f2borrar')){ var bv=t.getAttribute('data-f2borrar'); if (bv==='1' || bv==='0'){ state.draft.borrar=bv==='1'; renderSheet(); } else f2Guardar({borrar:true}); return; }
   });
   function f2Input(ev){
