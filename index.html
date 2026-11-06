@@ -1135,7 +1135,7 @@ a.save.wa-go svg{width:20px;height:20px}
   // Lo que se puede repetir sin duplicar nada: si se corta internet o el servidor no contesta, se reintenta solo antes de avisar
   var REINTENTA={getData:1, saveAction:1, cambiarFase:1, saveResumenes:1, editarDatos:1, deshacerResultado:1};
   // Finanzas: cada pedido lleva la llave (PIN de finanzas). Vive solo en la memoria de la app: al cerrarla, se vuelve a pedir
-  var FIN_FN={getFin2:1, getFin2Panel:1, saveFin2:1, getFinanzas:1, saveFinanza:1, borrarFinanza:1};
+  var FIN_FN={getFin2:1, getFin2Panel:1, saveFin2:1, resolverRepFin2:1, getFinanzas:1, saveFinanza:1, borrarFinanza:1};
   function esCorte(e){ return /Sin conexi|no respondi|Failed to fetch|NetworkError|Load failed|network|timeout|JSON|Unexpected token/i.test(String((e&&e.message)||e)); }
   function call1(fn, arg){
     return new Promise(function(res, rej){
@@ -4801,7 +4801,7 @@ a.save.wa-go svg{width:20px;height:20px}
     var pd=b.periodo; if (pd && v.fecha && (hoy<pd.desde || hoy>pd.hasta)) v.fecha=pd.desde;
     var src=null;
     if (sh.fila){ var lista={cobro:b.cobros, gasto:b.gastos, cliente:b.clientes, factura:b.facturas, acuerdo:b.acuerdos, retiro:b.retiros}[sh.tipo]||[]; src=lista.filter(function(x){ return x.fila===sh.fila; })[0]||null; }
-    if (src) Object.keys(src).forEach(function(k){ if (k!=='fila' && src[k]!=='' && src[k]!=null) v[k]=String(src[k]); });
+    if (src) Object.keys(src).forEach(function(k){ if (k!=='fila' && src[k]!=='' && src[k]!=null && !(src[k]===0 && sh.tipo==='cliente')) v[k]=String(src[k]); }); // un salario o edad vacíos llegan como 0: no se precargan
     if (sh.pre) Object.keys(sh.pre).forEach(function(k){ v[k]=sh.pre[k]; });
     return { v:v, borrar:false, dup:null };
   }
