@@ -768,6 +768,13 @@ a.save.wa-go svg{width:20px;height:20px}
 .rt-h{font-size:16px;font-weight:800;margin:18px 2px 6px}
 .rt-box{padding:10px 8px 8px}
 .rt-svg{display:block;width:100%;height:auto}
+.rt-wrap{position:relative}
+.rt-wrap .rt-svg{touch-action:pan-y;cursor:crosshair}
+.rt-cur{stroke:var(--ink-2);stroke-width:1;stroke-dasharray:2 2}
+.rt-cp{fill:var(--ink);stroke:var(--paper);stroke-width:2}
+.rt-tip{position:absolute;top:0;transform:translateX(-50%);pointer-events:none;background:var(--paper);box-shadow:0 0 0 1px var(--line) inset,0 6px 18px rgba(0,0,0,.25);border-radius:10px;padding:7px 10px;font-size:12.5px;line-height:1.35;white-space:nowrap;z-index:2}
+.rt-tip b{display:block;font-size:13.5px}
+.rt-tip .m{color:var(--mint);font-weight:700}
 .rt-grid{stroke:var(--line);stroke-width:1}
 .rt-ax{font-size:10px;fill:var(--ink-3)}
 .rt-val{font-size:9.5px;fill:var(--ink-2);font-weight:700}
@@ -3142,6 +3149,29 @@ a.save.wa-go svg{width:20px;height:20px}
     }).catch(function(e){ state.rt[k]={error:(e&&e.message)||'No se pudo leer la planilla de ingresos.', d:prev.d}; if (state.view==='reportes') render(); });
   }
   function rtNum(x){ return String(Math.round(x*10)/10).replace('.',','); }
+  function rtCursor(ev, fijar){
+    var svg=ev.target.closest && ev.target.closest('svg[data-rtc]'); if (!svg) return;
+    var D; try{ D=JSON.parse(svg.getAttribute('data-rtc')); }catch(e){ return; }
+    var r=svg.getBoundingClientRect(); if (!r.width) return;
+    var x=(ev.clientX-r.left)/r.width*D.W, i=Math.max(0, Math.min(30, Math.round((x-D.L)/D.w*30)));
+    var X=D.L+(i/30)*D.w, Y=function(v){ return D.T+D.h-(v/D.top)*D.h; };
+    var ln=svg.querySelector('.rt-cur'), cp=svg.querySelector('.rt-cp:not(.rt-ca)'), ca=svg.querySelector('.rt-ca');
+    ln.setAttribute('x1',X); ln.setAttribute('x2',X); ln.setAttribute('visibility','visible');
+    cp.setAttribute('cx',X); cp.setAttribute('cy',Y(D.p[i])); cp.setAttribute('visibility','visible');
+    var tieneA = i < D.a.length;
+    if (tieneA){ ca.setAttribute('cx',X); ca.setAttribute('cy',Y(D.a[i])); ca.setAttribute('visibility','visible'); } else ca.setAttribute('visibility','hidden');
+    var tip=svg.parentNode.querySelector('.rt-tip');
+    tip.innerHTML='<b>Día '+(i+1)+'</b>Promedio: '+rtNum(D.p[i])+' '+(Math.round(D.p[i]*10)===10?'cliente':'clientes')+'<br>Rango de los meses: '+D.mn[i]+' a '+D.mx[i]+(tieneA?'<br><span class="m">'+esc(D.mes)+': '+D.a[i]+'</span>':'');
+    tip.hidden=false;
+    var pct=X/D.W*100; tip.style.left=Math.max(14, Math.min(86, pct))+'%';
+  }
+  function rtOcultar(svg){
+    if (!svg) return; ['.rt-cur','.rt-cp'].forEach(function(q){ [].forEach.call(svg.querySelectorAll(q), function(el){ el.setAttribute('visibility','hidden'); }); });
+    var tip=svg.parentNode.querySelector('.rt-tip'); if (tip) tip.hidden=true;
+  }
+  document.addEventListener('pointermove', function(ev){ if (ev.target.closest && ev.target.closest('svg[data-rtc]')) rtCursor(ev); });
+  document.addEventListener('pointerdown', function(ev){ if (ev.target.closest && ev.target.closest('svg[data-rtc]')) rtCursor(ev); else [].forEach.call(document.querySelectorAll('svg[data-rtc]'), rtOcultar); });
+  document.addEventListener('pointerout', function(ev){ var svg=ev.target.closest && ev.target.closest('svg[data-rtc]'); if (svg && ev.pointerType==='mouse' && !svg.contains(ev.relatedTarget)) rtOcultar(svg); });
   function rtCurva(d){
     var W=340, H=190, L=26, R=8, T=10, B=24, w=W-L-R, h=H-T-B;
     var top=Math.max(d.max[30], d.prom[30], d.actual.length?d.actual[d.actual.length-1]:0, 4); top=Math.ceil(top/4)*4;
@@ -3152,8 +3182,11 @@ a.save.wa-go svg{width:20px;height:20px}
     [0, top/2, top].forEach(function(v){ g+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(v)+'" y2="'+Y(v)+'" class="rt-grid"/><text x="'+(L-5)+'" y="'+(Y(v)+4)+'" class="rt-ax" text-anchor="end">'+Math.round(v)+'</text>'; });
     [1,10,20,31].forEach(function(dd){ g+='<text x="'+X(dd-1)+'" y="'+(H-6)+'" class="rt-ax" text-anchor="middle">'+dd+'</text>'; });
     var a=d.actual, dot=a.length ? '<circle cx="'+X(a.length-1)+'" cy="'+Y(a[a.length-1])+'" r="4.5" class="rt-dot"/>' : '';
-    return '<svg class="rt-svg" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Clientes acumulados por día del mes">'+g+
-      (d.base.length>1?'<path d="'+band+'" class="rt-band"/>':'')+'<path d="'+line(d.prom)+'" class="rt-prom"/>'+(a.length?'<path d="'+line(a)+'" class="rt-act"/>':'')+dot+'</svg>'+
+    var datos={W:W,L:L,w:w,T:T,h:h,top:top,p:d.prom,mn:d.min,mx:d.max,a:a,mes:d.mesActual.split(' ')[0]};
+    return '<div class="rt-wrap"><svg class="rt-svg" data-rtc="'+esc(JSON.stringify(datos))+'" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Clientes acumulados por día del mes. Pasá el dedo o el mouse para ver cada día.">'+g+
+      (d.base.length>1?'<path d="'+band+'" class="rt-band"/>':'')+'<path d="'+line(d.prom)+'" class="rt-prom"/>'+(a.length?'<path d="'+line(a)+'" class="rt-act"/>':'')+dot+
+      '<line class="rt-cur" x1="0" x2="0" y1="'+T+'" y2="'+(T+h)+'" visibility="hidden"/><circle class="rt-cp" r="4" cx="0" cy="0" visibility="hidden"/><circle class="rt-cp rt-ca" r="4" cx="0" cy="0" visibility="hidden" style="fill:var(--mint)"/>'+
+      '<rect x="'+L+'" y="0" width="'+w+'" height="'+H+'" fill="transparent"/></svg><div class="rt-tip" hidden></div></div>'+
       '<div class="rt-ley"><span><i class="b"></i>Rango de los meses</span><span><i class="p"></i>Promedio</span><span><i class="a"></i>'+esc(d.mesActual.split(' ')[0])+'</span></div>';
   }
   function rtBarras(d){
