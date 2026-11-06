@@ -1196,7 +1196,17 @@ a.save.wa-go svg{width:20px;height:20px}
     var t=$('toast'), pos=state.sheet?' top':''; t.textContent=msg; t.className='toast on'+(err?' err':'')+pos;
     clearTimeout(toast._t); toast._t=setTimeout(function(){ t.className='toast'+(err?' err':'')+pos; }, 2800);
   }
-  function findLead(id){ if (id===NUEVO_ID) return state.nuevoLead||null; var L=state.data.leads; for (var i=0;i<L.length;i++) if (L[i].id===id) return L[i]; var P=state.data.porAgendar||[]; for (var j=0;j<P.length;j++) if (P[j].id===id) return P[j]; var O=state.otras||{}; for (var k in O){ var xs=(O[k]&&O[k].leads)||[]; for (var m=0;m<xs.length;m++) if (xs[m].id===id) return xs[m]; } var B=(state.busq&&state.busq.leads)||[]; for (var n=0;n<B.length;n++) if (B[n].id===id) return B[n]; var M=state.data.paraMi||[]; for (var q=0;q<M.length;q++) if (M[q].id===id) return M[q]; return null; }
+  function findLead(id){ if (id===NUEVO_ID) return state.nuevoLead||null; var L=state.data.leads; for (var i=0;i<L.length;i++) if (L[i].id===id) return L[i]; var P=state.data.porAgendar||[]; for (var j=0;j<P.length;j++) if (P[j].id===id) return P[j]; var O=state.otras||{}; for (var k in O){ var xs=(O[k]&&O[k].leads)||[]; for (var m=0;m<xs.length;m++) if (xs[m].id===id) return xs[m]; } var B=(state.busq&&state.busq.leads)||[]; for (var n=0;n<B.length;n++) if (B[n].id===id) return B[n]; var M=state.data.paraMi||[]; for (var q=0;q<M.length;q++) if (M[q].id===id) return M[q]; var S=state.sueltos||{}; if (S[id]) return S[id]; return null; }
+  // Ficha de un lead que puede no estar cargado en el celular (ej. un posible repetido en fase C o del mes anterior): se trae del servidor
+  function abrirFicha(id){
+    if (findLead(id)){ openSheet({type:'ficha', id:id}); return; }
+    toast('Abriendo la ficha…');
+    call('getLead', {id:id}).then(function(l){
+      if (!l) throw new Error('No encontré ese lead.');
+      (state.sueltos=state.sueltos||{})[l.id]=l;
+      openSheet({type:'ficha', id:l.id});
+    }).catch(function(e){ toast((e&&e.message)||'No se pudo abrir la ficha.', true); });
+  }
   function agendada(id){ var L=state.data.leads; for (var i=0;i<L.length;i++) if (L[i].id===id) return true; return false; }
   function findBloq(id){ var B=state.data.bloqueos||[]; for (var i=0;i<B.length;i++) if (B[i].id===id) return B[i]; return null; }
   function replaceLead(nl){ if (!nl) return; var P=state.data.porAgendar||[]; for (var j=0;j<P.length;j++) if (P[j].id===nl.id){ P.splice(j,1); break; } var L=state.data.leads; for (var i=0;i<L.length;i++) if (L[i].id===nl.id){ L[i]=nl; return; } L.push(nl); }
@@ -1552,6 +1562,7 @@ a.save.wa-go svg{width:20px;height:20px}
     if (sh.type==='yo' && !state.login) state.login={};
     if (sh.type==='ficha' || sh.type==='lead') state.fichaUI={};
     renderSheet();
+    if (state.sheet!==sh) return; // no había nada para mostrar: no se abre un panel vacío
     $('scrim').classList.add('on'); $('sheet').classList.add('on'); $('sheet').scrollTop=0;
     if (sh.focusResult){ setTimeout(function(){ var r=$('resBlk'); if (r) r.scrollIntoView({behavior:'smooth',block:'start'}); }, 280); }
   }
@@ -2690,7 +2701,7 @@ a.save.wa-go svg{width:20px;height:20px}
     return '';
   }
   function replaceAny(nl){
-    if (!nl) return; var P=state.data.porAgendar||(state.data.porAgendar=[]), L=state.data.leads||[], O=state.otras||{}, i, enO=false;
+    if (!nl) return; if (state.sueltos && state.sueltos[nl.id]) state.sueltos[nl.id]=nl; var P=state.data.porAgendar||(state.data.porAgendar=[]), L=state.data.leads||[], O=state.otras||{}, i, enO=false;
     // En las listas de "Otras fases": se actualiza, se saca de la fase vieja o se suma a la nueva
     Object.keys(O).forEach(function(k){ var o=O[k]; if (!o || !o.leads) return; for (var j=0;j<o.leads.length;j++) if (o.leads[j].id===nl.id){ if (nl.fase===k){ o.leads[j]=nl; enO=true; } else { o.leads.splice(j,1); o.total=Math.max(0,(o.total||1)-1); } return; } });
     if (O[nl.fase] && O[nl.fase].leads && !enO){ O[nl.fase].leads.unshift(nl); O[nl.fase].total=(O[nl.fase].total||0)+1; enO=true; }
@@ -3710,7 +3721,7 @@ a.save.wa-go svg{width:20px;height:20px}
     if (t.hasAttribute('data-agcorregir')){ closeSearch(); openSheet({type:'agendar', id:t.getAttribute('data-agcorregir')}); if (state.draft){ state.draft.corregir=true; renderSheet(); } return; }
     if (t.hasAttribute('data-derivar')){ openSheet({type:'derivar', id:t.getAttribute('data-derivar')}); return; }
     if (t.hasAttribute('data-reagsindia')){ reagSinDiaUI(t.getAttribute('data-reagsindia')); return; }
-    if (t.hasAttribute('data-ficha')){ if (ev.target.closest('a')) return; closeSearch(); openSheet({type:'ficha', id:t.getAttribute('data-ficha')}); return; }
+    if (t.hasAttribute('data-ficha')){ if (ev.target.closest('a')) return; closeSearch(); abrirFicha(t.getAttribute('data-ficha')); return; }
     if (t.hasAttribute('data-pinok')){ pinOk(); return; }
     if (t.hasAttribute('data-pinback')){ state.login={}; renderSheet(); return; }
     if (t.hasAttribute('data-pinreset')){ resetPinUI(t.getAttribute('data-pinreset')); return; }
