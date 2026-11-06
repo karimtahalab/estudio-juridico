@@ -218,6 +218,7 @@ class FakeApi:
             return True, {"pines": self.get_data(who).get("pines", [])}
         if fn == "getReporte":
             return True, {"__prueba": True, "filas": [], "semana": arg.get("semana")}
+        if fn == "getEstudios": return True, {"lista": [], "puedeSubir": True, "maxMB": 10}
         if fn == "getCreativos": return True, {"ramas": []}
         if fn in ("finPinEntrar",): return True, {"ftok": "fake-fin", "creado": False}
         self.sin_fake.add(fn)

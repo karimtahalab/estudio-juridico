@@ -78,7 +78,11 @@ def run_role(pw, browser, who, vp, tag):
     shot('ingreso_nombres')
     page.click('button[data-yo="%s"]' % who); page.wait_for_timeout(300)
     shot('ingreso_pin')
-    page.fill('#pin', '1234'); page.wait_for_timeout(2000)
+    page.fill('#pin', '1234'); page.wait_for_timeout(700)
+    if page.query_selector('#sheet.on #pin'):  # primera vez: crear PIN (pide repetirlo)
+        shot('ingreso_pin_repetir')
+        page.fill('#pin', '1234'); page.wait_for_timeout(700)
+    page.wait_for_timeout(1300)
     shot('inicio')
     views = page.eval_on_selector_all('#nav button[data-view]', 'bs => bs.filter(b=>!b.hidden).map(b=>b.getAttribute("data-view"))')
     REPORT.setdefault('nav', {})[who] = views

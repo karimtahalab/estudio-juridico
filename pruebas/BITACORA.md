@@ -8,11 +8,13 @@ Cómo correrlo: `python3 pruebas/correr.py <carpeta con index.html> <carpeta de 
 - Fuente Archivo servida local (`fuentes/`, licencia OFL) porque Google Fonts no responde desde el entorno.
 - Login: PIN falso 1234. Julián figura con PIN bloqueado.
 - Las fn sin respuesta falsa se listan en `sin_fake` (hoy: fin2Calentar, que la pantalla ignora).
+- Si la persona no tiene PIN (Pri en los datos falsos), el banco pasa por crear PIN y repetirlo.
 
 ## Estado de las mejoras
 | Rama | Qué | Estado |
 |---|---|---|
-| mejora/2026-11-05 | Encabezado: subtítulo a todo el ancho en celular y título que no se corta en 360px; zona táctil 44px en flechas de semana, Día/Semana, "Elegir otro nombre" y "Salir" | Pendiente de aprobar |
+| mejora/2026-11-05 | Encabezado: subtítulo a todo el ancho en celular y título que no se corta en 360px; zona táctil 44px en flechas de semana, Día/Semana, "Elegir otro nombre" y "Salir" | Aplicada (en main desde el 05/11) |
+| mejora/2026-11-06 | Crear PIN: el paso "Repetí el PIN" ya no muestra "Son 4 números." en rojo antes de escribir (el PIN se mandaba dos veces); "Editar" del Resumen del caso con zona táctil de 44px | Pendiente de aprobar |
 
 ## 2026-11-05 (primera noche)
 - Armé el banco (rama pruebas-nocturnas, carpeta pruebas/).
@@ -29,3 +31,15 @@ Cómo correrlo: `python3 pruebas/correr.py <carpeta con index.html> <carpeta de 
   - Chips de persona y de fase a 40-44px de alto (cambia un poco el diseño, por eso no lo hice solo).
   - Barra de abajo con etiquetas de 12.5-13px.
 - Pendiente del banco: respuestas falsas más completas para getReporte, getFinanzas/getFin2 y getCreativos (hoy los reportes muestran "No hay planillas"), y flujos de agendar, bloquear y derivar.
+
+## 2026-11-06
+- mejora/2026-11-05 ya está en main: marcada como aplicada.
+- Banco: ahora sigue el flujo de crear PIN (Pri) y responde getEstudios (lista vacía). Funciones nuevas en main sin respuesta falsa todavía: getRitmo, noRepetido, saveTraslado, trasladoAccion, trasladoRecibo, verRecibo, subirEstudio, verEstudio, borrarEstudio, getFin2, getFin2Panel, saveFin2 (no se llamaron en los flujos de hoy).
+- Roles probados: Sol, Pri (intaker, crea PIN), Juan (Tránsito), Estefanía (Laboral). Regresión de la rama con Mica, Fran y Karim. 390 y 360.
+- Roto: nada de JavaScript. Permisos OK con datos falsos (Estefanía sin Agendar; Juan solo Tránsito; nadie fuera de Karim con Reportes completos).
+- Problema encontrado (confuso): al crear el PIN por primera vez (o después de un reseteo), apenas pasa al paso "Repetí el PIN" aparece "Son 4 números." en rojo, antes de escribir nada. Causa: dos listeners de input mandaban el PIN; el segundo leía el campo vacío del paso 2. Afecta a todos los que entran por primera vez o después de que Karim les resetea el PIN.
+- Sigue chico: "Editar" del Resumen del caso 52x32; botones de confirmación 144x42; "Cerrar" de la hoja 40x40; "Cambiar" del pie 59x25; chips de persona 32 de alto.
+- Mejoras propuestas: mejora/2026-11-06 (ver tabla).
+- Ideas grandes:
+  - Sol tiene rol de control (deja comentarios a intakers) y hoy entra con la misma vista que una abogada: un acceso directo a "comentar al intaker" desde la ficha le ahorraría pasos.
+  - Chips de persona/rama a 40-44px de alto (sigue pendiente de la noche anterior).
