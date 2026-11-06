@@ -3583,6 +3583,7 @@ a.save.wa-go svg{width:20px;height:20px}
       return '<h3 class="sc-rama"><span class="rama r-'+ramaKey(k)+'">'+ramaLabel(k)+'</span><span class="cnt num">'+por[k].length+'</span></h3><ul class="todo">'+por[k].map(scRow).join('')+'</ul>';
     }).join('');
   }
+  document.addEventListener('click', function(ev){ if (ev.target.closest('[data-scotros]')){ state.scOtros=!state.scOtros; render(); } });
   document.addEventListener('click', function(ev){
     var t=ev.target.closest('[data-levante]'); if (!t) return;
     var id=t.getAttribute('data-levante'), l=findLead(id), hechos=state.scHechos||(state.scHechos={});
@@ -3603,9 +3604,17 @@ a.save.wa-go svg{width:20px;height:20px}
     body += secTarea('Mensaje previo', t.previa.length, 'Consultas de los próximos días que todavía no tienen la confirmación previa.', '<ol class="dk">'+t.previa.map(function(l){ return tkRow(l,'confPrev'); }).join('')+'</ol>');
     body += respuestasHtml();
     body += secTarea('Sin resumen', t.sinRes.length, 'Escribí el resumen para que la abogada lo tenga antes de la consulta.', '<ul class="todo">'+t.sinRes.map(srRow).join('')+'</ul>');
-    var sc=scLista();
-    body += secTarea('Sin contactar', sc.length, 'Leads que todavía no tienen el nombre de Fran ni de Pri en la primera columna de la planilla. Primero los que hace más que entraron. Cuando le mandes el primer mensaje, tocá <b>Ya lo contacté</b> y queda tu nombre en la planilla.',
-      scHtml(sc));
+    // Sin contactar: arriba solo los nuevos sin clasificar; los C y los "Falta enviar leads" quedan en un botón que se abre al tocarlo
+    var scTodos=scLista(), esOtro=function(l){ return !!l.fase || /^falta enviar/i.test(String(l.levanto||'')); };
+    var sc=scTodos.filter(function(l){ return !esOtro(l); }), otros=scTodos.filter(esOtro);
+    var otrosHtml='';
+    if (otros.length){
+      var abierto=!!state.scOtros;
+      otrosHtml='<button class="rs-ctl" data-scotros aria-expanded="'+abierto+'" style="margin-top:14px"><span>Ya clasificados o "Falta enviar leads" sin nombre de intaker ('+otros.length+')</span><small>'+(abierto?'Ocultar ▴':'Ver ▾')+'</small></button>'+
+        (abierto?'<p class="hint" style="margin:8px 2px 0">Tienen fase (casi todos C) pero ningún nombre de Fran ni de Pri en la primera columna.</p>'+scHtml(otros):'');
+    }
+    body += secTarea('Sin contactar', sc.length, 'Leads nuevos sin clasificar: todavía no tienen fase ni el nombre de Fran o de Pri en la planilla. Primero los que hace más que entraron. Cuando le mandes el primer mensaje, tocá <b>Ya lo contacté</b> y queda tu nombre.',
+      scHtml(sc)) + otrosHtml;
     if (pa.length) body += '<button class="btn3" data-view="agendar">Ver todos los leads por agendar ('+pa.length+')</button>';
     total += sc.length;
     return { h1:'Tareas', p: total ? plural(total,'cosa para hacer','cosas para hacer')+(sc.length?', '+sc.length+' sin contactar':'') : (pa.length?pa.length+' por agendar':'Todo al día'), extra:seg(), body:body };
