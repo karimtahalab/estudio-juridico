@@ -520,10 +520,16 @@ textarea:focus,.inp:focus,select:focus{outline:none;box-shadow:0 0 0 2.5px var(-
 .cl .cn .fz{font-size:11.5px;padding:1px 6px;border-radius:7px}
 .cl .ct{font:inherit;font-weight:700;font-size:14px;letter-spacing:.01em;background:var(--paper-2);color:var(--ink);border:0;border-radius:10px;padding:0 10px;min-height:40px;box-shadow:0 0 0 1px var(--line) inset;cursor:pointer}
 .cl .ib{width:40px;height:40px}
+.cl.sc li{grid-template-columns:minmax(0,1fr) auto auto auto}
+.cl.sc .cn{grid-column:1;grid-row:1} .cl.sc .ct{grid-column:2;grid-row:1} .cl.sc .ib{grid-column:3;grid-row:1} .cl.sc .lv{grid-column:4;grid-row:1} .cl.sc .ce{grid-row:2}
+.cl .lv .lv-t{display:none}
+@media (min-width:700px){.cl .lv .lv-t{display:inline}}
+.cl .lv{min-width:40px;font:inherit;font-weight:700;font-size:15px;color:var(--blue);background:color-mix(in srgb,var(--blue) 10%,transparent);border:0;border-radius:10px;padding:0 10px;min-height:40px;cursor:pointer;white-space:nowrap}
 .cl .ce{grid-column:1/-1;min-width:0;text-align:left;background:none;border:0;padding:0 0 4px;font:inherit;font-size:12.5px;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
 @media (min-width:700px){
   .cl li{grid-template-columns:minmax(0,1.2fr) auto minmax(0,1fr) auto}
   .cl .cn{grid-column:1;grid-row:1} .cl .ct{grid-column:2;grid-row:1} .cl .ce{grid-column:3;grid-row:1;padding:0 6px} .cl .ib{grid-column:4;grid-row:1}
+  .cl.sc li{grid-template-columns:minmax(0,1.2fr) auto minmax(0,1fr) auto auto} .cl.sc .ce{grid-column:3;grid-row:1} .cl.sc .ib{grid-column:4} .cl.sc .lv{grid-column:5}
 }
 .pa{background:var(--paper);border-radius:var(--r-lg);box-shadow:0 0 0 1px var(--line) inset;padding:12px 12px 12px 14px}
 .pa-top{display:flex;align-items:flex-start;gap:10px}
@@ -3573,6 +3579,11 @@ a.save.wa-go svg{width:20px;height:20px}
       (l.tel?'<a class="ib wa sc-wa" href="'+waHref(l.tel)+'" target="_blank" rel="noopener" aria-label="WhatsApp a '+esc(l.nombre||'')+'">'+I.chat+'</a>':'')+
       (esInt?'<button class="pa-ag" data-levante="'+esc(l.id)+'">✓ Ya lo contacté</button>':'')+'</li>';
   }
+  function scFila(l){
+    var h=clRow(l);
+    if (rol()==='intaker') h=h.replace(/<\/li>$/, '<button class="lv" data-levante="'+esc(l.id)+'" aria-label="Ya contacté a '+esc(l.nombre||'')+'" title="Ya lo contacté">✓<span class="lv-t"> Contacté</span></button></li>');
+    return h;
+  }
   function scHtml(xs){
     var orden=['ART','LABORAL','TRANSITO'], por={};
     xs.forEach(function(l){ var k=String(l.rama||'').toUpperCase(); (por[k]=por[k]||[]).push(l); });
@@ -3580,7 +3591,7 @@ a.save.wa-go svg{width:20px;height:20px}
     var prio=function(l){ return l.fase==='C' ? 1 : 0; };
     Object.keys(por).forEach(function(k){ por[k].sort(function(a,b){ return prio(a)-prio(b) || String(a.ingreso).localeCompare(String(b.ingreso)); }); });
     return orden.concat(Object.keys(por).filter(function(k){ return orden.indexOf(k)===-1; })).filter(function(k){ return por[k]; }).map(function(k){
-      return '<h3 class="sc-rama"><span class="rama r-'+ramaKey(k)+'">'+ramaLabel(k)+'</span><span class="cnt num">'+por[k].length+'</span></h3><ul class="todo">'+por[k].map(scRow).join('')+'</ul>';
+      return '<h3 class="sc-rama"><span class="rama r-'+ramaKey(k)+'">'+ramaLabel(k)+'</span><span class="cnt num">'+por[k].length+'</span></h3><ul class="cl sc">'+por[k].map(scFila).join('')+'</ul>';
     }).join('');
   }
   document.addEventListener('click', function(ev){ if (ev.target.closest('[data-scotros]')){ state.scOtros=!state.scOtros; render(); } });
@@ -3613,7 +3624,7 @@ a.save.wa-go svg{width:20px;height:20px}
       otrosHtml='<button class="rs-ctl" data-scotros aria-expanded="'+abierto+'" style="margin-top:14px"><span>Ya clasificados o "Falta enviar leads" sin nombre de intaker ('+otros.length+')</span><small>'+(abierto?'Ocultar ▴':'Ver ▾')+'</small></button>'+
         (abierto?'<p class="hint" style="margin:8px 2px 0">Tienen fase (casi todos C) pero ningún nombre de Fran ni de Pri en la primera columna.</p>'+scHtml(otros):'');
     }
-    body += secTarea('Sin contactar', sc.length, 'Leads nuevos sin clasificar: todavía no tienen fase ni el nombre de Fran o de Pri en la planilla. Primero los que hace más que entraron. Cuando le mandes el primer mensaje, tocá <b>Ya lo contacté</b> y queda tu nombre.',
+    body += secTarea('Sin contactar', sc.length, 'Leads nuevos sin clasificar: todavía no tienen fase ni el nombre de Fran o de Pri en la planilla. Primero los que hace más que entraron. Tocá el número para copiarlo. Cuando le mandes el primer mensaje, tocá <b>✓ Contacté</b> y queda tu nombre en la planilla.',
       scHtml(sc)) + otrosHtml;
     if (pa.length) body += '<button class="btn3" data-view="agendar">Ver todos los leads por agendar ('+pa.length+')</button>';
     total += sc.length;
