@@ -1482,10 +1482,19 @@ a.save.wa-go svg{width:20px;height:20px}
     if (cur===null) return '<div class="rp">Semana anterior: '+prev+' %</div>';
     var d=cur-prev; return '<div class="rp '+(d>0?'up':(d<0?'down':''))+'">Semana anterior: '+prev+' %'+(d?' ('+(d>0?'+':'')+d+' puntos)':', igual')+'</div>';
   }
+  function resRamaOk(l){ var r=state.resRama||store('resRama')||'todas'; return r==='todas' || String(l.rama||'').toUpperCase()===r; }
+  function resRamaSeg(){
+    var todas=[]; (state.data.leads||[]).forEach(function(l){ var k=String(l.rama||'').toUpperCase(); if (k && todas.indexOf(k)===-1) todas.push(k); });
+    var orden=['ART','LABORAL','TRANSITO'].filter(function(k){ return todas.indexOf(k)!==-1; });
+    if (orden.length<2) return '';
+    var cur=state.resRama||store('resRama')||'todas'; if (cur!=='todas' && orden.indexOf(cur)===-1) cur='todas';
+    return '<div class="seg" role="tablist" aria-label="Rama">'+['todas'].concat(orden).map(function(k){ return '<button data-resrama="'+k+'" class="'+(cur===k?'on':'')+(k==='TRANSITO'?' mk-transito':'')+'" role="tab" aria-selected="'+(cur===k)+'">'+(k==='todas'?'Todas las ramas':ramaLabel(k))+'</button>'; }).join('')+'</div>';
+  }
+  document.addEventListener('click', function(ev){ var t=ev.target.closest('[data-resrama]'); if (!t) return; state.resRama=t.getAttribute('data-resrama'); store('resRama', state.resRama); state.sumOpen=null; render(); });
   function viewResumen(){
-    var items=inWeek(), c=stats(items), p=stats(inWeek(state.week-1));
+    var items=inWeek().filter(resRamaOk), c=stats(items), p=stats(inWeek(state.week-1).filter(resRamaOk));
     var body = '<div class="sum-head"><span class="sum-big num">'+c.total+'</span><span class="sum-cap"><b>'+(c.total===1?'consulta':'consultas')+'</b>'+(state.abog==='Todas'&&c.total?splitPeople(items):'en la semana')+'</span></div>';
-    if (!c.total) return { h1:'Resumen', p:'Cómo viene la semana', extra:seg()+weekNav(), body: body + emptyBox('Sin consultas esta semana') };
+    if (!c.total) return { h1:'Resumen', p:'Cómo viene la semana', extra:seg()+resRamaSeg()+weekNav(), body: body + emptyBox('Sin consultas esta semana'+((state.resRama||store('resRama')||'todas')!=='todas'?' en esta rama':'')) };
     body += '<div class="rbar" aria-hidden="true">'+SUM.map(function(x){ return c[x.k]?'<i style="width:'+(c[x.k]*100/c.total)+'%;background:'+x.c+'"></i>':''; }).join('')+'</div>';
     body += '<ul class="legend">'+SUM.map(function(x){
       var its = items.filter(function(l){ return x.test(l,statusOf(l)); }).sort(byTime), open = state.sumOpen===x.k && its.length;
@@ -1502,6 +1511,13 @@ a.save.wa-go svg{width:20px;height:20px}
     var tx = function(arr, who){ return arr.length ? '<b class="num">'+pct(arr.filter(vino).length,arr.length)+' %</b><span>vinieron '+arr.filter(vino).length+' de '+arr.length+' '+who+'</span>' : '<b>–</b><span>sin resultados '+who+'</span>'; };
     body += '<div class="rate"><h3>¿Confirmar ayuda a que vengan?</h3><div class="cmp"><div>'+tx(okC,'que confirmaron')+'</div><div>'+tx(noC,'que no confirmaron')+'</div></div></div>';
     body += '</div>';
+    // Por rama (cuando se ven todas)
+    var rCur=state.resRama||store('resRama')||'todas';
+    if (rCur==='todas'){
+      var rs=['ART','LABORAL','TRANSITO'].filter(function(k){ return items.some(function(l){ return String(l.rama||'').toUpperCase()===k; }); });
+      if (rs.length>1) body += '<h2 class="sec-t">Por rama</h2><div class="box"><table class="tbl"><thead><tr><th>Rama</th><th>Consultas</th><th>Vinieron</th><th>Firmaron</th></tr></thead><tbody>'+
+        rs.map(function(k){ var s=stats(items.filter(function(l){ return String(l.rama||'').toUpperCase()===k; })); return '<tr><td>'+ramaLabel(k)+'</td><td class="num">'+s.total+'</td><td class="num">'+s.vino+(s.cerr?' de '+s.cerr:'')+'</td><td class="num">'+s.firmo+'</td></tr>'; }).join('')+'</tbody></table></div>';
+    }
     if (state.abog==='Todas'){
       var names=[]; items.forEach(function(l){ var a=l.abogada||'Sin asignar'; if (names.indexOf(a)===-1) names.push(a); });
       var people=orderPeople(names);
@@ -1511,7 +1527,7 @@ a.save.wa-go svg{width:20px;height:20px}
           '</tbody></table></div>';
       }
     }
-    return { h1:'Resumen', p:'Cómo viene la semana', extra:seg()+weekNav(), body:body };
+    return { h1:'Resumen', p:'Cómo viene la semana', extra:seg()+resRamaSeg()+weekNav(), body:body };
   }
 
   /* ---------- Falta cargar ---------- */
@@ -2894,7 +2910,7 @@ a.save.wa-go svg{width:20px;height:20px}
     {k:'firm', l:'Firmaron', d:'pasaron a Caso en proceso'}
   ];
   // Sábado y domingo: la semana en curso (es cuando se arma el reporte). El resto: la última semana cerrada.
-  function repDefault(){ var t=nowBA().date, w=dow(t), m=mondayOf(t); return (w===6||w===0) ? m : addDays(m,-7); }
+  function repDefault(){ var t=nowBA().date, w=dow(t), m=mondayOf(t), pref=store('repSemPref'); if (pref==='esta') return m; if (pref==='pasada') return addDays(m,-7); return (w===6||w===0) ? m : addDays(m,-7); }
   function repKey(ctrl){ return (state.repSem||'')+'|'+(ctrl?1:0); }
   function loadRep(ctrl, sem, bg){
     // sem: otra semana que se pide por adelantado. bg: en segundo plano (si falla no se muestra error).
@@ -3249,7 +3265,9 @@ a.save.wa-go svg{width:20px;height:20px}
     if (!state.repSem) state.repSem=repDefault();
     var key=repKey(ctrl), d=(state.repCache||{})[key], lun=state.repSem, dom=addDays(lun,6), m0=mondayOf(nowBA().date);
     var viejo=null; if (!d){ viejo=guardado('rep:', key); if (viejo){ loadRep(ctrl); d=viejo.d; } }
-    var nav='<div class="wnav"><button class="arr" data-repweek="-1" aria-label="Semana anterior">‹</button><div class="wl">'+dnum(lun)+'/'+(mnum(lun)+1)+' al '+dnum(dom)+'/'+(mnum(dom)+1)+
+    var sp=store('repSemPref');
+    var nav='<div class="seg" role="tablist" aria-label="Qué semana"><button data-repsemq="esta" class="'+(lun===m0?'on':'')+'" role="tab" aria-selected="'+(lun===m0)+'">Esta semana</button><button data-repsemq="pasada" class="'+(lun===addDays(m0,-7)?'on':'')+'" role="tab" aria-selected="'+(lun===addDays(m0,-7))+'">Semana pasada</button></div>'+
+      '<div class="wnav"><button class="arr" data-repweek="-1" aria-label="Semana anterior">‹</button><div class="wl">'+dnum(lun)+'/'+(mnum(lun)+1)+' al '+dnum(dom)+'/'+(mnum(dom)+1)+
       '<small>'+(lun===m0?'Esta semana':(lun===addDays(m0,-7)?'Semana pasada':'Lunes a domingo'))+'</small></div><button class="arr" data-repweek="1" aria-label="Semana siguiente">›</button></div>';
     var body='';
     var semTxt=dnum(lun)+'/'+(mnum(lun)+1)+' al '+dnum(dom)+'/'+(mnum(dom)+1), cual=lun===m0?'Esta semana':(lun===addDays(m0,-7)?'Semana pasada':'');
@@ -3759,7 +3777,7 @@ a.save.wa-go svg{width:20px;height:20px}
 
   /* ---------- eventos ---------- */
   document.addEventListener('click', function(ev){
-    var t = ev.target.closest('[data-pindesbloq],[data-fin],[data-equipo],[data-view],[data-undo],[data-agotra],[data-agbuscartodo],[data-ficha],[data-pinok],[data-pinback],[data-pinreset],[data-salir],[data-fimodo],[data-fase],[data-notasave],[data-datosave],[data-mnfase],[data-mnsin],[data-dupfase],[data-derivar],[data-reagsindia],[data-dvsel],[data-dvhora],[data-dvsave],[data-deon],[data-debrush],[data-decopia],[data-deamplio],[data-dedia],[data-dequick],[data-decopy],[data-devolver],[data-defijo],[data-definde],[data-demodo],[data-desave],[data-decancel],[data-repweek],[data-reprow],[data-repmodo],[data-rtrama],[data-rtfresco],[data-repretry],[data-agmode],[data-wgday],[data-agrama],[data-agfase],[data-agmas],[data-agmes],[data-agvista],[data-agclr],[data-agnuevo],[data-mnrama],[data-mnorigen],[data-mnsig],[data-mncrear],[data-open],[data-result],[data-bloq],[data-nuevo],[data-week],[data-day],[data-sum],[data-chip],[data-abog],[data-close],[data-res],[data-motivo],[data-save],[data-bqwho],[data-bqtodo],[data-savebq],[data-delbq],[data-retry],[data-pastefor],[data-pasteall],[data-rvcheck],[data-rvtoggle],[data-rvsave],[data-rvback],[data-yo],[data-yocambiar],[data-visto],[data-conf],[data-escribir],[data-agendar],[data-agcorregir],[data-agdia],[data-slot],[data-agcorr],[data-saveag],[data-savecampos]');
+    var t = ev.target.closest('[data-repsemq],[data-pindesbloq],[data-fin],[data-equipo],[data-view],[data-undo],[data-agotra],[data-agbuscartodo],[data-ficha],[data-pinok],[data-pinback],[data-pinreset],[data-salir],[data-fimodo],[data-fase],[data-notasave],[data-datosave],[data-mnfase],[data-mnsin],[data-dupfase],[data-derivar],[data-reagsindia],[data-dvsel],[data-dvhora],[data-dvsave],[data-deon],[data-debrush],[data-decopia],[data-deamplio],[data-dedia],[data-dequick],[data-decopy],[data-devolver],[data-defijo],[data-definde],[data-demodo],[data-desave],[data-decancel],[data-repweek],[data-reprow],[data-repmodo],[data-rtrama],[data-rtfresco],[data-repretry],[data-agmode],[data-wgday],[data-agrama],[data-agfase],[data-agmas],[data-agmes],[data-agvista],[data-agclr],[data-agnuevo],[data-mnrama],[data-mnorigen],[data-mnsig],[data-mncrear],[data-open],[data-result],[data-bloq],[data-nuevo],[data-week],[data-day],[data-sum],[data-chip],[data-abog],[data-close],[data-res],[data-motivo],[data-save],[data-bqwho],[data-bqtodo],[data-savebq],[data-delbq],[data-retry],[data-pastefor],[data-pasteall],[data-rvcheck],[data-rvtoggle],[data-rvsave],[data-rvback],[data-yo],[data-yocambiar],[data-visto],[data-conf],[data-escribir],[data-agendar],[data-agcorregir],[data-agdia],[data-slot],[data-agcorr],[data-saveag],[data-savecampos]');
     if (!t) return;
     if (t.hasAttribute('data-pindesbloq')){ var nd=t.getAttribute('data-pindesbloq'); t.disabled=true; t.textContent='Desbloqueando…'; call('desbloquearPin', {nombre:nd}).then(function(p){ if (state.data) state.data.pines=p; if (state.sheet) renderSheet(); render(); toast('Listo: '+nd+' ya puede entrar de nuevo.'); }).catch(function(e){ t.disabled=false; toast((e&&e.message)||'No se pudo desbloquear.', true); }); return; }
     if (t.hasAttribute('data-fin')){ finClick(t); return; }
@@ -3793,6 +3811,7 @@ a.save.wa-go svg{width:20px;height:20px}
     if (t.hasAttribute('data-repweek')){ state.repSem=addDays(state.repSem||repDefault(), 7*(+t.getAttribute('data-repweek'))); state.repOpen={}; render(); window.scrollTo(0,0); return; }
     if (t.hasAttribute('data-reprow')){ var ro=t.getAttribute('data-reprow'); state.repOpen=state.repOpen||{}; state.repOpen[ro]=!state.repOpen[ro]; render(); return; }
     if (t.hasAttribute('data-repmodo')){ state.repModo=t.getAttribute('data-repmodo'); render(); return; }
+    if (t.hasAttribute('data-repsemq')){ var q=t.getAttribute('data-repsemq'), m0q=mondayOf(nowBA().date); store('repSemPref', q); state.repSem = q==='esta' ? m0q : addDays(m0q,-7); state.repOpen={}; render(); return; }
     if (t.hasAttribute('data-rtrama')){ state.rtRama=t.getAttribute('data-rtrama'); render(); return; }
     if (t.hasAttribute('data-rtfresco')){ rtLoad(state.rtRama||'', true); render(); return; }
     if (t.hasAttribute('data-repretry')){ if (state.repCache) delete state.repCache[repKey(state.view==='reportes')]; render(); return; }
