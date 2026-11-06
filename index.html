@@ -369,6 +369,9 @@ textarea:focus,.inp:focus,select:focus{outline:none;box-shadow:0 0 0 2.5px var(-
 .case{background:var(--paper);border-radius:var(--r-lg);box-shadow:0 0 0 1px var(--line) inset;padding:2px 16px}
 .case .kv.stack > b{font-size:15.5px;line-height:1.42}
 .blk-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+/* Zona táctil de 44px en "Editar" del Resumen del caso, sin cambiar cómo se ve */
+.blk-row .mini{position:relative}
+.blk-row .mini::after{content:'';position:absolute;left:-4px;right:-4px;top:-6px;bottom:-6px}
 .mini{font-size:14px;font-weight:700;color:var(--blue);height:32px;padding:0 6px;border-radius:8px}
 .missing{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--paper);border-radius:14px;box-shadow:0 0 0 1px var(--line) inset;padding:10px 10px 10px 14px;font-size:15px;color:var(--ink-2)}
 .btn2{height:40px;padding:0 14px;border-radius:11px;background:var(--navy);color:#fff;font-weight:700;font-size:14.5px;flex:none;display:inline-flex;align-items:center;gap:7px}
@@ -3779,7 +3782,7 @@ a.save.wa-go svg{width:20px;height:20px}
   function syncDetalle(){ var ta=$('detalle'); if (ta && state.draft) state.draft.detalle=ta.value; }
   document.addEventListener('input', function(ev){
     var id=ev.target.id;
-    if (id==='pin'){ var pv=ev.target.value.replace(/\D/g,'').slice(0,4); if (pv!==ev.target.value) ev.target.value=pv; if (pv.length===4) pinOk(); return; }
+    if (id==='pin') return; // el PIN sigue solo con el listener de "Ingreso con PIN" (antes se mandaba dos veces y al crear el PIN aparecía "Son 4 números." en el paso de repetirlo)
     if (id==='notaTxt'){ var fu=state.fichaUI||(state.fichaUI={}); fu.nota=ev.target.value; var nb=document.querySelector('[data-notasave]'); if (nb) nb.disabled=!fu.nota.trim(); return; }
     if (id==='fdNombre' || id==='fdTel' || id==='fdEmail'){ var fu2=state.fichaUI||(state.fichaUI={}); fu2[({fdNombre:'nombre', fdTel:'tel', fdEmail:'email'})[id]]=ev.target.value; return; }
     if (id==='mnNombre' || id==='mnTel' || id==='mnNota' || id==='mnEmail'){
