@@ -3219,12 +3219,13 @@ a.save.wa-go svg{width:20px;height:20px}
   }
   function repCard(r, prev){
     var open=(state.repOpen||{})[r.rama+':tile'], firm=repN(r,'firm'), vnf=repN(r,'vnf'), ns=repN(r,'ns'), reag=repN(r,'reag'), cons=repN(r,'cons'), agend=repN(r,'agend'), llam=repN(r,'llam');
-    var vino=firm+vnf, debian=cons-reag, asis=pct(vino,debian), tasa=pct(firm,vino);
+    // Asistencia: sobre los que tenían que venir y ya tienen resultado (vinieron + no vinieron). Los que reagendaron no cuentan.
+    var vino=firm+vnf, debian=vino+ns, sinRes=Math.max(0, cons-reag-debian), asis=pct(vino,debian), tasa=pct(firm,vino);
     var L=r.listas||{}; L.vino=(L.firm||[]).concat(L.vnf||[]).sort(function(a,b){ return String(a.n).localeCompare(String(b.n)); });
     var h='<div class="rs-card"><h2>'+ramaLabel(r.rama)+'</h2>';
     // En una frase
     var fr=[];
-    if (cons) fr.push('Tenían turno <b>'+cons+'</b>'+(reag?' ('+reag+' '+(reag===1?'pidió':'pidieron')+' pasarlo a otro día)':'')+'. Vinieron <b>'+vino+'</b>'+(debian>0?' de '+debian+(asis!==null?' ('+asis+' %)':''):'')+(ns?' y '+ns+' no '+(ns===1?'vino':'vinieron'):'')+'.');
+    if (cons) fr.push('Tenían turno <b>'+cons+'</b>.'+(reag?' '+reag+' '+(reag===1?'pidió':'pidieron')+' pasarlo a otro día, así que '+(cons-reag===1?'quedó 1 que tenía':'quedaron '+(cons-reag)+' que tenían')+' que venir.':'')+' Vinieron <b>'+vino+'</b>'+(debian>0&&debian!==vino?' de '+debian+(asis!==null?' ('+asis+' %)':''):'')+(ns?' y '+ns+' no '+(ns===1?'vino':'vinieron'):'')+(sinRes?'; '+sinRes+' todavía sin resultado':'')+'.');
     else fr.push('Esta semana no hubo consultas con turno.');
     if (vino) fr.push('De los que vinieron, firmaron <b>'+firm+'</b>'+(tasa!==null?' ('+tasa+' %)':'')+'.');
     if (firm>vino) fr.push('Hay más firmados que consultas: algunos firmaron sin pasar por una consulta con turno esta semana.');
@@ -3233,7 +3234,7 @@ a.save.wa-go svg{width:20px;height:20px}
     if (r.pend && r.pend.length) h+='<div class="rp-pend"><b>⚠ Faltan cargar '+plural(r.pend.length,'resultado','resultados')+'</b> de consultas que ya pasaron, y los números todavía no los cuentan:<ul class="rp-list">'+r.pend.map(function(p){ var tx=esc(p.n)+' · '+esc(shortDate(p.fecha))+(p.hora?' '+esc(p.hora):'')+(p.abogada?' · '+esc(p.abogada):''); return '<li>'+(findLead(p.id)?'<button data-open="'+esc(p.id)+'">'+tx+'</button>':'<span>'+tx+'</span>')+'</li>'; }).join('')+'</ul></div>';
     var T=[
       {k:'firm', n:firm, l:'Firmaron', d:'clientes nuevos', cls:'firm'},
-      {k:'vino', n:vino, l:'Vinieron', d:asis!==null?asis+' % de los que tenían turno':'a la consulta'},
+      {k:'vino', n:vino, l:'Vinieron', d:asis!==null?asis+' % · '+vino+' de '+debian+' que tenían que venir'+(reag?' (sin los '+reag+' que reagendaron)':''):'a la consulta'},
       {k:'vnf', n:vnf, l:'No firmaron', d:'vinieron y no firmaron, o no era caso'},
       {k:'ns', n:ns, l:'No vinieron', d:'faltaron sin reagendar'},
       {k:'cons', n:cons, l:'Consultas', d:'tenían turno esta semana'},
