@@ -652,6 +652,40 @@ textarea:focus,.inp:focus,select:focus{outline:none;box-shadow:0 0 0 2.5px var(-
 .de-save .link{width:auto;margin:0;padding:0 14px}
 
 /* ===== Editor de disponibilidad ===== */
+.de-mia{display:flex;align-items:center;gap:12px;width:100%;margin:10px 0 4px;padding:12px 14px;border:0;border-radius:14px;background:color-mix(in srgb,var(--green) 12%,var(--paper));box-shadow:0 0 0 1.5px color-mix(in srgb,var(--green) 55%,transparent) inset;color:var(--ink);font:inherit;text-align:left;cursor:pointer}
+.de-mia>span:first-child{font-size:24px}
+.de-mia b{display:block;font-size:16px;font-weight:800}
+.de-mia small{display:block;font-size:13px;color:var(--ink-2);font-weight:600}
+.de-mia .de-mia-go{margin-left:auto;font-size:24px;color:var(--green);font-weight:800}
+.de-modos{display:grid;gap:8px;margin-top:8px}
+@media (min-width:700px){.de-modos{grid-template-columns:1fr 1fr}}
+.de-modos .dv-op{margin:0}
+.de-modos .dv-op.on{box-shadow:0 0 0 2.5px var(--green) inset;background:color-mix(in srgb,var(--green) 12%,var(--paper))}
+.de-modos .dv-op.on b::after{content:'  ✓';color:var(--green)}
+.de-que button{font-size:14px;min-height:42px}
+.de-sem{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px;background:var(--paper);border-radius:12px;box-shadow:0 0 0 1px var(--line) inset;padding:4px}
+.de-sem b{font-size:15px}
+.de-nav{width:44px;height:40px;border:0;border-radius:10px;background:var(--paper-2);color:var(--ink);font-size:22px;font-weight:800;cursor:pointer}
+.de-nav:disabled{opacity:.3;cursor:default}
+.de-ley{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;margin:12px 2px 0;font-size:13.5px;font-weight:700}
+.de-ley>span{display:inline-flex;align-items:center;gap:6px}
+.de-ley .de-ley-t{flex-basis:100%;font-weight:500;color:var(--ink-2)}
+.de-sw{display:inline-block;width:18px;height:14px;border-radius:4px;background:var(--paper-2);box-shadow:0 0 0 1px var(--line) inset}
+.de-sw.on{background:color-mix(in srgb,var(--green) 40%,var(--paper));box-shadow:inset 3px 0 0 var(--green)}
+.de-tab.on small{color:var(--green)}
+.de-tab.sel.on small{color:var(--paper)}
+.de-s:not(.on)::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(135deg,transparent 0 6px,color-mix(in srgb,var(--ink-3) 10%,transparent) 6px 7px);pointer-events:none}
+.de-res{margin-top:16px;background:var(--paper);border-radius:14px;box-shadow:0 0 0 1px var(--line) inset;padding:6px 12px}
+.de-res-t{display:block;font-size:13px;color:var(--ink-2);margin:6px 0 2px}
+.de-res-f{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1.4fr);gap:2px 10px;align-items:baseline;padding:8px 0;border-top:1px solid var(--line)}
+.de-res-f:first-of-type{border-top:0}
+.de-res-f span{font-weight:700;font-size:14px}
+.de-res-f b{font-size:14px;color:var(--ink-3);font-weight:700}
+.de-res-f.on b{color:var(--green)}
+.de-res-f small{grid-column:2;font-size:12px;color:var(--ink-3);font-weight:600}
+.de-res-f small.cambio{color:var(--blue)}
+@media (min-width:700px){.de-res-f{grid-template-columns:220px minmax(0,1fr)}}
+.de-dirty{font-size:12.5px;font-weight:800;color:var(--amber);white-space:nowrap}
 .de-tabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:12px -16px 0;padding:0 16px 2px}
 .de-tabs::-webkit-scrollbar{display:none}
 .de-tab{flex:1 0 62px;border-radius:12px;background:var(--paper);box-shadow:0 0 0 1px var(--line) inset;padding:7px 6px;display:flex;flex-direction:column;align-items:center;gap:1px}
@@ -1465,12 +1499,10 @@ a.save.wa-go svg{width:20px;height:20px}
   /* ---------- Agenda: hoy, mañana y la semana en un solo lugar ---------- */
   function viewAgenda(){
     var today=nowBA().date;
+    if (state.dispEdit) return deView();
     if (modoAgenda()==='semana'){
       var ws=weekRange(), nw=inWeek().length;
-      if (state.dispEdit){ var de0=state.dispEdit, s0=addDays(de0.mon,6);
-        return { h1:'Disponibilidad de '+de0.a, p:'Semana del '+dnum(de0.mon)+'/'+(mnum(de0.mon)+1)+' al '+dnum(s0)+'/'+(mnum(s0)+1), extra:'', body:deBar()+weekGrid()+deFoot()+'<div class="de-save"><button class="save" data-desave '+(de0.dirty?'':'disabled')+'>Guardar disponibilidad</button><button class="link" data-decancel>Cancelar</button></div>' };
-      }
-      return { h1:'Agenda', p:'Semana del '+dnum(ws.mon)+'/'+(mnum(ws.mon)+1)+' al '+dnum(ws.sun)+'/'+(mnum(ws.sun)+1)+', '+plural(nw,'consulta','consultas'), extra:seg()+'<div class="agbar">'+weekNav()+agModoSeg()+'</div>', body:novBanner()+weekGrid() };
+      return { h1:'Agenda', p:'Semana del '+dnum(ws.mon)+'/'+(mnum(ws.mon)+1)+' al '+dnum(ws.sun)+'/'+(mnum(ws.sun)+1)+', '+plural(nw,'consulta','consultas'), extra:seg()+'<div class="agbar">'+weekNav()+agModoSeg()+'</div>', body:deBoton()+novBanner()+weekGrid() };
     }
     if (state.week===0 && !state.weekDay) state.weekDay=(isHabil(today) || onDate(today).length) ? today : nextHabil(today);
     if (state.week===0 && state.weekDay && state.weekDay>weekRange().sun) state.week=1;
@@ -1493,7 +1525,7 @@ a.save.wa-go svg{width:20px;height:20px}
     var body=novBanner()+tiles+(sel===today && selItems.length ? heroHoy(selItems) : '')+
       '<h2 class="sec-t">'+(et ? et+', '+longDate(sel).toLowerCase() : longDate(sel))+'<button class="lk" data-nuevo="'+sel+'">'+I.lock+'Bloquear</button></h2>'+
       ((selItems.length||selBq.length) ? (selItems.length?chips('semana',selItems):'') + (docket(shown,{nowLine: sel===today && allChip, blocks: allChip?selBq:[]}) || emptyBox('Nada en este filtro')) : emptyBox('Sin consultas este día'));
-    return { h1:'Agenda', p:(et||cap(DIAS[dow(sel)]))+' '+dnum(sel)+(selItems.length ? ', '+plural(selItems.length,'consulta','consultas')+(sel>=today ? ', '+conf+' '+(conf===1?'confirmó':'confirmaron') : '') : ''), extra:seg()+'<div class="agbar">'+weekNav()+agModoSeg()+'</div>', body:body };
+    return { h1:'Agenda', p:(et||cap(DIAS[dow(sel)]))+' '+dnum(sel)+(selItems.length ? ', '+plural(selItems.length,'consulta','consultas')+(sel>=today ? ', '+conf+' '+(conf===1?'confirmó':'confirmaron') : '') : ''), extra:seg()+'<div class="agbar">'+weekNav()+agModoSeg()+'</div>', body:deBoton()+body };
   }
 
   /* ---------- Resumen ---------- */
@@ -3426,82 +3458,144 @@ a.save.wa-go svg{width:20px;height:20px}
   function puedeDisp(a){ return rol()==='admin' || !!(state.me && state.me.nombre===a); }
   function fueraDisp(l){ return !!(l.fecha && l.hora && l.abogada && l.fecha>=nowBA().date && (l.fase==='Consulta agendada' || l.fase==='Reagenda') && (state.data.abogadas||[]).indexOf(l.abogada)!==-1 && !dispOk(l.abogada, l.fecha, l.hora)); }
 
-  function deStart(){
-    var a=dispQuien(); if (!a || !puedeDisp(a)) return;
-    var w=weekRange(), dias7=[], dias={};
-    for (var i=0;i<7;i++){ var d=addDays(w.mon,i); dias7.push(d); dias[d]=dispArr(a,d); }
-    var modo=modoDe(a);
-    var hoy0=nowBA().date, dia0=(hoy0>=w.mon && hoy0<=w.sun && dow(hoy0)!==0 && dow(hoy0)!==6) ? hoy0 : w.mon;
-    state.dispEdit={a:a, mon:w.mon, dias7:dias7, dias:dias, brush: modo==='disponibilidad', dia:dia0, amplio:false, modo:modo, modoOrig:modo,
-      finde: dias7.some(function(d){ var x=dow(d); return (x===0||x===6) && dias[d].some(Boolean); }), fijoNuevo:null, dirty:false};
+  /* ---------- Editor de disponibilidad ----------
+   * Dos cosas se pueden marcar: una semana puntual (fechas) o el horario de todas las semanas (claves F1..F7, lunes a domingo).
+   * Las fechas que no se tocan siguen el horario de todas las semanas. */
+  var DE_K=['1','2','3','4','5','6','7'];
+  function deDow(k){ return k==='F7' ? 0 : +k.slice(1); }
+  function deEsF(k){ return k.charAt(0)==='F'; }
+  function deHab(k){ var de=state.dispEdit; return de.dias['F'+k] || frToArr(fijoDeModo(de.a, k, de.modo)); }
+  function deBase(d){ return arrToFr(deHab(diaSem(d))); }
+  function deCargarSemana(mon){
+    var de=state.dispEdit; de.mon=mon; de.dias7=[];
+    for (var i=0;i<7;i++){ var d=addDays(mon,i); de.dias7.push(d); if (!de.dias[d]) de.dias[d]= hasOverride(de.a,d) ? dispArr(de.a,d) : frToArr(deBase(d)); }
+    if (de.dias7.indexOf(de.dia.semana)===-1){ var hoy=nowBA().date; de.dia.semana = de.dias7.indexOf(hoy)!==-1 && dow(hoy)!==0 && dow(hoy)!==6 ? hoy : mon; }
+  }
+  function deRefrescar(){ // las fechas que no se tocaron siguen el horario de todas las semanas
+    var de=state.dispEdit; Object.keys(de.dias).forEach(function(d){ if (!deEsF(d) && !de.tocados[d] && !hasOverride(de.a,d)) de.dias[d]=frToArr(deBase(d)); });
+  }
+  function deTocar(k){ var de=state.dispEdit; de.tocados[k]=1; de.dirty=true; if (deEsF(k)) deRefrescar(); }
+  function deStart(a){
+    a = a || dispQuien(); if (!a || !puedeDisp(a)) return;
+    var modo=modoDe(a), hoy=nowBA().date, w=weekRange(state.week>0 ? state.week : ((dow(hoy)===6 || dow(hoy)===0) ? 1 : 0)); // fin de semana: arranca en la que viene
+    state.dispEdit={a:a, modo:modo, modoOrig:modo, que:'semana', dias:{}, tocados:{}, dia:{semana:(hoy>=w.mon ? hoy : w.mon), habitual:'F'+diaSem(hoy>=w.mon && hoy<=w.sun ? hoy : w.mon)}, amplio:false, finde:false, dirty:false};
+    var de=state.dispEdit;
+    DE_K.forEach(function(k){ de.dias['F'+k]=frToArr(fijoDeModo(a, k, modo)); });
+    deCargarSemana(w.mon);
+    de.finde = ['F6','F7'].some(function(k){ return de.dias[k].some(Boolean); }) || de.dias7.some(function(d){ var x=dow(d); return (x===0||x===6) && de.dias[d].some(Boolean); });
+    if (state.agMode!=='semana'){ state.agMode='semana'; store('agmode','semana'); }
     render(); window.scrollTo(0,0);
   }
-  function deBase(d){ var de=state.dispEdit, k=diaSem(d); return de.fijoNuevo ? de.fijoNuevo[k] : fijoDeModo(de.a, k, de.modo); }
+  // Acceso directo: cada abogada ve "Marcar mi disponibilidad"; administración, la de quien tenga elegida arriba
+  function deBoton(){
+    var me=state.me && state.me.nombre, abs=state.data.abogadas||[];
+    var a = me && abs.indexOf(me)!==-1 ? me : (dispQuien() && puedeDisp(dispQuien()) ? dispQuien() : '');
+    if (!a) return '';
+    var m=modoDe(a);
+    return '<button class="de-mia" data-deon="'+esc(a)+'"><span>🗓</span><span><b>'+(a===me?'Marcar mi disponibilidad':'Disponibilidad de '+esc(a))+'</b><small>'+(m==='disponibilidad'?'Se dan turnos solo en lo que marca':'Se dan turnos siempre, salvo lo que saca')+'</small></span><span class="de-mia-go">›</span></button>';
+  }
+  function deCols(){
+    var de=state.dispEdit;
+    if (de.que==='habitual') return DE_K.map(function(k){ return 'F'+k; }).filter(function(k){ var w=deDow(k); return de.finde || (w!==0 && w!==6) || de.dias[k].some(Boolean); });
+    var hoy=nowBA().date; // los días que ya pasaron no se marcan
+    return de.dias7.filter(function(d){ var w=dow(d); return d>=hoy && (de.finde || (w!==0 && w!==6) || de.dias[d].some(Boolean)); });
+  }
+  function deLbl(k){ return deEsF(k) ? DIAS_C[deDow(k)] : DIAS_C[dow(k)]+' '+dnum(k); }
+  function deLblLargo(k){ return deEsF(k) ? 'Todos los '+DIAS[deDow(k)].toLowerCase()+(deDow(k)===6||deDow(k)===0?'s':'') : cap(DIAS[dow(k)])+' '+dnum(k)+'/'+(mnum(k)+1); }
+  function deHs(m){ var h=m/60|0, mi=m%60; return h+(mi?':'+pad2(mi):''); }
+  function deTxt(arr, corto){
+    var fr=arrToFr(arr); if (!fr) return corto ? 'Cerrado' : 'No atiende';
+    var rs=fr.split(','); if (corto && rs.length>2) return rs.length+' franjas';
+    return rs.map(function(r){ var p=r.split('-'); return corto ? deHs(hmin(p[0]))+'–'+deHs(hmin(p[1])) : p[0]+' a '+p[1]; }).join(corto?', ':' y ');
+  }
+  function deDiaSel(){ var de=state.dispEdit, cols=deCols(), k=de.dia[de.que]; if (cols.indexOf(k)===-1){ k = de.que==='semana' && cols.indexOf(nowBA().date)!==-1 ? nowBA().date : cols[0]; de.dia[de.que]=k; } return k; }
   function deQuick(q){
-    var de=state.dispEdit, d=de && de.dia; if (!d) return;
+    var de=state.dispEdit, k=deDiaSel(); if (!k) return;
     var H=state.data.horario||{desde:'09:00',hasta:'19:00'};
-    var fr = q==='todo' ? H.desde+'-'+H.hasta : (q==='manana' ? H.desde+'-13:00' : (q==='tarde' ? '14:00-'+H.hasta : (q==='nada' ? '' : deBase(d))));
-    de.dias[d]=frToArr(fr); de.dirty=true; render();
+    var fr = q==='todo' ? H.desde+'-'+H.hasta : (q==='manana' ? H.desde+'-13:00' : (q==='tarde' ? '14:00-'+H.hasta : (q==='nada' ? '' : deBase(k))));
+    de.dias[k]=frToArr(fr); deTocar(k); render();
   }
   function deModo(v){
     var de=state.dispEdit; if (!de || de.modo===v) return;
-    de.modo=v; de.brush = v==='disponibilidad';
-    // Los días que todavía no tienen nada propio pasan a lo que da el modo nuevo
-    de.dias7.forEach(function(d){ var k=diaSem(d); if (!de.fijoNuevo && !hasOverride(de.a,d) && !(dispData().fijo[de.a]||{}).hasOwnProperty(k)) de.dias[d]=frToArr(fijoDeModo(de.a,k,v)); });
-    de.dirty=true; render();
+    var H=state.data.horario||{desde:'09:00',hasta:'19:00'};
+    de.modo=v;
+    if (v==='disponibilidad') DE_K.forEach(function(k){ de.dias['F'+k]=frToArr(''); de.tocados['F'+k]=1; }); // arranca todo cerrado: se marca lo que atiende
+    else DE_K.forEach(function(k){ if (!de.dias['F'+k].some(Boolean)){ de.dias['F'+k]=frToArr(k==='6'||k==='7' ? '' : H.desde+'-'+H.hasta); de.tocados['F'+k]=1; } });
+    de.dirty=true; deRefrescar(); render();
+    toast(v==='disponibilidad' ? 'Quedó todo cerrado: marcá en verde cuándo atendés.' : 'Quedó abierto todo el horario: sacá lo que no puedas.');
   }
   function deSave(){
     var de=state.dispEdit; if (!de || !de.dirty) return;
-    var p={abogada:de.a, fechas:{}};
-    if (de.modo!==de.modoOrig) p.modo=de.modo;
-    if (de.fijoNuevo) p.fijo=de.fijoNuevo;
-    de.dias7.forEach(function(d){
+    var p={abogada:de.a, fechas:{}}, fi=dispData().fijo[de.a]||{}, hay=false;
+    if (de.modo!==de.modoOrig){ p.modo=de.modo; hay=true; }
+    DE_K.forEach(function(k){ if (!de.tocados['F'+k]) return; var fr=arrToFr(de.dias['F'+k]); if (!fi.hasOwnProperty(k) || fi[k]!==fr){ (p.fijo=p.fijo||{})[k]=fr; hay=true; } });
+    Object.keys(de.tocados).forEach(function(d){
+      if (deEsF(d)) return;
       var fr=arrToFr(de.dias[d]);
-      if (fr===arrToFr(frToArr(deBase(d)))){ if (hasOverride(de.a,d)) p.fechas[d]=null; } // igual al fijo: no hace falta guardarlo aparte
-      else p.fechas[d]=fr;
+      if (fr===deBase(d)){ if (hasOverride(de.a,d)){ p.fechas[d]=null; hay=true; } } // igual que todas las semanas: no hace falta guardarlo aparte
+      else { p.fechas[d]=fr; hay=true; }
     });
-    toast('Guardando…');
-    call('saveDisponibilidad', p).then(function(disp){ state.data.disponibilidad=disp; state.dispEdit=null; render(); toast('✅ Disponibilidad guardada'); })
-      .catch(function(e){ toast(e.message||'No se pudo guardar.', true); });
-  }
-  function deBar(){
-    return '<p class="hint" style="margin:12px 2px 0">Lo verde es disponible. <b>Tocá</b> una media hora para marcarla o desmarcarla. Para marcar varias seguidas, <b>mantené apretado</b> un momento y deslizá. En la compu, hacé clic y arrastrá.</p>';
-  }
-  function deFoot(){
-    var de=state.dispEdit, modo=de.modo, H=state.data.horario||{desde:'09:00',hasta:'19:00'};
-    var b='<h2 class="sec-t" style="margin-top:22px">Toda la semana</h2><div class="de-acts"><button class="chip" data-decopy>Copiar la semana anterior</button><button class="chip" data-devolver>Volver al horario fijo</button><button class="chip" data-defijo>Usar esta semana como horario fijo</button><button class="chip" data-definde>'+(de.finde?'Ocultar sábado y domingo':'Mostrar sábado y domingo')+'</button><button class="chip" data-deamplio>'+(de.amplio?'Ver solo de '+esc(H.desde)+' a '+esc(H.hasta):'Ver de 8 a 21')+'</button></div>';
-    if (de.fijoNuevo) b+='<div class="warn">Al guardar, esta semana queda como horario fijo de '+esc(de.a)+' para todas las semanas.</div>';
-    b+='<div class="de-modo"><span class="lbl">Cómo funciona la agenda de '+esc(de.a)+'</span><div class="seg2"><button data-demodo="disponibilidad" class="'+(modo==='disponibilidad'?'on':'')+'">Solo lo que marca como disponible</button><button data-demodo="bloqueos" class="'+(modo==='bloqueos'?'on':'')+'">Todo libre salvo lo que bloquea</button></div>'+
-      '<p class="hint" style="margin:6px 2px 0">'+(modo==='disponibilidad' ? 'Solo se ofrece para agendar lo que está en verde.' : 'Se ofrece para agendar todo el horario de atención ('+esc(H.desde)+' a '+esc(H.hasta)+', lunes a viernes) salvo lo que desmarque.')+'</p></div>';
-    return b;
+    if (!hay){ state.dispEdit=null; render(); toast('No había nada distinto para guardar.'); return; }
+    state.deGuardando=true; render();
+    call('saveDisponibilidad', p).then(function(disp){ state.deGuardando=false; state.data.disponibilidad=disp; state.dispEdit=null; render(); toast('✅ Disponibilidad de '+p.abogada+' guardada'); })
+      .catch(function(e){ state.deGuardando=false; render(); toast(e.message||'No se pudo guardar.', true); });
   }
   function deRango(){
     var de=state.dispEdit, H=state.data.horario||{desde:'09:00',hasta:'19:00'}, R=state.data.dispRango||{desde:'08:00',hasta:'21:00'};
     var a=hmin(de.amplio?R.desde:H.desde)/SLOT, b=hmin(de.amplio?R.hasta:H.hasta)/SLOT;
-    de.dias7.forEach(function(d){ de.dias[d].forEach(function(v,s){ if (v){ a=Math.min(a,s); b=Math.max(b,s+1); } }); });
+    deCols().forEach(function(k){ de.dias[k].forEach(function(v,s){ if (v){ a=Math.min(a,s); b=Math.max(b,s+1); } }); });
     return {a:a, b:b};
   }
+  function deView(){
+    var de=state.dispEdit, H=state.data.horario||{desde:'09:00',hasta:'19:00'}, s0=addDays(de.mon,6), hoyMon=mondayOf(nowBA().date);
+    var b='';
+    // 1. Cómo se dan los turnos
+    b+='<h2 class="sec-t" style="margin-top:6px">1. ¿Cómo se dan los turnos de '+esc(de.a)+'?</h2><div class="de-modos">'+
+      '<button class="dv-op'+(de.modo==='disponibilidad'?' on':'')+'" data-demodo="disponibilidad"><b>✋ Solo cuando marco que atiendo</b><span class="dv-st">Los turnos se dan únicamente en lo verde. Lo que no marques queda cerrado.</span></button>'+
+      '<button class="dv-op'+(de.modo==='bloqueos'?' on':'')+'" data-demodo="bloqueos"><b>🟢 Siempre, salvo lo que saco</b><span class="dv-st">Los turnos se dan en todo el horario que esté en verde. Sacá lo que no puedas.</span></button></div>';
+    // 2. Qué se marca
+    b+='<h2 class="sec-t" style="margin-top:20px">2. Marcá cuándo atiende</h2>'+
+      '<div class="seg2 de-que"><button data-deque="semana" class="'+(de.que==='semana'?'on':'')+'">📅 Una semana puntual</button><button data-deque="habitual" class="'+(de.que==='habitual'?'on':'')+'">🔁 Todas las semanas</button></div>';
+    if (de.que==='semana') b+='<div class="de-sem"><button class="de-nav" data-desem="-1" aria-label="Semana anterior" '+(de.mon<=hoyMon?'disabled':'')+'>‹</button><b>Semana del '+dnum(de.mon)+'/'+(mnum(de.mon)+1)+' al '+dnum(s0)+'/'+(mnum(s0)+1)+'</b><button class="de-nav" data-desem="1" aria-label="Semana siguiente">›</button></div>'+
+      '<p class="hint" style="margin:6px 2px 0">Solo cambia esta semana. Los días que no toques quedan como el horario de todas las semanas.</p>';
+    else b+='<p class="hint" style="margin:8px 2px 0">Esto se repite cada semana. Si una semana es distinta, cambiala en <b>Una semana puntual</b>.</p>';
+    b+='<div class="de-ley"><span><i class="de-sw on"></i>Atiende</span><span><i class="de-sw"></i>Cerrado</span><span class="de-ley-t">Tocá un horario para abrirlo o cerrarlo. Para varios seguidos, mantené apretado y deslizá (en la compu, arrastrá).</span></div>';
+    b+=deGrid();
+    // Resumen: así queda
+    var cols=deCols();
+    b+='<div class="de-res"><b class="de-res-t">'+(de.que==='semana'?'Así queda esa semana':'Así queda todas las semanas')+'</b>'+cols.map(function(k){
+      var arr=de.dias[k], on=arr.some(Boolean), tag='';
+      if (!deEsF(k)) tag = (!de.tocados[k] && !hasOverride(de.a,k)) || arrToFr(arr)===deBase(k) ? '<small>como siempre</small>' : '<small class="cambio">solo esa semana</small>';
+      return '<div class="de-res-f'+(on?' on':'')+'"><span>'+esc(deLblLargo(k))+'</span><b>'+esc(deTxt(arr,false))+'</b>'+tag+'</div>';
+    }).join('')+'</div>';
+    // Más opciones
+    b+='<div class="de-acts">'+(de.que==='semana'?'<button class="chip" data-decopy>Copiar la semana anterior</button><button class="chip" data-devolver>Volver al horario de todas las semanas</button>':'')+
+      '<button class="chip" data-definde>'+(de.finde?'Ocultar sábado y domingo':'Mostrar sábado y domingo')+'</button><button class="chip" data-deamplio>'+(de.amplio?'Ver solo de '+esc(H.desde)+' a '+esc(H.hasta):'Ver de 8 a 21')+'</button></div>';
+    var gd=!!state.deGuardando;
+    b+='<div class="de-save">'+(de.dirty?'<span class="de-dirty">Cambios sin guardar</span>':'')+'<button class="save" data-desave '+(de.dirty&&!gd?'':'disabled')+'>'+(gd?'Guardando…':'Guardar')+'</button><button class="link" data-decancel>'+(de.dirty?'Descartar':'Salir')+'</button></div>';
+    var yo=state.me && state.me.nombre===de.a;
+    return { h1:yo?'Mis horarios':'Horarios', p:(yo?'':'De '+de.a+' · ')+(de.modo==='disponibilidad'?'Se dan turnos solo en lo verde':'Se dan turnos en todo lo verde, salvo bloqueos'), extra:'', body:b };
+  }
   function deGrid(){
-    var de=state.dispEdit, today=nowBA().date, rg=deRango();
-    var dias=de.dias7.filter(function(d){ var w=dow(d); return de.finde || (w!==0 && w!==6) || de.dias[d].some(Boolean); });
-    if (!de.dia || dias.indexOf(de.dia)===-1) de.dia = dias.indexOf(today)!==-1 ? today : dias[0];
-    var horas=function(d){ var n=de.dias[d].filter(Boolean).length*SLOT/60; return n ? (Math.round(n*10)/10)+' h' : 'nada'; };
-    var tabs='<div class="de-tabs" role="tablist">'+dias.map(function(d){
-      return '<button class="de-tab'+(d===de.dia?' sel':'')+(d===today?' today':'')+'" data-dedia="'+d+'" role="tab" aria-selected="'+(d===de.dia)+'"><b>'+DIAS_C[dow(d)]+' '+dnum(d)+'</b><small>'+horas(d)+'</small></button>'; }).join('')+'</div>';
-    var quick='<div class="de-quick"><b>'+esc(cap(DIAS[dow(de.dia)]))+' '+dnum(de.dia)+':</b>'+[['todo','Todo el día'],['manana','Mañana'],['tarde','Tarde'],['nada','Nada'],['fijo','Como el horario fijo']].map(function(q){ return '<button class="chip" data-dequick="'+q[0]+'">'+q[1]+'</button>'; }).join('')+'</div>';
-    var fin7=addDays(de.mon,6), cons=(state.data.leads||[]).filter(function(l){ return l.abogada===de.a && l.fecha>=de.mon && l.fecha<=fin7 && l.hora && (l.fase==='Consulta agendada' || l.fase==='Reagenda'); });
+    var de=state.dispEdit, today=nowBA().date, rg=deRango(), cols=deCols(), sel=deDiaSel();
+    var tabs='<div class="de-tabs" role="tablist">'+cols.map(function(k){
+      return '<button class="de-tab'+(k===sel?' sel':'')+(k===today?' today':'')+(de.dias[k].some(Boolean)?' on':'')+'" data-dedia="'+k+'" role="tab" aria-selected="'+(k===sel)+'"><b>'+esc(deLbl(k))+'</b><small>'+esc(deTxt(de.dias[k],true))+'</small></button>'; }).join('')+'</div>';
+    var qs=[['todo','Todo el día'],['manana','Mañana'],['tarde','Tarde'],['nada','Cerrado']]; if (!deEsF(sel)) qs.push(['fijo','Como todas las semanas']);
+    var quick='<div class="de-quick"><b>'+esc(deLblLargo(sel))+':</b>'+qs.map(function(q){ return '<button class="chip" data-dequick="'+q[0]+'">'+q[1]+'</button>'; }).join('')+'</div>';
+    var cons = deEsF(sel) ? [] : (state.data.leads||[]).filter(function(l){ return l.abogada===de.a && l.fecha>=de.mon && l.fecha<=addDays(de.mon,6) && l.hora && (l.fase==='Consulta agendada' || l.fase==='Reagenda'); });
     var hs='<div class="de-hs"><div class="de-ch"></div>'; for (var s=rg.a;s<rg.b;s++) hs+='<div class="de-h'+(s%2===0?' hr':'')+'">'+hhmm(s*SLOT)+'</div>'; hs+='</div>';
-    var cols=dias.map(function(d){
-      var av=de.dias[d], c='<button class="de-ch'+(d===de.dia?' sel':'')+'" data-dedia="'+d+'">'+DIAS_C[dow(d)]+' '+dnum(d)+' <small>'+horas(d)+'</small></button>';
+    var grid=cols.map(function(k){
+      var av=de.dias[k], c='<button class="de-ch'+(k===sel?' sel':'')+'" data-dedia="'+k+'">'+esc(deLbl(k))+' <small>'+esc(deTxt(av,true))+'</small></button>';
       for (var s=rg.a;s<rg.b;s++){
-        var cs=cons.filter(function(l){ return l.fecha===d && Math.floor(hmin(l.hora)/SLOT)===s; });
-        c+='<div class="de-s'+(av[s]?' on':'')+(s%2===0?' hr':'')+'" data-s="'+s+'">'+(cs.length?'<span>'+esc(cs.map(function(l){ return l.hora+' '+String(l.nombre||'').split(' ')[0]; }).join(', '))+'</span>':'')+'</div>';
+        var cs=cons.filter(function(l){ return l.fecha===k && Math.floor(hmin(l.hora)/SLOT)===s; });
+        c+='<div class="de-s'+(av[s]?' on':'')+(s%2===0?' hr':'')+'" data-s="'+s+'">'+(cs.length?'<span>📌 '+esc(cs.map(function(l){ return l.hora+' '+String(l.nombre||'').split(' ')[0]; }).join(', '))+'</span>':'')+'</div>';
       }
-      return '<div class="de-col'+(d===de.dia?' sel':'')+'" data-ded="'+d+'">'+c+'</div>';
+      return '<div class="de-col'+(k===sel?' sel':'')+'" data-ded="'+k+'">'+c+'</div>';
     }).join('');
-    var otros=dias.filter(function(x){ return x!==de.dia; });
-    var copia='<div class="de-quick"><b>Copiar '+esc(DIAS[dow(de.dia)].toLowerCase())+' a:</b>'+otros.map(function(x){ return '<button class="chip" data-decopia="'+x+'">'+DIAS_C[dow(x)]+' '+dnum(x)+'</button>'; }).join('')+'<button class="chip" data-decopia="habiles">Todos los días hábiles</button></div>';
-    return tabs+quick+'<div class="de-grid" style="--n:'+dias.length+'">'+hs+cols+'</div>'+copia;
+    var otros=cols.filter(function(x){ return x!==sel; });
+    var habiles=function(x){ var w=deEsF(x)?deDow(x):dow(x); return w!==0 && w!==6; };
+    var copia=otros.length?'<div class="de-quick"><b>Copiar '+esc(deEsF(sel)?DIAS[deDow(sel)].toLowerCase():DIAS[dow(sel)].toLowerCase())+' a:</b>'+otros.map(function(x){ return '<button class="chip" data-decopia="'+x+'">'+esc(deLbl(x))+'</button>'; }).join('')+(otros.filter(habiles).length>1?'<button class="chip" data-decopia="habiles">Lunes a viernes</button>':'')+'</div>':'';
+    return tabs+quick+'<div class="de-grid" style="--n:'+cols.length+'">'+hs+grid+'</div>'+copia;
   }
 
   /* ---------- Agenda: vista semanal tipo calendario ---------- */
@@ -3541,7 +3635,7 @@ a.save.wa-go svg{width:20px;height:20px}
       var now=''; if (c.d===today){ var nm=nowBA().min; if (nm>=ini && nm<=fin) now='<i class="wg-now" style="top:'+((nm-ini)*PX)+'px"></i>'; }
       return '<div class="wg-c'+(c.d===today?' today':'')+'">'+naH(c.d)+bqh+evh+now+'</div>';
     }).join('');
-    var pie = who ? '<p class="hint" style="margin:10px 2px 0">Rayado: '+esc(who)+' no está disponible. Su agenda: '+(modoDe(who)==='disponibilidad'?'solo lo que marca como disponible':'todo libre salvo lo que bloquea')+'. Tocá una consulta para abrir la ficha, o un día para verlo en detalle.</p>'+(puedeDisp(who)?'<button class="btn3" data-deon>✏️ Editar disponibilidad de '+esc(who)+'</button>':'')
+    var pie = who ? '<p class="hint" style="margin:10px 2px 0">Rayado: '+esc(who)+' no está disponible. Su agenda: '+(modoDe(who)==='disponibilidad'?'solo lo que marca como disponible':'todo libre salvo lo que bloquea')+'. Tocá una consulta para abrir la ficha, o un día para verlo en detalle.</p>'
       : '<p class="hint" style="margin:10px 2px 0">Tocá una consulta para abrir la ficha, o un día para verlo en detalle. Para ver o editar la disponibilidad de alguien, elegila arriba.</p>';
     return head+'<div class="wg-b" style="'+gt+';height:'+((fin-ini)*PX)+'px"><div class="wg-t">'+horas+'</div>'+cuerpo+'</div>'+pie;
   }
@@ -3914,7 +4008,7 @@ a.save.wa-go svg{width:20px;height:20px}
 
   /* ---------- eventos ---------- */
   document.addEventListener('click', function(ev){
-    var t = ev.target.closest('[data-reptile],[data-repctl],[data-repsemq],[data-pindesbloq],[data-fin],[data-equipo],[data-view],[data-undo],[data-agotra],[data-agbuscartodo],[data-ficha],[data-pinok],[data-pinback],[data-pinreset],[data-salir],[data-fimodo],[data-fase],[data-notasave],[data-datosave],[data-mnfase],[data-mnsin],[data-dupfase],[data-derivar],[data-reagsindia],[data-dvsel],[data-dvhora],[data-dvsave],[data-deon],[data-debrush],[data-decopia],[data-deamplio],[data-dedia],[data-dequick],[data-decopy],[data-devolver],[data-defijo],[data-definde],[data-demodo],[data-desave],[data-decancel],[data-repweek],[data-reprow],[data-repmodo],[data-rtrama],[data-rtfresco],[data-repretry],[data-agmode],[data-wgday],[data-agrama],[data-agfase],[data-agmas],[data-agmes],[data-agvista],[data-agclr],[data-agnuevo],[data-mnrama],[data-mnorigen],[data-mnsig],[data-mncrear],[data-open],[data-result],[data-bloq],[data-nuevo],[data-week],[data-day],[data-sum],[data-chip],[data-abog],[data-close],[data-res],[data-motivo],[data-save],[data-bqwho],[data-bqtodo],[data-savebq],[data-delbq],[data-retry],[data-pastefor],[data-pasteall],[data-rvcheck],[data-rvtoggle],[data-rvsave],[data-rvback],[data-yo],[data-yocambiar],[data-visto],[data-conf],[data-escribir],[data-agendar],[data-agcorregir],[data-agdia],[data-slot],[data-agcorr],[data-saveag],[data-savecampos]');
+    var t = ev.target.closest('[data-reptile],[data-repctl],[data-repsemq],[data-pindesbloq],[data-fin],[data-equipo],[data-view],[data-undo],[data-agotra],[data-agbuscartodo],[data-ficha],[data-pinok],[data-pinback],[data-pinreset],[data-salir],[data-fimodo],[data-fase],[data-notasave],[data-datosave],[data-mnfase],[data-mnsin],[data-dupfase],[data-derivar],[data-reagsindia],[data-dvsel],[data-dvhora],[data-dvsave],[data-deon],[data-deque],[data-desem],[data-decopia],[data-deamplio],[data-dedia],[data-dequick],[data-decopy],[data-devolver],[data-definde],[data-demodo],[data-desave],[data-decancel],[data-repweek],[data-reprow],[data-repmodo],[data-rtrama],[data-rtfresco],[data-repretry],[data-agmode],[data-wgday],[data-agrama],[data-agfase],[data-agmas],[data-agmes],[data-agvista],[data-agclr],[data-agnuevo],[data-mnrama],[data-mnorigen],[data-mnsig],[data-mncrear],[data-open],[data-result],[data-bloq],[data-nuevo],[data-week],[data-day],[data-sum],[data-chip],[data-abog],[data-close],[data-res],[data-motivo],[data-save],[data-bqwho],[data-bqtodo],[data-savebq],[data-delbq],[data-retry],[data-pastefor],[data-pasteall],[data-rvcheck],[data-rvtoggle],[data-rvsave],[data-rvback],[data-yo],[data-yocambiar],[data-visto],[data-conf],[data-escribir],[data-agendar],[data-agcorregir],[data-agdia],[data-slot],[data-agcorr],[data-saveag],[data-savecampos]');
     if (!t) return;
     if (t.hasAttribute('data-pindesbloq')){ var nd=t.getAttribute('data-pindesbloq'); t.disabled=true; t.textContent='Desbloqueando…'; call('desbloquearPin', {nombre:nd}).then(function(p){ if (state.data) state.data.pines=p; if (state.sheet) renderSheet(); render(); toast('Listo: '+nd+' ya puede entrar de nuevo.'); }).catch(function(e){ t.disabled=false; toast((e&&e.message)||'No se pudo desbloquear.', true); }); return; }
     if (t.hasAttribute('data-fin')){ finClick(t); return; }
@@ -3929,17 +4023,19 @@ a.save.wa-go svg{width:20px;height:20px}
     if (t.hasAttribute('data-agmes')){ var sm=agState(); sm.mes=t.getAttribute('data-agmes'); sm.n=40; renderAg(); return; }
     if (t.hasAttribute('data-agvista')){ var sv=agState(); sv.vista=t.getAttribute('data-agvista'); store('agvista', sv.vista); sv.n=40; renderAg(); return; }
     if (t.hasAttribute('data-agnuevo')){ abrirManual(); return; }
-    if (t.hasAttribute('data-deon')){ deStart(); return; }
+    if (t.hasAttribute('data-deon')){ deStart(t.getAttribute('data-deon')||''); return; }
     if (state.dispEdit){
       var de=state.dispEdit;
-      if (t.hasAttribute('data-debrush')){ de.brush=t.getAttribute('data-debrush')==='1'; render(); return; }
-      if (t.hasAttribute('data-dedia')){ de.dia=t.getAttribute('data-dedia'); render(); return; }
-      if (t.hasAttribute('data-decopia')){ var dst=t.getAttribute('data-decopia'), src=de.dias[de.dia].slice(); var dsts = dst==='habiles' ? de.dias7.filter(function(x){ var w=dow(x); return w!==0 && w!==6 && x!==de.dia; }) : [dst]; dsts.forEach(function(x){ de.dias[x]=src.slice(); }); de.dirty=true; render(); toast('Copiado a '+(dst==='habiles'?'todos los días hábiles':DIAS[dow(dst)].toLowerCase())+'. Revisá y guardá.'); return; }
+      if (t.hasAttribute('data-dedia')){ de.dia[de.que]=t.getAttribute('data-dedia'); render(); return; }
+      if (t.hasAttribute('data-deque')){ de.que=t.getAttribute('data-deque'); if (de.que==='semana') deRefrescar(); render(); return; }
+      if (t.hasAttribute('data-desem')){ deCargarSemana(addDays(de.mon, 7*(+t.getAttribute('data-desem')))); render(); return; }
+      if (t.hasAttribute('data-decopia')){ var sel=deDiaSel(), dst=t.getAttribute('data-decopia'), src=de.dias[sel].slice();
+        var dsts = dst==='habiles' ? deCols().filter(function(x){ var w=deEsF(x)?deDow(x):dow(x); return w!==0 && w!==6 && x!==sel; }) : [dst];
+        dsts.forEach(function(x){ de.dias[x]=src.slice(); deTocar(x); }); render(); toast('Copiado a '+(dst==='habiles'?'lunes a viernes':deLblLargo(dst).toLowerCase())+'. Revisá y guardá.'); return; }
       if (t.hasAttribute('data-deamplio')){ de.amplio=!de.amplio; render(); return; }
       if (t.hasAttribute('data-dequick')){ deQuick(t.getAttribute('data-dequick')); return; }
-      if (t.hasAttribute('data-decopy')){ de.dias7.forEach(function(d){ de.dias[d]=dispArr(de.a, addDays(d,-7)); }); de.dirty=true; render(); toast('Copiada la semana anterior. Revisá y guardá.'); return; }
-      if (t.hasAttribute('data-devolver')){ de.dias7.forEach(function(d){ de.dias[d]=frToArr(deBase(d)); }); de.dirty=true; render(); return; }
-      if (t.hasAttribute('data-defijo')){ de.fijoNuevo={}; de.dias7.forEach(function(d){ de.fijoNuevo[diaSem(d)]=arrToFr(de.dias[d]); }); de.dirty=true; render(); return; }
+      if (t.hasAttribute('data-decopy')){ de.dias7.filter(function(d){ return d>=nowBA().date; }).forEach(function(d){ var prev=addDays(d,-7); de.dias[d]= de.dias[prev] ? de.dias[prev].slice() : dispArr(de.a, prev); deTocar(d); }); render(); toast('Copiada la semana anterior. Revisá y guardá.'); return; }
+      if (t.hasAttribute('data-devolver')){ de.dias7.filter(function(d){ return d>=nowBA().date; }).forEach(function(d){ de.dias[d]=frToArr(deBase(d)); deTocar(d); }); render(); return; }
       if (t.hasAttribute('data-definde')){ de.finde=!de.finde; render(); return; }
       if (t.hasAttribute('data-demodo')){ deModo(t.getAttribute('data-demodo')); return; }
       if (t.hasAttribute('data-desave')){ deSave(); return; }
@@ -4923,10 +5019,10 @@ a.save.wa-go svg{width:20px;height:20px}
       var d=col.getAttribute('data-ded'), s=+sl.getAttribute('data-s');
       // La primera media hora define si se marca o se desmarca
       g={col:col, d:d, s0:s, s1:s, snap:de.dias[d].slice(), val:!de.dias[d][s], largo:largo};
-      de.dirty=true; state.pintando=true; pintar();
+      de.dirty=true; de.tocados[d]=1; state.pintando=true; pintar();
       if (largo){ try{ if (navigator.vibrate) navigator.vibrate(15); }catch(e){} }
     }
-    function terminar(){ if (!g) return; g=null; state.pintando=false; render(); }
+    function terminar(){ if (!g) return; var d=g.d; g=null; state.pintando=false; if (state.dispEdit && deEsF(d)) deRefrescar(); render(); }
     // Compu (mouse): apretar y arrastrar, siempre dentro del mismo día
     document.addEventListener('pointerdown', function(ev){
       if (ev.pointerType!=='mouse' || ev.button!==0 || !state.dispEdit || !ev.target.closest) return;
