@@ -468,6 +468,9 @@ textarea:focus,.inp:focus,select:focus{outline:none;box-shadow:0 0 0 2.5px var(-
 .todo li.pa-li > button[data-ficha]{flex:1;min-width:0}
 .todo li.pa-li .pa-ag{width:auto;flex:none;gap:6px;margin-right:10px;padding:8px 12px;border-radius:10px;font-size:14px;font-weight:700;color:var(--blue);background:color-mix(in srgb,var(--blue) 10%,transparent)}
 .todo li.pa-li .pa-ag svg{width:16px;height:16px}
+.todo li.pa-li .ib.sc-wa{flex:none;width:40px;height:40px;margin-right:8px}
+.sc-rama{margin:14px 0 6px;font-size:13px;font-weight:700;letter-spacing:.02em;text-transform:uppercase;color:var(--ink-3);display:flex;align-items:center;gap:8px}
+.sc-rama .cnt{font-size:12px}
 .btn3{width:100%;height:46px;margin-top:10px;border-radius:14px;background:var(--paper);box-shadow:0 0 0 1px var(--line) inset;font-weight:700;font-size:15px;display:flex;align-items:center;justify-content:center;gap:8px}
 .btn3 svg{width:18px;height:18px}
 .nov{background:var(--paper);border-radius:var(--r-lg);box-shadow:0 0 0 2px var(--mint) inset;padding:10px 6px 6px;margin-top:8px}
@@ -555,6 +558,15 @@ textarea:focus,.inp:focus,select:focus{outline:none;box-shadow:0 0 0 2.5px var(-
 .rp-t .chv{display:inline-block;width:12px;color:var(--ink-3);font-size:12px}
 .rp-t td.df{color:var(--red);background:var(--red-bg);border-radius:6px}
 .rp-t td.na{color:var(--ink-3);font-weight:500}
+.rp-t td.nc{color:var(--ink-3);font-weight:500;font-size:12px}
+.rp-t th small{display:block;font-weight:500;font-size:10.5px;color:var(--ink-3)}
+.rp-t td:first-child small{display:block;font-weight:500;font-size:12px;color:var(--ink-3);margin:1px 0 0 16px}
+.rp-sem{margin:12px 0 0;padding:12px 14px;border-radius:14px;background:var(--paper);box-shadow:0 0 0 1px var(--line) inset;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.rp-sem b{font-size:16px}
+.rp-sem span{color:var(--ink-3);font-size:13.5px;flex:1 1 180px}
+.rp-sem button{flex:none;padding:8px 12px;border-radius:10px;font-weight:700;font-size:14px;color:var(--blue);background:color-mix(in srgb,var(--blue) 10%,transparent)}
+.rp-ok{margin:0 0 8px;font-size:13.5px;font-weight:600;color:var(--ink-2)}
+.rp-ok.mal{color:var(--red)}
 .rp-t tr.rl td{border-top:0;padding:0 6px 6px;text-align:left;font-weight:500}
 .rp-list{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:6px}
 .rp-list li button,.rp-list li span{display:inline-block;font-size:13.5px;font-weight:600;padding:5px 9px;border-radius:8px;background:var(--paper-2);box-shadow:0 0 0 1px var(--line) inset;color:var(--ink);text-align:left}
@@ -1196,7 +1208,7 @@ a.save.wa-go svg{width:20px;height:20px}
     var t=$('toast'), pos=state.sheet?' top':''; t.textContent=msg; t.className='toast on'+(err?' err':'')+pos;
     clearTimeout(toast._t); toast._t=setTimeout(function(){ t.className='toast'+(err?' err':'')+pos; }, 2800);
   }
-  function findLead(id){ if (id===NUEVO_ID) return state.nuevoLead||null; var L=state.data.leads; for (var i=0;i<L.length;i++) if (L[i].id===id) return L[i]; var P=state.data.porAgendar||[]; for (var j=0;j<P.length;j++) if (P[j].id===id) return P[j]; var O=state.otras||{}; for (var k in O){ var xs=(O[k]&&O[k].leads)||[]; for (var m=0;m<xs.length;m++) if (xs[m].id===id) return xs[m]; } var B=(state.busq&&state.busq.leads)||[]; for (var n=0;n<B.length;n++) if (B[n].id===id) return B[n]; var M=state.data.paraMi||[]; for (var q=0;q<M.length;q++) if (M[q].id===id) return M[q]; var S=state.sueltos||{}; if (S[id]) return S[id]; return null; }
+  function findLead(id){ if (id===NUEVO_ID) return state.nuevoLead||null; var L=state.data.leads; for (var i=0;i<L.length;i++) if (L[i].id===id) return L[i]; var P=state.data.porAgendar||[]; for (var j=0;j<P.length;j++) if (P[j].id===id) return P[j]; var O=state.otras||{}; for (var k in O){ var xs=(O[k]&&O[k].leads)||[]; for (var m=0;m<xs.length;m++) if (xs[m].id===id) return xs[m]; } var B=(state.busq&&state.busq.leads)||[]; for (var n=0;n<B.length;n++) if (B[n].id===id) return B[n]; var M=state.data.paraMi||[]; for (var q=0;q<M.length;q++) if (M[q].id===id) return M[q]; var S=state.sueltos||{}; if (S[id]) return S[id]; var SC=state.data.sinContactar||[]; for (var r=0;r<SC.length;r++) if (SC[r].id===id) return SC[r]; return null; }
   // Ficha de un lead que puede no estar cargado en el celular (ej. un posible repetido en fase C o del mes anterior): se trae del servidor
   function abrirFicha(id){
     if (findLead(id)){ openSheet({type:'ficha', id:id}); return; }
@@ -2701,7 +2713,9 @@ a.save.wa-go svg{width:20px;height:20px}
     return '';
   }
   function replaceAny(nl){
-    if (!nl) return; if (state.sueltos && state.sueltos[nl.id]) state.sueltos[nl.id]=nl; var P=state.data.porAgendar||(state.data.porAgendar=[]), L=state.data.leads||[], O=state.otras||{}, i, enO=false;
+    if (!nl) return; if (state.sueltos && state.sueltos[nl.id]) state.sueltos[nl.id]=nl;
+    if (state.data && state.data.sinContactar){ var SC=state.data.sinContactar; for (var x=0;x<SC.length;x++) if (SC[x].id===nl.id){ if (rol()==='intaker' && nl.fase!==SC[x].fase) SC.splice(x,1); else SC[x]=nl; break; } }
+    var P=state.data.porAgendar||(state.data.porAgendar=[]), L=state.data.leads||[], O=state.otras||{}, i, enO=false;
     // En las listas de "Otras fases": se actualiza, se saca de la fase vieja o se suma a la nueva
     Object.keys(O).forEach(function(k){ var o=O[k]; if (!o || !o.leads) return; for (var j=0;j<o.leads.length;j++) if (o.leads[j].id===nl.id){ if (nl.fase===k){ o.leads[j]=nl; enO=true; } else { o.leads.splice(j,1); o.total=Math.max(0,(o.total||1)-1); } return; } });
     if (O[nl.fase] && O[nl.fase].leads && !enO){ O[nl.fase].leads.unshift(nl); O[nl.fase].total=(O[nl.fase].total||0)+1; enO=true; }
@@ -2864,12 +2878,13 @@ a.save.wa-go svg{width:20px;height:20px}
 
   /* ---------- Reportes: semana por rama (app, CARGA SEMANAL y KPIs) ---------- */
   var REP_FILAS=[
-    {k:'llam', l:'Llamadas agendadas', ramas:['ART','TRANSITO']},
-    {k:'cons', l:'Consultas (tenían turno)'},
-    {k:'reag', l:'Pidieron reagendar'},
-    {k:'ns',   l:'No show'},
-    {k:'vnf',  l:'Vinieron y no firmaron'},
-    {k:'firm', l:'Firmaron'}
+    {k:'llam', l:'Llamadas agendadas', d:'se agendó una llamada esa semana', ramas:['ART','TRANSITO']},
+    {k:'agend', l:'Turnos nuevos', d:'se agendó la consulta esa semana', soloCtrl:true, sinCarga:true},
+    {k:'cons', l:'Consultas de la semana', d:'tenían turno de lunes a domingo'},
+    {k:'reag', l:'Pidieron reagendar', d:'avisaron y pasaron a otro día'},
+    {k:'ns',   l:'No vinieron', d:'no show'},
+    {k:'vnf',  l:'Vinieron y no firmaron', d:'incluye los que no eran caso'},
+    {k:'firm', l:'Firmaron', d:'pasaron a Caso en proceso'}
   ];
   // Sábado y domingo: la semana en curso (es cuando se arma el reporte). El resto: la última semana cerrada.
   function repDefault(){ var t=nowBA().date, w=dow(t), m=mondayOf(t); return (w===6||w===0) ? m : addDays(m,-7); }
@@ -3082,26 +3097,34 @@ a.save.wa-go svg{width:20px;height:20px}
   }
   function repRama(r, ctrl){
     var open=state.repOpen||{}, app=r.app||{}, ca=r.carga, kp=r.kpis;
-    var filas=REP_FILAS.filter(function(f){ return !f.ramas || f.ramas.indexOf(r.rama)!==-1; });
-    if (ctrl) filas=filas.concat([{k:'agend', l:'Consultas agendadas (turnos nuevos)', sinCarga:true}]);
-    var celda=function(x, ref){ return x===null ? '<td class="na">—</td>' : '<td class="num'+(ref!==null && x!==ref?' df':'')+'">'+x+'</td>'; };
+    var filas=REP_FILAS.filter(function(f){ return (!f.ramas || f.ramas.indexOf(r.rama)!==-1) && (ctrl || !f.soloCtrl); });
+    var celda=function(x, ref){ return x===null ? '<td class="na" title="Sin dato">—</td>' : '<td class="num'+(ref!==null && x!==ref?' df':'')+'">'+x+'</td>'; };
+    // Diferencias con lo que cuenta la app (lo que hay que revisar)
+    var difs=[];
+    filas.forEach(function(f){
+      var a=repNum(app,f.k), c=f.sinCarga?null:repNum(ca,f.k), k=ctrl?repNum(kp,f.k):null;
+      if (a===null) return;
+      if (c!==null && c!==a) difs.push(f.l+' (intakers '+c+', planilla '+a+')');
+      if (k!==null && k!==a) difs.push(f.l+' (KPIs '+k+', planilla '+a+')');
+    });
     var html='<h2 class="sec-t">'+ramaLabel(r.rama)+'</h2>';
     if (r.pend && r.pend.length){
       html+='<div class="rp-pend"><b>⚠ '+plural(r.pend.length,'consulta','consultas')+' de esta semana sin resultado.</b> Hay que cargarlas antes de pasar el reporte:'+
         '<ul class="rp-list">'+r.pend.map(function(p){ var tx=esc(p.n)+' · '+esc(shortDate(p.fecha))+(p.hora?' '+esc(p.hora):'')+(p.abogada?' · '+esc(p.abogada):''); return '<li>'+(findLead(p.id)?'<button data-open="'+esc(p.id)+'">'+tx+'</button>':'<span>'+tx+'</span>')+'</li>'; }).join('')+'</ul></div>';
     }
-    html+='<div class="box rp-box"><table class="rp-t"><thead><tr><th>Qué</th><th>App</th><th>'+(ctrl?'Intakers':'Cargado')+'</th>'+(ctrl?'<th>KPIs</th>':'')+'</tr></thead><tbody>';
+    if (ca || (ctrl && kp)) html+='<p class="rp-ok'+(difs.length?' mal':'')+'">'+(difs.length?'⚠ '+plural(difs.length,'diferencia','diferencias')+': '+esc(difs.join(' · ')):'✓ Todo coincide')+'</p>';
+    html+='<div class="box rp-box"><table class="rp-t"><thead><tr><th>Qué pasó</th><th>Planilla<small>automático</small></th><th>'+(ctrl?'Intakers<small>carga semanal</small>':'Cargado')+'</th>'+(ctrl?'<th>KPIs</th>':'')+'</tr></thead><tbody>';
     filas.forEach(function(f){
       var a=repNum(app,f.k), c=f.sinCarga?null:repNum(ca,f.k), k=ctrl?repNum(kp,f.k):null, id=r.rama+':'+f.k, on=!!open[id];
-      html+='<tr class="rw" data-reprow="'+esc(id)+'" aria-expanded="'+on+'"><td><span class="chv">'+(on?'▾':'▸')+'</span> '+esc(f.l)+'</td>'+celda(a,null)+(f.sinCarga?'<td class="na">·</td>':celda(c,a))+(ctrl?celda(k,a):'')+'</tr>';
+      html+='<tr class="rw" data-reprow="'+esc(id)+'" aria-expanded="'+on+'"><td><span class="chv">'+(on?'▾':'▸')+'</span> '+esc(f.l)+(f.d?'<small>'+esc(f.d)+'</small>':'')+'</td>'+celda(a,null)+(f.sinCarga?'<td class="nc">no se carga</td>':celda(c,a))+(ctrl?celda(k,a):'')+'</tr>';
       if (on) html+='<tr class="rl"><td colspan="'+(ctrl?4:3)+'">'+repLista(r,f.k)+'</td></tr>';
     });
     html+='</tbody></table></div>';
     var notas=[];
-    if (!ca) notas.push('Esta semana todavía no está cargada en CARGA SEMANAL.');
+    if (!ca) notas.push('Los intakers todavía no cargaron esta semana en CARGA SEMANAL.');
     else {
       var s=['reag','ns','vnf','firm'].reduce(function(t,k){ return t+(repNum(ca,k)||0); },0), cc=repNum(ca,'cons');
-      if (cc!==null && s!==cc) notas.push('Lo cargado en CARGA SEMANAL no suma: reagendaron, no show, vinieron y firmaron dan '+s+' y consultas dice '+cc+'.');
+      if (cc!==null && s!==cc) notas.push('En CARGA SEMANAL las cuentas no cierran: pidieron reagendar + no vinieron + no firmaron + firmaron suman '+s+', pero en consultas pusieron '+cc+'. Tendrían que dar lo mismo.');
     }
     if (ctrl && !kp) notas.push(r.kpisError || 'No encontré esta semana en KPIS PRUEBA.');
     if (notas.length) html+='<p class="hint" style="margin:8px 2px 0">'+esc(notas.join(' '))+'</p>';
@@ -3196,17 +3219,20 @@ a.save.wa-go svg{width:20px;height:20px}
     var nav='<div class="wnav"><button class="arr" data-repweek="-1" aria-label="Semana anterior">‹</button><div class="wl">'+dnum(lun)+'/'+(mnum(lun)+1)+' al '+dnum(dom)+'/'+(mnum(dom)+1)+
       '<small>'+(lun===m0?'Esta semana':(lun===addDays(m0,-7)?'Semana pasada':'Lunes a domingo'))+'</small></div><button class="arr" data-repweek="1" aria-label="Semana siguiente">›</button></div>';
     var body='';
-    if (d && !d.error){ var semAnt=addDays(state.repSem,-7); setTimeout(function(){ loadRep(ctrl, semAnt, true); }, 800); }
+    var semTxt=dnum(lun)+'/'+(mnum(lun)+1)+' al '+dnum(dom)+'/'+(mnum(dom)+1), cual=lun===m0?'Esta semana':(lun===addDays(m0,-7)?'Semana pasada':'');
+    var semCaja='<div class="rp-sem"><b>📅 '+(cual?cual+': ':'')+'lunes '+semTxt.replace(' al ',' al domingo ')+'</b>'+
+      (lun<m0?'<span>Lo de esta semana (desde el lunes '+dnum(m0)+'/'+(mnum(m0)+1)+') no aparece acá.</span><button data-repweek="'+Math.round(diffDays(m0,lun)/7)+'">Ver esta semana</button>':'<span>Va sumando a medida que se cargan los resultados.</span>'+(lun===m0?'<button data-repweek="-1">Ver la semana pasada</button>':''))+'</div>';
+    if (d && !d.error){ var semAnt=addDays(state.repSem,-7); setTimeout(function(){ loadRep(ctrl, semAnt, true); }, 800); if (lun!==m0) setTimeout(function(){ loadRep(ctrl, m0, true); }, 1200); }
     if (!d){ loadRep(ctrl); body='<div class="skel"></div><div class="skel"></div><p class="hint" style="text-align:center">Armando el reporte…</p>'; }
     else if (d.error) body='<div class="err-box">'+esc(d.error)+'<br><button data-repretry>Reintentar</button></div>';
     else {
       body+= ctrl
-        ? '<p class="hint" style="margin:12px 2px 0"><b>App</b>: lo que cuenta la app desde el HISTORIAL, con las mismas reglas que KPIs. <b>Intakers</b>: CARGA SEMANAL. <b>KPIs</b>: KPIS PRUEBA'+(d.kpisAct?' (actualizado '+esc(d.kpisAct)+')':'')+'. En rojo, lo que no coincide con la app. Tocá una fila para ver quiénes son.</p>'+(d.kpisAcceso?'':'<div class="warn">No pude abrir KPIS PRUEBA con tu cuenta.</div>')
-        : '<div class="note" style="margin-top:12px">1. Tocá cada fila y revisá la lista de personas.<br>2. Completá lo que esté en rojo.<br>3. Pasá los números a <b>CARGA SEMANAL</b>, columnas C a H, en la fila de esta semana.</div>';
+        ? semCaja+'<p class="hint" style="margin:10px 2px 0"><b>Planilla</b>: lo que la app cuenta sola desde el HISTORIAL de cada planilla de leads. <b>Intakers</b>: lo que cargaron a mano en CARGA SEMANAL. <b>KPIs</b>: la planilla KPIS PRUEBA'+(d.kpisAct?' (actualizada '+esc(d.kpisAct)+')':'')+'. En rojo, lo que no coincide con la planilla. Tocá una fila para ver los nombres.</p>'+(d.kpisAcceso?'':'<div class="warn">No pude abrir KPIS PRUEBA con tu cuenta.</div>')
+        : semCaja+'<div class="note" style="margin-top:12px">1. Tocá cada fila y revisá la lista de personas.<br>2. Completá lo que esté en rojo.<br>3. Pasá los números a <b>CARGA SEMANAL</b>, columnas C a H, en la fila de esta semana.</div>';
       (d.ramas||[]).forEach(function(r){ body+=repRama(r, ctrl); });
       if (!(d.ramas||[]).length) body+=emptyBox('No hay planillas de ART o Laboral para este reporte');
     }
-    return { h1: ctrl?'Reportes':'Reporte de la semana', p:'ART y Laboral', extra:(ctrl?repModoSeg():'')+nav, body:(ctrl?equipoBtn():'')+(viejo?notaViejo(viejo.t):'')+body };
+    return { h1: ctrl?'Reportes':'Reporte de la semana', p:'ART y Laboral · '+(cual?cual.toLowerCase()+', ':'')+semTxt, extra:(ctrl?repModoSeg():'')+nav, body:(ctrl?equipoBtn():'')+(viejo?notaViejo(viejo.t):'')+body };
   }
 
   /* ---------- Disponibilidad por persona (cada una elige su modo) ---------- */
@@ -3373,6 +3399,36 @@ a.save.wa-go svg{width:20px;height:20px}
   function srRow(l){
     return '<li><button data-escribir="'+esc(l.id)+'"><span class="h num">'+esc(l.hora||'--:--')+'</span><span class="w"><b>'+esc(l.nombre)+'</b><span>'+diaCorto(l.fecha)+', '+ramaLabel(l.rama)+(l.abogada?', con '+esc(l.abogada):'')+'</span></span><span class="go2">Escribir</span></button></li>';
   }
+  /* ---------- Sin contactar: leads sin el nombre de un intaker en la primera columna, por rama ---------- */
+  function scLista(){ var o=state.scHechos||{}; return ((state.data && state.data.sinContactar)||[]).filter(function(l){ return !o[l.id]; }); }
+  function scRow(l){
+    var dd = l.ingreso ? diffDays(nowBA().date, l.ingreso) : null;
+    var when = dd===null ? '' : (dd<=0?'entró hoy':(dd===1?'entró ayer':'entró hace '+dd+' días'));
+    var esInt = rol()==='intaker';
+    return '<li class="pa-li"><button data-ficha="'+esc(l.id)+'" aria-label="Abrir ficha de '+esc(l.nombre||'Sin nombre')+'"><span class="w"><b>'+esc(l.nombre||'Sin nombre')+'</b><span>'+(when||'')+(l.fase?', fase '+esc(faseLbl(l.fase)):', sin clasificar')+(l.levanto?' · dice "'+esc(l.levanto)+'"':'')+'</span></span></button>'+
+      (l.tel?'<a class="ib wa sc-wa" href="'+waHref(l.tel)+'" target="_blank" rel="noopener" aria-label="WhatsApp a '+esc(l.nombre||'')+'">'+I.chat+'</a>':'')+
+      (esInt?'<button class="pa-ag" data-levante="'+esc(l.id)+'">✓ Ya lo contacté</button>':'')+'</li>';
+  }
+  function scHtml(xs){
+    var orden=['ART','LABORAL','TRANSITO'], por={};
+    xs.forEach(function(l){ var k=String(l.rama||'').toUpperCase(); (por[k]=por[k]||[]).push(l); });
+    // Dentro de cada rama: primero los que todavía pueden ser caso (sin fase, A, B, llamada); los C al final. Y de ahí, los que hace más que entraron
+    var prio=function(l){ return l.fase==='C' ? 1 : 0; };
+    Object.keys(por).forEach(function(k){ por[k].sort(function(a,b){ return prio(a)-prio(b) || String(a.ingreso).localeCompare(String(b.ingreso)); }); });
+    return orden.concat(Object.keys(por).filter(function(k){ return orden.indexOf(k)===-1; })).filter(function(k){ return por[k]; }).map(function(k){
+      return '<h3 class="sc-rama"><span class="rama r-'+ramaKey(k)+'">'+ramaLabel(k)+'</span><span class="cnt num">'+por[k].length+'</span></h3><ul class="todo">'+por[k].map(scRow).join('')+'</ul>';
+    }).join('');
+  }
+  document.addEventListener('click', function(ev){
+    var t=ev.target.closest('[data-levante]'); if (!t) return;
+    var id=t.getAttribute('data-levante'), l=findLead(id), hechos=state.scHechos||(state.scHechos={});
+    hechos[id]=1; render(); toast('✓ '+((l&&l.nombre)||'Lead')+': queda tu nombre en la planilla');
+    call('levantarLead', {id:id}).then(function(r){
+      if (r && r.ya) toast('Ya lo había levantado '+r.ya+'.');
+      if (state.data) state.data.sinContactar=(state.data.sinContactar||[]).filter(function(x){ return x.id!==id; });
+      delete hechos[id]; render();
+    }).catch(function(e){ delete hechos[id]; render(); toast((e&&e.message)||'No se pudo guardar. Probá de nuevo.', true); });
+  });
   function viewTareas(){
     var t=tareasDe(), pa=t.porAgendar;
     var total=t.hoy.length+t.previa.length+t.sinRes.length;
@@ -3383,9 +3439,12 @@ a.save.wa-go svg{width:20px;height:20px}
     body += secTarea('Mensaje previo', t.previa.length, 'Consultas de los próximos días que todavía no tienen la confirmación previa.', '<ol class="dk">'+t.previa.map(function(l){ return tkRow(l,'confPrev'); }).join('')+'</ol>');
     body += respuestasHtml();
     body += secTarea('Sin resumen', t.sinRes.length, 'Escribí el resumen para que la abogada lo tenga antes de la consulta.', '<ul class="todo">'+t.sinRes.map(srRow).join('')+'</ul>');
-    body += secTarea('Por agendar', pa.length, 'Leads que todavía no tienen consulta. Tocá el nombre para ver la ficha (cambiar fase, notas, datos) o Agendar para elegir día y horario.',
-      '<ul class="todo">'+agBase().slice(0,5).map(paRow).join('')+'</ul>'+(pa.length?'<button class="btn3" data-view="agendar">Ver todos en Agendar ('+pa.length+')</button>':''));
-    return { h1:'Tareas', p: total ? plural(total,'cosa para hacer','cosas para hacer')+(pa.length?', '+pa.length+' por agendar':'') : (pa.length?pa.length+' por agendar':'Todo al día'), extra:seg(), body:body };
+    var sc=scLista();
+    body += secTarea('Sin contactar', sc.length, 'Leads que todavía no tienen el nombre de Fran ni de Pri en la primera columna de la planilla. Primero los que hace más que entraron. Cuando le mandes el primer mensaje, tocá <b>Ya lo contacté</b> y queda tu nombre en la planilla.',
+      scHtml(sc));
+    if (pa.length) body += '<button class="btn3" data-view="agendar">Ver todos los leads por agendar ('+pa.length+')</button>';
+    total += sc.length;
+    return { h1:'Tareas', p: total ? plural(total,'cosa para hacer','cosas para hacer')+(sc.length?', '+sc.length+' sin contactar':'') : (pa.length?pa.length+' por agendar':'Todo al día'), extra:seg(), body:body };
   }
   function saveConf(id, campo, valor, sinUndo){
     var l=findLead(id); if (!l || !puede('confirmar')) return;
