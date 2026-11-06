@@ -523,6 +523,9 @@ textarea:focus,.inp:focus,select:focus{outline:none;box-shadow:0 0 0 2.5px var(-
 .cl.sc li{grid-template-columns:minmax(0,1fr) auto auto auto}
 .cl.sc .cn{grid-column:1;grid-row:1} .cl.sc .ct{grid-column:2;grid-row:1} .cl.sc .ib{grid-column:3;grid-row:1} .cl.sc .lv{grid-column:4;grid-row:1} .cl.sc .ce{grid-row:2}
 .cl .lv .lv-t{display:none}
+.f2rep-it{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:8px 0;border-top:1px solid var(--line)}
+.f2rep-it span{color:var(--ink-2);font-size:13px}
+.f2rep-bt{display:flex;flex-direction:column;gap:6px;align-items:flex-end;flex:none}
 @media (min-width:700px){.cl .lv .lv-t{display:inline}}
 .cl .lv{min-width:40px;font:inherit;font-weight:700;font-size:15px;color:var(--blue);background:color-mix(in srgb,var(--blue) 10%,transparent);border:0;border-radius:10px;padding:0 10px;min-height:40px;cursor:pointer;white-space:nowrap}
 .cl .ce{grid-column:1/-1;min-width:0;text-align:left;background:none;border:0;padding:0 0 4px;font:inherit;font-size:12.5px;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
@@ -4727,6 +4730,7 @@ a.save.wa-go svg{width:20px;height:20px}
     if (b.tieneClientes){
       var cl=b.clientes||[];
       body+=f2Sec('Clientes nuevos', cl.length, null, (F.cliente && F.gasto)?'cliente':'', 'Los que firmaron entran solos desde la agenda. Tocá uno para completar '+(hom?'el tipo y la lesión':'el detalle')+'.');
+      body+=f2RepHtml(b.posiblesRep||[]);
       body+=cl.length ? '<ul class="todo">'+cl.map(function(c){ var falta=!c.lesion || (hom && !c.tipo); return f2Fila('cl','👤', c.nombre, [shortDate(c.fecha), c.tipo, c.lesion, c.atiende?'atendió '+c.atiende:''].filter(Boolean).join(' · '), falta?'Completar':'', 'data-f2edit="cliente|'+c.fila+'"'); }).join('')+'</ul>' : emptyBox('Todavía no hay clientes nuevos');
     } else if ((b.firmados||[]).length){
       body+='<h2 class="sec-t">Firmaron <span class="cnt num">'+b.firmados.length+'</span></h2><p class="sec-sub">Según la planilla de leads.</p><ul class="todo">'+b.firmados.map(function(c){ return '<li><span class="w" style="padding:10px 4px;display:block"><b>👤 '+esc(c.nombre)+'</b><span>'+esc([shortDate(c.fecha), c.atendio].filter(Boolean).join(' · '))+'</span></span></li>'; }).join('')+'</ul>';
@@ -4767,6 +4771,22 @@ a.save.wa-go svg{width:20px;height:20px}
     try{ navigator.clipboard.writeText(t).then(ok, function(){ window.open('https://wa.me/?text='+encodeURIComponent(t), '_blank'); }); }catch(e){ window.open('https://wa.me/?text='+encodeURIComponent(t), '_blank'); }
   }
   function f2Campos(tipo){ var b=f2Base(); return ((b&&b.forms)||{})[tipo]||[]; }
+  // Clientes que pueden estar cargados dos veces: lo ven Sol y los socios, y se resuelve con un toque
+  function f2RepHtml(xs){
+    if (!xs.length) return '';
+    var uno=function(c){ return '<b>'+esc(c.nombre)+'</b> <span>('+esc([shortDate(c.fecha), c.app?'la cargó la app':'cargada a mano', c.lesion].filter(Boolean).join(' · '))+')</span>'; };
+    return '<div class="warn f2rep" style="margin:0 0 10px"><b>⚠ '+(xs.length===1?'Puede haber un cliente cargado dos veces':'Puede haber '+xs.length+' clientes cargados dos veces')+'</b>'+
+      '<p class="hint" style="margin:4px 0 8px">El nombre está escrito distinto pero se parece y las fechas están cerca. Si es la misma persona, tocá <b>Es el mismo</b>: queda una sola fila con todos los datos y se cuenta una vez.</p>'+
+      xs.map(function(x){ var busy=(state.f2RepBusy||{})[x.k];
+        return '<div class="f2rep-it"><div>'+uno(x.a)+'<br>'+uno(x.b)+'</div><div class="f2rep-bt">'+(busy?'<span class="hint">'+esc(busy)+'</span>':
+          '<button class="btn3" data-f2rep="unir|'+esc(x.k)+'|'+x.a.fila+'|'+x.b.fila+'">Es el mismo</button><button class="link" data-f2rep="distintos|'+esc(x.k)+'|'+x.a.fila+'|'+x.b.fila+'">Son distintos</button>')+'</div></div>'; }).join('')+'</div>';
+  }
+  function f2Rep(acc, k, a, b){
+    var busy=state.f2RepBusy||(state.f2RepBusy={}); busy[k]=acc==='unir'?'Uniendo…':'Guardando…'; render();
+    call('resolverRepFin2', {rama:f2Rama(), accion:acc, k:k, a:+a, b:+b}).then(function(r){
+      delete busy[k]; toast(acc==='unir'?'✔ Quedó una sola fila: '+((r&&r.quedo)||''):'Listo, no se vuelve a avisar'); f2Load(true); if (enFinanzas()) render();
+    }).catch(function(e){ delete busy[k]; toast((e&&e.message)||'No se pudo.', true); if (enFinanzas()) render(); });
+  }
   function f2Draft(sh){
     var b=f2Base()||{}, v={}, hoy=nowBA().date;
     f2Campos(sh.tipo).forEach(function(c){
@@ -4792,7 +4812,8 @@ a.save.wa-go svg{width:20px;height:20px}
     var sh=state.sheet, d=state.draft||(state.draft=f2Draft(sh)), cs=f2Campos(sh.tipo), r=f2Rama();
     var html='<div class="grab"></div><div class="sh-head"><div class="sh-who"><h2>'+esc(f2Titulo(sh))+'</h2><div class="mt"><span class="rama r-'+ramaKey(r)+'">'+F2_RAMA[r]+'</span></div></div><button class="close" data-close aria-label="Cerrar">'+I.x+'</button></div>';
     if (!cs.length) return html+'<div class="note">Cargando…</div>';
-    if (d.dup) html+='<div class="warn">Ya hay '+(r==='ART'?'una homologación':'un acuerdo')+' con el nombre "'+esc(d.dup.caso)+'". Si es otro caso, cambiá el nombre; si es el mismo, tocalo en la lista para corregirlo.</div><button class="btn3" data-f2forzar>Es otro caso: cargar igual</button>';
+    if (d.dup && d.dup.cliente) html+='<div class="warn">Puede ser el mismo cliente que ya está cargado: <b>'+esc(d.dup.nombre)+'</b> ('+esc(shortDate(d.dup.fecha))+(d.dup.app?', lo cargó la app cuando firmó':'')+'). Si es la misma persona, completá esa fila así no queda dos veces.</div><div class="save-wrap" style="margin-top:8px"><button class="save" data-f2completar="'+d.dup.fila+'">Es el mismo: completar esa fila</button><button class="btn3" data-f2forzar>Es otro cliente: cargar igual</button></div>';
+    else if (d.dup) html+='<div class="warn">Ya hay '+(r==='ART'?'una homologación':'un acuerdo')+' con el nombre "'+esc(d.dup.caso)+'". Si es otro caso, cambiá el nombre; si es el mismo, tocalo en la lista para corregirlo.</div><button class="btn3" data-f2forzar>Es otro caso: cargar igual</button>';
     cs.forEach(function(c,i){
       var val=d.v[c.k]==null?'':d.v[c.k], id='f2c'+i, lab='<label for="'+id+'">'+esc(c.label)+(c.req?'':' <small>(opcional)</small>')+'</label>';
       var ayuda=c.ayuda?'<p class="hint" style="margin:4px 2px 0">'+esc(c.ayuda)+'</p>':'';
@@ -4849,7 +4870,7 @@ a.save.wa-go svg{width:20px;height:20px}
     return copia;
   }
   document.addEventListener('click', function(ev){
-    var t=ev.target.closest('[data-f2prama],[data-f2pfresco],[data-f2mes],[data-f2per],[data-f2rama],[data-f2retry],[data-f2nuevo],[data-f2edit],[data-f2cobrar],[data-f2mios],[data-f2pick],[data-f2save],[data-f2borrar],[data-f2forzar],[data-f2share]'); if (!t) return;
+    var t=ev.target.closest('[data-f2prama],[data-f2pfresco],[data-f2mes],[data-f2per],[data-f2rama],[data-f2retry],[data-f2nuevo],[data-f2edit],[data-f2cobrar],[data-f2mios],[data-f2pick],[data-f2save],[data-f2borrar],[data-f2forzar],[data-f2share],[data-f2completar],[data-f2rep]'); if (!t) return;
     if (t.hasAttribute('data-f2mes')){ f2Mover(+t.getAttribute('data-f2mes')); render(); return; }
     if (t.hasAttribute('data-f2per')){ var np=t.getAttribute('data-f2per'); if (np===f2Per()) return; if (np==='panel' || f2Per()==='panel'){ state.f2Per=np; render(); window.scrollTo(0,0); return; } if (np==='semana'){ var hoy=nowBA().date; state.f2Sem = f2Mes()===hoy.slice(0,7) ? mondayOf(hoy) : mondayOf(f2Mes()+'-01'); } else state.f2Mes=f2Sem().slice(0,7); state.f2Per=np; render(); return; }
     if (t.hasAttribute('data-f2rama')){ state.f2Rama=t.getAttribute('data-f2rama'); render(); return; }
@@ -4865,6 +4886,8 @@ a.save.wa-go svg{width:20px;height:20px}
     if (t.hasAttribute('data-f2pick')){ var pk=t.getAttribute('data-f2pick').split('|'), k=pk.shift(); state.draft.v[k]=pk.join('|'); renderSheet(); return; }
     if (t.hasAttribute('data-f2save')){ f2Guardar(); return; }
     if (t.hasAttribute('data-f2forzar')){ f2Guardar({forzar:true}); return; }
+    if (t.hasAttribute('data-f2completar')){ if (state.sheet && state.draft){ state.sheet.fila=+t.getAttribute('data-f2completar'); state.draft.dup=null; f2Guardar(); } return; }
+    if (t.hasAttribute('data-f2rep')){ var q=t.getAttribute('data-f2rep').split('|'); f2Rep(q[0], q[1], q[2], q[3]); return; }
     if (t.hasAttribute('data-f2borrar')){ var bv=t.getAttribute('data-f2borrar'); if (bv==='1' || bv==='0'){ state.draft.borrar=bv==='1'; renderSheet(); } else f2Guardar({borrar:true}); return; }
   });
   function f2Input(ev){
