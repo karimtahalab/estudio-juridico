@@ -3208,7 +3208,7 @@ a.save.wa-go svg{width:20px;height:20px}
     var tot=(d.ramas||[]).reduce(function(a,r){ return a+repN(r,'firm'); },0), ptot=prev?(prev.ramas||[]).reduce(function(a,r){ return a+repN(r,'firm'); },0):null;
     var cmp = ptot===null ? '' : (tot>ptot?' · <b style="color:var(--green)">'+(tot-ptot)+' más</b> que la semana anterior ('+ptot+')':(tot<ptot?' · '+(ptot-tot)+' menos que la semana anterior ('+ptot+')':' · igual que la semana anterior'));
     return '<div class="rs-hero"><div class="rs-n"><b class="num">'+tot+'</b><span>'+(tot===1?'cliente nuevo firmó':'clientes nuevos firmaron')+'<br>en la semana</span></div>'+
-      '<div class="rs-chips">'+(d.ramas||[]).map(function(r){ var pr=prev?(prev.ramas||[]).filter(function(x){ return x.rama===r.rama; })[0]:null; return '<span class="rs-chip">'+ramaLabel(r.rama)+' '+repN(r,'firm')+(pr?' <i>(antes '+repN(pr,'firm')+')</i>':'')+'</span>'; }).join('')+'</div>'+
+      '<div class="rs-chips">'+(d.ramas||[]).map(function(r){ var pr=prev?(prev.ramas||[]).filter(function(x){ return x.rama===r.rama; })[0]:null; return '<span class="rs-chip">'+ramaLabel(r.rama)+' '+repN(r,'firm')+(pr?' <i>(semana anterior: '+repN(pr,'firm')+')</i>':'')+'</span>'; }).join('')+'</div>'+
       '<p class="rs-sub">Cuenta a todos los que pasaron a <b>Caso en proceso</b> entre el lunes y el domingo, se haya agendado la consulta en la app o no'+cmp+'.</p></div>';
   }
   function repCard(r, prev){
@@ -3385,10 +3385,11 @@ a.save.wa-go svg{width:20px;height:20px}
     else if (d.error) body='<div class="err-box">'+esc(d.error)+'<br><button data-repretry>Reintentar</button></div>';
     else {
       body+= ctrl
-        ? semCaja+(d.kpisAcceso?'':'<div class="warn">No pude abrir KPIS PRUEBA con tu cuenta.</div>')
+        ? (d.kpisAcceso?'':'<div class="warn">No pude abrir KPIS PRUEBA con tu cuenta.</div>')
         : semCaja+'<div class="note" style="margin-top:12px">1. Tocá cada fila y revisá la lista de personas.<br>2. Completá lo que esté en rojo.<br>3. Pasá los números a <b>CARGA SEMANAL</b>, columnas C a H, en la fila de esta semana.</div>';
       if (ctrl){
-        var prv=repPrev(state.repSem); if (!prv) setTimeout(function(){ loadRep(true, addDays(state.repSem,-7), true); }, 300);
+        var prv=repPrev(state.repSem), semV=state.repSem;
+        if (!prv){ setTimeout(function(){ loadRep(true, addDays(semV,-7), true); }, 300); setTimeout(function(){ if (state.view==='reportes' && state.repSem===semV && repPrev(semV)) render(); }, 3500); }
         body+=repHero(d, prv);
         (d.ramas||[]).forEach(function(r){ body+=repCard(r, prv); });
         body+=repComo();
