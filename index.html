@@ -3239,7 +3239,7 @@ a.save.wa-go svg{width:20px;height:20px}
     if (open){ var tt=T.filter(function(t){ return t.k===open; })[0]; if (tt) h+='<div class="rs-names"><h4>'+esc(tt.l)+' · '+ramaLabel(r.rama)+'</h4>'+repLista(r, open)+'</div>'; }
     // Control con la carga de los intakers y KPIs, cerrado
     var cOn=!!(state.repCtl||{})[r.rama], difs=repDifs(r);
-    h+='<button class="rs-ctl'+(difs.length?' mal':'')+'" data-repctl="'+esc(r.rama)+'" aria-expanded="'+cOn+'"><span>'+(difs.length?'⚠ La carga de los intakers o los KPIs no coinciden ('+difs.length+')':(r.carga||r.kpis?'✓ La carga de los intakers y los KPIs coinciden':'Control con la carga de los intakers y los KPIs'))+'</span><small>'+(cOn?'Ocultar ▴':'Ver ▾')+'</small></button>';
+    h+='<button class="rs-ctl'+(difs.length?' mal':'')+'" data-repctl="'+esc(r.rama)+'" aria-expanded="'+cOn+'"><span>'+(difs.length?'⚠ No coincide con lo cargado: '+esc(difs.join(', ')):(!r.carga?'Los intakers todavía no cargaron esta semana'+(r.kpis?' · KPIs ✓':''):'✓ Coincide con lo que cargaron los intakers'+(r.kpis?' y con KPIs':'')))+'</span><small>'+(cOn?'Ocultar ▴':'Ver ▾')+'</small></button>';
     if (cOn) h+=repRama(r, true, true);
     return h+'</div>';
   }
