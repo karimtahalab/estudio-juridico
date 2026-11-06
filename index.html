@@ -651,6 +651,17 @@ textarea:focus,.inp:focus,select:focus{outline:none;box-shadow:0 0 0 2.5px var(-
 .de-save .save{flex:1}
 .de-save .link{width:auto;margin:0;padding:0 14px}
 
+.vc-ban{position:sticky;top:0;z-index:20;display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;margin:0 -16px 12px;padding:10px 16px;background:#5B3FD0;color:#fff;font-size:14px;font-weight:600;box-shadow:0 2px 10px rgba(0,0,0,.25)}
+.vc-ban .vc-ojo{font-size:20px}
+.vc-ban .vc-tx{flex:1 1 200px}
+.vc-ban .vc-bt{display:flex;gap:6px}
+.vc-ban button{border:0;border-radius:10px;padding:7px 12px;font:inherit;font-weight:800;background:rgba(255,255,255,.18);color:#fff;cursor:pointer}
+.vc-ban .vc-salir{background:#fff;color:#2b1d73}
+.vc-lista{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:8px}
+.vc-p{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:12px;border:0;border-radius:14px;background:var(--paper);box-shadow:0 0 0 1px var(--line) inset;color:var(--ink);font:inherit;text-align:left;cursor:pointer}
+.vc-p b{font-size:16px}
+.vc-p small{font-size:12px;color:var(--ink-3);font-weight:600}
+.vc-p.on{box-shadow:0 0 0 2px var(--violet,#7C5CFF) inset}
 /* ===== Editor de disponibilidad ===== */
 .de-mia{display:flex;align-items:center;gap:12px;width:100%;margin:10px 0 4px;padding:12px 14px;border:0;border-radius:14px;background:color-mix(in srgb,var(--green) 12%,var(--paper));box-shadow:0 0 0 1.5px color-mix(in srgb,var(--green) 55%,transparent) inset;color:var(--ink);font:inherit;text-align:left;cursor:pointer}
 .de-mia>span:first-child{font-size:24px}
@@ -1169,6 +1180,7 @@ a.save.wa-go svg{width:20px;height:20px}
   // Lo que se puede repetir sin duplicar nada: si se corta internet o el servidor no contesta, se reintenta solo antes de avisar
   var REINTENTA={getData:1, saveAction:1, cambiarFase:1, saveResumenes:1, editarDatos:1, deshacerResultado:1};
   // Finanzas: cada pedido lleva la llave (PIN de finanzas). Vive solo en la memoria de la app: al cerrarla, se vuelve a pedir
+  var VER_FN={getData:1, getReporte:1, getRitmo:1, leadsDeFase:1, getLead:1, getCreativos:1, getEstudios:1, verEstudio:1, verRecibo:1}; // lo único que se pide en "Ver como"
   var FIN_FN={getFin2:1, getFin2Panel:1, saveFin2:1, resolverRepFin2:1, getFinanzas:1, saveFinanza:1, borrarFinanza:1};
   function esCorte(e){ return /Sin conexi|no respondi|Failed to fetch|NetworkError|Load failed|network|timeout|JSON|Unexpected token/i.test(String((e&&e.message)||e)); }
   function call1(fn, arg){
@@ -1189,6 +1201,10 @@ a.save.wa-go svg{width:20px;height:20px}
     if (Array.isArray(arg)) arg = {items:arg};
     if (arg === undefined || arg === null) arg = {};
     if (typeof arg==='object'){ arg.tok = store('tok') || ''; if (state.me) arg.who = state.me.nombre; if (FIN_FN[fn]) arg.ftok = finTok(); }
+    if (state.verComo){ // "Ver como": solo mirar. Lo que guarda algo no sale de la app
+      if (!VER_FN[fn]) return Promise.reject(new Error('👁 Estás viendo la app como '+state.verComo+': es solo para mirar y no se guarda nada. Tocá Salir arriba para hacer cambios.'));
+      if (typeof arg==='object') arg.verComo = state.verComo;
+    }
     var w=!!ESCRIBE[fn], esperas=REINTENTA[fn] ? [1500, 4000] : [];
     if (w){ state.wPend=(state.wPend||0)+1; state.wSeq=(state.wSeq||0)+1; }
     var p=new Promise(function(res, rej){
@@ -1212,13 +1228,14 @@ a.save.wa-go svg{width:20px;height:20px}
     if (state.busy) return;
     if (fresh){ state.otras={}; state.busq=null; state.otrasPre=false; } // Actualizar: las otras fases se vuelven a pedir
     state.busy = true; $('btnRefresh').classList.add('spin');
-    var seq0=state.wSeq||0;
+    var seq0=state.wSeq||0, vc0=state.verComo||'';
     call('getData', {fresh: !!fresh, who: store('yo') || ''}).then(recibir = function(d){
+      if (!d.__snap && (state.verComo||'')!==vc0){ setTimeout(function(){ load(false, true); }, 300); return; } // se entró o salió de "Ver como" mientras llegaba
       // Si mientras llegaba se guardó algo (o sigue guardándose), esta lectura puede ser de antes: no se usa y se pide otra al terminar
       if (!d.__snap && state.data && (state.wPend || (state.wSeq||0)!==seq0)){ if (state.wPend) state.wRecargar=true; else setTimeout(function(){ load(true); }, 300); return; }
-      if (d.__snap){ state.snapT=d.__snapT; } else { state.snapT=null; try{ store('snap', JSON.stringify({t:Date.now(), d:d})); }catch(e){} }
+      if (d.__snap){ state.snapT=d.__snapT; } else { state.snapT=null; if (!state.verComo) try{ store('snap', JSON.stringify({t:Date.now(), d:d})); }catch(e){} }
       state.data = d; state.offline = false;
-      if (d.user && d.user.name && !d.__snap){ var yoSrv=(d.equipo||[]).filter(function(e){ return e.nombre===d.user.name; })[0]; if (yoSrv){ state.me=yoSrv; store('yo', yoSrv.nombre); } }
+      if (d.user && d.user.name && !d.__snap){ var yoSrv=(d.equipo||[]).filter(function(e){ return e.nombre===d.user.name; })[0]; if (yoSrv){ state.me=yoSrv; if (!state.verComo) store('yo', yoSrv.nombre); } }
       if (!state.me) state.me = resolveMe(d);
       if (!state.seen) initSeen();
       if (!d.__snap){ setTimeout(precargarRep, 1500); setTimeout(precargarFin, 2500); setTimeout(calentarFin, 2000); }
@@ -1234,7 +1251,7 @@ a.save.wa-go svg{width:20px;height:20px}
       if (state.sheet && (state.sheet.type==='lead' || state.sheet.type==='bloq') && !escribiendo()) renderSheet();
       if (state.primeraVez){ state.primeraVez=false; if (!state.me && d.modoPrueba) openSheet({type:'yo', first:true}); }
       if ($('search').classList.contains('on')) renderSearch();
-      avisoNuevos(d);
+      if (!state.verComo) avisoNuevos(d);
     }).catch(function(e){
       if (!state.data){
         $('main').innerHTML = '<div class="err-box">No se pudieron cargar las consultas.<br><small>'+esc(e.message)+'</small><br><button data-retry>Reintentar</button></div>';
@@ -1643,7 +1660,7 @@ a.save.wa-go svg{width:20px;height:20px}
     $('ttl').innerHTML = '<h1>'+v.h1+'</h1><p>'+v.p+'</p>';
     $('headExtra').innerHTML = v.extra || '';
     $('offline').classList.toggle('on', state.offline);
-    $('main').innerHTML = trAvisoBanner() + pinBanner() + dupBanner() + internasBanner() + v.body + '<div class="foot">'+(state.snapT?'Mostrando lo guardado a las '+state.snapT+'. Actualizando…':'Actualizado a las '+nowBA().hm)+(state.me?'. Usás la app como '+esc(state.me.nombre)+' ('+({abogada:'parte de abogadas', intaker:'parte de intakers', admin:'administración', produccion:'filmación y edición'}[state.me.rol]||state.me.rol)+')'+' <button data-yocambiar>Cambiar</button>':'')+'</div>';
+    $('main').innerHTML = vcBanner() + trAvisoBanner() + pinBanner() + dupBanner() + internasBanner() + v.body + '<div class="foot">'+(state.snapT?'Mostrando lo guardado a las '+state.snapT+'. Actualizando…':'Actualizado a las '+nowBA().hm)+(state.verComo?'':(state.me?'. Usás la app como '+esc(state.me.nombre)+' ('+({abogada:'parte de abogadas', intaker:'parte de intakers', admin:'administración', produccion:'filmación y edición'}[state.me.rol]||state.me.rol)+')'+' <button data-yocambiar>Cambiar</button>':'')+(state.me && state.me.rol==='admin'?' · <button data-vcabrir>👁 Ver como otra persona</button>':''))+'</div>';
     alignRs();
     renderNav();
     // En modo prueba, arriba a la derecha se ve quién está usando la app y se toca para cambiar de persona o rol
@@ -1689,13 +1706,44 @@ a.save.wa-go svg{width:20px;height:20px}
     $('scrim').classList.add('on'); $('sheet').classList.add('on'); $('sheet').scrollTop=0;
     if (sh.focusResult){ setTimeout(function(){ var r=$('resBlk'); if (r) r.scrollIntoView({behavior:'smooth',block:'start'}); }, 280); }
   }
+  /* ---------- Ver como: administración mira la app como la ve otra persona (solo lectura) ---------- */
+  var VC_ROL={abogada:'abogada', intaker:'intaker', admin:'administración', produccion:'filmación y edición'};
+  function vcBanner(){
+    if (!state.verComo) return '';
+    var r=state.me && VC_ROL[state.me.rol];
+    return '<div class="vc-ban"><span class="vc-ojo">👁</span><span class="vc-tx">Estás viendo la app como <b>'+esc(state.verComo)+'</b>'+(r?' ('+esc(r)+')':'')+'. Es solo para mirar: no se guarda nada.</span><span class="vc-bt"><button data-vcabrir>Otra persona</button><button class="vc-salir" data-vcsalir>Salir</button></span></div>';
+  }
+  function vcEntrar(n){
+    var e=((state.data&&state.data.equipo)||[]).filter(function(x){ return x.nombre===n; })[0]; if (!e) return;
+    if (!state.verComo) state.vcPrev={me:state.me, abog:state.abog, view:state.view};
+    state.verComo=n; state.me=e; state.dispEdit=null; state.f2={}; state.otras={}; state.busq=null; state.otrasPre=false; repInvalidar();
+    state.abog = e.rol==='abogada' ? n : 'Todas'; state.view = e.rol==='intaker' ? 'tareas' : 'agenda';
+    closeSheet(); render(); window.scrollTo(0,0); load(false, true);
+  }
+  function vcSalir(){
+    var pv=state.vcPrev||{}; state.verComo=null; state.vcPrev=null;
+    if (pv.me) state.me=pv.me; state.abog = pv.abog===undefined ? null : pv.abog; if (pv.view) state.view=pv.view;
+    state.dispEdit=null; state.f2={}; state.otras={}; state.busq=null; state.otrasPre=false; repInvalidar();
+    render(); window.scrollTo(0,0); load(false, true); toast('Volviste a tu vista');
+  }
+  function sheetVerComo(){
+    var yo=(state.vcPrev&&state.vcPrev.me&&state.vcPrev.me.nombre) || (state.me&&state.me.nombre), eq=((state.data&&state.data.equipo)||[]).filter(function(e){ return e.nombre!==yo; });
+    var grupos=[['abogada','Abogadas'],['intaker','Intakers'],['produccion','Filmación y edición'],['admin','Administración']];
+    var html=head('👁','','Ver la app como…','<div class="mt"><span class="cp">Solo para mirar</span></div>')+
+      '<p class="hint" style="margin:10px 2px 4px">Ves exactamente lo que ve esa persona: sus pestañas, su agenda y sus reportes. No se puede guardar nada, así que no se rompe nada. Finanzas no se abre porque pide el PIN de esa persona.</p>';
+    grupos.forEach(function(g){
+      var xs=eq.filter(function(e){ return e.rol===g[0]; }); if (!xs.length) return;
+      html+='<h2 class="sec-t" style="margin-top:14px">'+g[1]+'</h2><div class="vc-lista">'+xs.map(function(e){ return '<button class="vc-p'+(state.verComo===e.nombre?' on':'')+'" data-vercomo="'+esc(e.nombre)+'"><b>'+esc(e.nombre)+'</b><small>'+esc((e.agenda||e.leads||[]).join(' · ').replace(/TRANSITO/g,'Tránsito').replace(/LABORAL/g,'Laboral'))+'</small></button>'; }).join('')+'</div>';
+    });
+    return html;
+  }
   function closeSheet(){ if (state.sheet && state.sheet.first && !state.me) return; var had=!!state.sheet; state.sheet=null; if (had) setTimeout(render, 0); state.draft=null; $('scrim').classList.remove('on'); $('sheet').classList.remove('on'); setTimeout(function(){ if (!state.sheet) $('sheet').innerHTML=''; }, 320); }
   // Si alguien está escribiendo en la hoja abierta, no se vuelve a dibujar (se cerraría el teclado)
   function escribiendo(){ var a=document.activeElement, s=$('sheet'); return !!(a && s && s.contains(a) && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)); }
   function renderSheet(){
     if (!state.sheet) return;
     var y=$('sheet').scrollTop;
-    var ty=state.sheet.type, html = ({lead:sheetLead, bloq:sheetBloq, pegar:sheetPegar, nuevo:sheetNuevo, escribir:sheetEscribir, agendar:sheetAgendar, derivar:sheetDerivar, ficha:sheetFicha, yo:sheetYo, manual:sheetManual, dup:sheetDup, fin:sheetFin, interna:sheetInterna, marca:sheetMarca, guion:sheetGuion, creprint:sheetCrePrint, fin2:sheetFin2, traslado:sheetTraslado, recibo:sheetRecibo, reintegros:sheetReintegros, sinenv:sheetSinEnv})[ty]();
+    var ty=state.sheet.type, html = ({lead:sheetLead, bloq:sheetBloq, pegar:sheetPegar, nuevo:sheetNuevo, escribir:sheetEscribir, agendar:sheetAgendar, derivar:sheetDerivar, ficha:sheetFicha, yo:sheetYo, manual:sheetManual, dup:sheetDup, fin:sheetFin, interna:sheetInterna, marca:sheetMarca, guion:sheetGuion, creprint:sheetCrePrint, fin2:sheetFin2, vercomo:sheetVerComo, traslado:sheetTraslado, recibo:sheetRecibo, reintegros:sheetReintegros, sinenv:sheetSinEnv})[ty]();
     if (html===null){ closeSheet(); return; }
     $('sheet').innerHTML = html; $('sheet').scrollTop=y;
   }
@@ -4008,7 +4056,7 @@ a.save.wa-go svg{width:20px;height:20px}
 
   /* ---------- eventos ---------- */
   document.addEventListener('click', function(ev){
-    var t = ev.target.closest('[data-reptile],[data-repctl],[data-repsemq],[data-pindesbloq],[data-fin],[data-equipo],[data-view],[data-undo],[data-agotra],[data-agbuscartodo],[data-ficha],[data-pinok],[data-pinback],[data-pinreset],[data-salir],[data-fimodo],[data-fase],[data-notasave],[data-datosave],[data-mnfase],[data-mnsin],[data-dupfase],[data-derivar],[data-reagsindia],[data-dvsel],[data-dvhora],[data-dvsave],[data-deon],[data-deque],[data-desem],[data-decopia],[data-deamplio],[data-dedia],[data-dequick],[data-decopy],[data-devolver],[data-definde],[data-demodo],[data-desave],[data-decancel],[data-repweek],[data-reprow],[data-repmodo],[data-rtrama],[data-rtfresco],[data-repretry],[data-agmode],[data-wgday],[data-agrama],[data-agfase],[data-agmas],[data-agmes],[data-agvista],[data-agclr],[data-agnuevo],[data-mnrama],[data-mnorigen],[data-mnsig],[data-mncrear],[data-open],[data-result],[data-bloq],[data-nuevo],[data-week],[data-day],[data-sum],[data-chip],[data-abog],[data-close],[data-res],[data-motivo],[data-save],[data-bqwho],[data-bqtodo],[data-savebq],[data-delbq],[data-retry],[data-pastefor],[data-pasteall],[data-rvcheck],[data-rvtoggle],[data-rvsave],[data-rvback],[data-yo],[data-yocambiar],[data-visto],[data-conf],[data-escribir],[data-agendar],[data-agcorregir],[data-agdia],[data-slot],[data-agcorr],[data-saveag],[data-savecampos]');
+    var t = ev.target.closest('[data-reptile],[data-repctl],[data-repsemq],[data-pindesbloq],[data-fin],[data-equipo],[data-view],[data-undo],[data-agotra],[data-agbuscartodo],[data-ficha],[data-pinok],[data-pinback],[data-pinreset],[data-salir],[data-fimodo],[data-fase],[data-notasave],[data-datosave],[data-mnfase],[data-mnsin],[data-dupfase],[data-derivar],[data-reagsindia],[data-dvsel],[data-dvhora],[data-dvsave],[data-deon],[data-deque],[data-desem],[data-decopia],[data-deamplio],[data-dedia],[data-dequick],[data-decopy],[data-devolver],[data-definde],[data-demodo],[data-desave],[data-decancel],[data-repweek],[data-reprow],[data-repmodo],[data-rtrama],[data-rtfresco],[data-repretry],[data-agmode],[data-wgday],[data-agrama],[data-agfase],[data-agmas],[data-agmes],[data-agvista],[data-agclr],[data-agnuevo],[data-mnrama],[data-mnorigen],[data-mnsig],[data-mncrear],[data-open],[data-result],[data-bloq],[data-nuevo],[data-week],[data-day],[data-sum],[data-chip],[data-abog],[data-close],[data-res],[data-motivo],[data-save],[data-bqwho],[data-bqtodo],[data-savebq],[data-delbq],[data-retry],[data-pastefor],[data-pasteall],[data-rvcheck],[data-rvtoggle],[data-rvsave],[data-rvback],[data-yo],[data-yocambiar],[data-vcabrir],[data-vcsalir],[data-vercomo],[data-visto],[data-conf],[data-escribir],[data-agendar],[data-agcorregir],[data-agdia],[data-slot],[data-agcorr],[data-saveag],[data-savecampos]');
     if (!t) return;
     if (t.hasAttribute('data-pindesbloq')){ var nd=t.getAttribute('data-pindesbloq'); t.disabled=true; t.textContent='Desbloqueando…'; call('desbloquearPin', {nombre:nd}).then(function(p){ if (state.data) state.data.pines=p; if (state.sheet) renderSheet(); render(); toast('Listo: '+nd+' ya puede entrar de nuevo.'); }).catch(function(e){ t.disabled=false; toast((e&&e.message)||'No se pudo desbloquear.', true); }); return; }
     if (t.hasAttribute('data-fin')){ finClick(t); return; }
@@ -4060,6 +4108,9 @@ a.save.wa-go svg{width:20px;height:20px}
     if (t.hasAttribute('data-nuevo')){ openSheet({type:'nuevo', fecha:t.getAttribute('data-nuevo')}); return; }
     if (t.hasAttribute('data-yo')){ yoElegir(t.getAttribute('data-yo')); return; }
     if (t.hasAttribute('data-yocambiar')){ openSheet({type:'yo'}); return; }
+    if (t.hasAttribute('data-vcabrir')){ openSheet({type:'vercomo'}); return; }
+    if (t.hasAttribute('data-vcsalir')){ vcSalir(); return; }
+    if (t.hasAttribute('data-vercomo')){ vcEntrar(t.getAttribute('data-vercomo')); return; }
     if (t.hasAttribute('data-visto')){ markAllSeen(); render(); toast('Listo, novedades vistas'); return; }
     if (t.hasAttribute('data-conf')){ var cp=t.getAttribute('data-conf').split('|'), cv=cp.pop(), cc=cp.pop(); saveConf(cp.join('|'), cc, cv); return; } // el ID puede tener '|' (fuente|pestaña|ID)
     if (t.hasAttribute('data-escribir')){ openSheet({type:'escribir', id:t.getAttribute('data-escribir')}); return; }
