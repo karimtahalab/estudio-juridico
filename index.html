@@ -4776,15 +4776,15 @@ a.save.wa-go svg{width:20px;height:20px}
     if (!xs.length) return '';
     var uno=function(c){ return '<b>'+esc(c.nombre)+'</b> <span>('+esc([shortDate(c.fecha), c.app?'la cargó la app':'cargada a mano', c.lesion].filter(Boolean).join(' · '))+')</span>'; };
     return '<div class="warn f2rep" style="margin:0 0 10px"><b>⚠ '+(xs.length===1?'Puede haber un cliente cargado dos veces':'Puede haber '+xs.length+' clientes cargados dos veces')+'</b>'+
-      '<p class="hint" style="margin:4px 0 8px">El nombre está escrito distinto pero se parece y las fechas están cerca. Si es la misma persona, tocá <b>Es el mismo</b>: queda una sola fila con todos los datos y se cuenta una vez.</p>'+
+      '<p class="hint" style="margin:4px 0 8px">El nombre está escrito distinto pero se parece y las fechas están cerca. Si es la misma persona, tocá <b>Eliminar repetido</b>: se borra la fila que cargó la app (o la que tiene menos datos), lo que le faltaba a la otra se completa y el cliente se cuenta una sola vez.</p>'+
       xs.map(function(x){ var busy=(state.f2RepBusy||{})[x.k];
         return '<div class="f2rep-it"><div>'+uno(x.a)+'<br>'+uno(x.b)+'</div><div class="f2rep-bt">'+(busy?'<span class="hint">'+esc(busy)+'</span>':
-          '<button class="btn3" data-f2rep="unir|'+esc(x.k)+'|'+x.a.fila+'|'+x.b.fila+'">Es el mismo</button><button class="link" data-f2rep="distintos|'+esc(x.k)+'|'+x.a.fila+'|'+x.b.fila+'">Son distintos</button>')+'</div></div>'; }).join('')+'</div>';
+          '<button class="btn3" data-f2rep="unir|'+esc(x.k)+'|'+x.a.fila+'|'+x.b.fila+'">🗑 Eliminar repetido</button><button class="link" data-f2rep="distintos|'+esc(x.k)+'|'+x.a.fila+'|'+x.b.fila+'">Son distintos</button>')+'</div></div>'; }).join('')+'</div>';
   }
   function f2Rep(acc, k, a, b){
-    var busy=state.f2RepBusy||(state.f2RepBusy={}); busy[k]=acc==='unir'?'Uniendo…':'Guardando…'; render();
+    var busy=state.f2RepBusy||(state.f2RepBusy={}); busy[k]=acc==='unir'?'Eliminando…':'Guardando…'; render();
     call('resolverRepFin2', {rama:f2Rama(), accion:acc, k:k, a:+a, b:+b}).then(function(r){
-      delete busy[k]; toast(acc==='unir'?'✔ Quedó una sola fila: '+((r&&r.quedo)||''):'Listo, no se vuelve a avisar'); f2Load(true); if (enFinanzas()) render();
+      delete busy[k]; toast(acc==='unir'?'✔ Repetido eliminado. Quedó: '+((r&&r.quedo)||''):'Listo, no se vuelve a avisar'); f2Load(true); if (enFinanzas()) render();
     }).catch(function(e){ delete busy[k]; toast((e&&e.message)||'No se pudo.', true); if (enFinanzas()) render(); });
   }
   function f2Draft(sh){
