@@ -566,6 +566,37 @@ textarea:focus,.inp:focus,select:focus{outline:none;box-shadow:0 0 0 2.5px var(-
 .rp-sem span{color:var(--ink-3);font-size:13.5px;flex:1 1 180px}
 .rp-sem button{flex:none;padding:8px 12px;border-radius:10px;font-weight:700;font-size:14px;color:var(--blue);background:color-mix(in srgb,var(--blue) 10%,transparent)}
 .rp-ok{margin:0 0 8px;font-size:13.5px;font-weight:600;color:var(--ink-2)}
+.rs-hero{margin-top:12px;padding:16px;border-radius:var(--r-lg);background:var(--paper);box-shadow:0 0 0 1px var(--line) inset}
+.rs-hero .rs-n{display:flex;align-items:flex-end;gap:10px}
+.rs-hero .rs-n b{font-size:52px;font-weight:800;font-stretch:var(--cond);line-height:.85}
+.rs-hero .rs-n span{font-weight:700;font-size:17px;line-height:1.2}
+.rs-hero .rs-sub{color:var(--ink-3);font-size:13.5px;margin-top:8px;line-height:1.4}
+.rs-chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.rs-chip{padding:6px 11px;border-radius:10px;background:var(--paper-2);font-weight:700;font-size:14px}
+.rs-chip i{font-style:normal;font-weight:500;color:var(--ink-3)}
+.rs-card{margin-top:14px;padding:14px;border-radius:var(--r-lg);background:var(--paper);box-shadow:0 0 0 1px var(--line) inset}
+.rs-card>h2{margin:0;font-size:20px;font-weight:800}
+.rs-frase{margin:6px 0 12px;font-size:15px;line-height:1.5;color:var(--ink-2)}
+.rs-frase b{color:var(--ink)}
+.rs-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+@media (min-width:560px){.rs-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.rs-t{display:block;width:100%;text-align:left;border-radius:14px;padding:11px 12px;background:var(--paper-2)}
+.rs-t b{display:block;font-size:30px;font-weight:800;font-stretch:var(--cond);line-height:1}
+.rs-t span{display:block;font-weight:700;font-size:14px;margin-top:5px;color:var(--ink)}
+.rs-t small{display:block;color:var(--ink-3);font-size:12px;margin-top:2px;line-height:1.3}
+.rs-t.firm{background:var(--green-bg)}
+.rs-t.firm b{color:var(--green)}
+.rs-t.on{box-shadow:0 0 0 2px var(--blue) inset}
+.rs-t:disabled{opacity:.55}
+.rs-names{margin:10px 0 0;padding:10px 12px;border-radius:12px;background:var(--paper-2)}
+.rs-names h4{margin:0;font-size:13px;color:var(--ink-3);font-weight:700}
+.rs-ctl{margin-top:12px;width:100%;text-align:left;padding:11px 12px;border-radius:12px;background:transparent;box-shadow:0 0 0 1px var(--line) inset;font-weight:700;font-size:14px;display:flex;justify-content:space-between;align-items:center;gap:8px;color:var(--ink-2)}
+.rs-ctl.mal{color:var(--red)}
+.rs-ctl small{font-weight:500;color:var(--ink-3)}
+.rs-como{margin-top:16px}
+.rs-como summary{cursor:pointer;font-weight:700;font-size:14px;color:var(--ink-2)}
+.rs-como div{margin-top:8px;font-size:13.5px;line-height:1.55;color:var(--ink-2)}
+.rs-aviso{margin-top:12px;padding:12px 14px;border-radius:14px;background:var(--amber-bg);box-shadow:0 0 0 1.5px var(--amber) inset;font-size:14px;line-height:1.45}
 .rp-ok.mal{color:var(--red)}
 .rp-t tr.rl td{border-top:0;padding:0 6px 6px;text-align:left;font-weight:500}
 .rp-list{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:6px}
@@ -1491,9 +1522,25 @@ a.save.wa-go svg{width:20px;height:20px}
     return '<div class="seg" role="tablist" aria-label="Rama">'+['todas'].concat(orden).map(function(k){ return '<button data-resrama="'+k+'" class="'+(cur===k?'on':'')+(k==='TRANSITO'?' mk-transito':'')+'" role="tab" aria-selected="'+(cur===k)+'">'+(k==='todas'?'Todas las ramas':ramaLabel(k))+'</button>'; }).join('')+'</div>';
   }
   document.addEventListener('click', function(ev){ var t=ev.target.closest('[data-resrama]'); if (!t) return; state.resRama=t.getAttribute('data-resrama'); store('resRama', state.resRama); state.sumOpen=null; render(); });
+  // Firmaron esa semana (según el HISTORIAL) pero no tenían el turno cargado en la app: se avisan para que los números no confundan
+  function resSinTurno(items){
+    if (state.abog!=='Todas' || navList().indexOf('reportes')===-1) return '';
+    var mon=weekRange(state.week).mon, d=(state.repCache||{})[mon+'|1'];
+    if (!d){ var g=guardado('rep:', mon+'|1'); if (g) d=g.d; }
+    if (!d){ setTimeout(function(){ loadRep(true, mon, true); }, 300); setTimeout(function(){ if (state.view==='reportes' && state.repModo==='resumen' && (state.repCache||{})[mon+'|1']) render(); }, 4000); return ''; }
+    if (d.error) return '';
+    var ids={}; items.forEach(function(l){ ids[l.id]=1; });
+    var falt=[];
+    (d.ramas||[]).forEach(function(r){ if (!resRamaOk({rama:r.rama})) return; ((r.listas||{}).firm||[]).forEach(function(p){ if (!p.id || !ids[p.id]) falt.push({n:p.n, id:p.id, rama:r.rama}); }); });
+    if (!falt.length) return '';
+    return '<div class="rs-aviso">Además, <b>'+plural(falt.length,'persona firmó','personas firmaron')+'</b> esta semana sin el turno cargado en la app, así que acá no '+(falt.length===1?'aparece':'aparecen')+': '+
+      falt.map(function(p){ return esc(p.n)+' ('+ramaLabel(p.rama)+')'; }).join(', ')+'. Sí '+(falt.length===1?'cuenta':'cuentan')+' en <b>Control semanal</b>.</div>';
+  }
   function viewResumen(){
     var items=inWeek().filter(resRamaOk), c=stats(items), p=stats(inWeek(state.week-1).filter(resRamaOk));
-    var body = '<div class="sum-head"><span class="sum-big num">'+c.total+'</span><span class="sum-cap"><b>'+(c.total===1?'consulta':'consultas')+'</b>'+(state.abog==='Todas'&&c.total?splitPeople(items):'en la semana')+'</span></div>';
+    var body = '<p class="rs-frase" style="margin:12px 2px 0">Las consultas con turno en la agenda de la app, por el día del turno. Tocá cada fila para ver quiénes son.</p>';
+    body += '<div class="sum-head"><span class="sum-big num">'+c.total+'</span><span class="sum-cap"><b>'+(c.total===1?'consulta':'consultas')+'</b>'+(state.abog==='Todas'&&c.total?splitPeople(items):'en la semana')+'</span></div>';
+    body += resSinTurno(items);
     if (!c.total) return { h1:'Resumen', p:'Cómo viene la semana', extra:seg()+resRamaSeg()+weekNav(), body: body + emptyBox('Sin consultas esta semana'+((state.resRama||store('resRama')||'todas')!=='todas'?' en esta rama':'')) };
     body += '<div class="rbar" aria-hidden="true">'+SUM.map(function(x){ return c[x.k]?'<i style="width:'+(c[x.k]*100/c.total)+'%;background:'+x.c+'"></i>':''; }).join('')+'</div>';
     body += '<ul class="legend">'+SUM.map(function(x){
@@ -3118,7 +3165,7 @@ a.save.wa-go svg{width:20px;height:20px}
       return '<li>'+(p.id && findLead(p.id) ? '<button data-open="'+esc(p.id)+'">'+tx+'</button>' : '<span>'+tx+'</span>')+'</li>';
     }).join('')+'</ul>';
   }
-  function repRama(r, ctrl){
+  function repRama(r, ctrl, dentro){
     var open=state.repOpen||{}, app=r.app||{}, ca=r.carga, kp=r.kpis;
     var filas=REP_FILAS.filter(function(f){ return (!f.ramas || f.ramas.indexOf(r.rama)!==-1) && (ctrl || !f.soloCtrl); });
     var celda=function(x, ref){ return x===null ? '<td class="na" title="Sin dato">—</td>' : '<td class="num'+(ref!==null && x!==ref?' df':'')+'">'+x+'</td>'; };
@@ -3130,11 +3177,12 @@ a.save.wa-go svg{width:20px;height:20px}
       if (c!==null && c!==a) difs.push(f.l+' (intakers '+c+', planilla '+a+')');
       if (k!==null && k!==a) difs.push(f.l+' (KPIs '+k+', planilla '+a+')');
     });
-    var html='<h2 class="sec-t">'+ramaLabel(r.rama)+'</h2>';
-    if (r.pend && r.pend.length){
+    var html=dentro?'<div style="margin-top:10px"></div>':'<h2 class="sec-t">'+ramaLabel(r.rama)+'</h2>';
+    if (r.pend && r.pend.length && !dentro){
       html+='<div class="rp-pend"><b>⚠ '+plural(r.pend.length,'consulta','consultas')+' de esta semana sin resultado.</b> Hay que cargarlas antes de pasar el reporte:'+
         '<ul class="rp-list">'+r.pend.map(function(p){ var tx=esc(p.n)+' · '+esc(shortDate(p.fecha))+(p.hora?' '+esc(p.hora):'')+(p.abogada?' · '+esc(p.abogada):''); return '<li>'+(findLead(p.id)?'<button data-open="'+esc(p.id)+'">'+tx+'</button>':'<span>'+tx+'</span>')+'</li>'; }).join('')+'</ul></div>';
     }
+    if (dentro) html+='<p class="hint" style="margin:0 2px 8px"><b>Planilla</b>: lo que cuenta la app sola. <b>Intakers</b>: lo que cargaron en CARGA SEMANAL. <b>KPIs</b>: KPIS PRUEBA. En rojo, lo que no coincide. Tocá una fila para ver los nombres.</p>';
     if (ca || (ctrl && kp)) html+='<p class="rp-ok'+(difs.length?' mal':'')+'">'+(difs.length?'⚠ '+plural(difs.length,'diferencia','diferencias')+': '+esc(difs.join(' · ')):'✓ Todo coincide')+'</p>';
     html+='<div class="box rp-box"><table class="rp-t"><thead><tr><th>Qué pasó</th><th>Planilla<small>automático</small></th><th>'+(ctrl?'Intakers<small>carga semanal</small>':'Cargado')+'</th>'+(ctrl?'<th>KPIs</th>':'')+'</tr></thead><tbody>';
     filas.forEach(function(f){
@@ -3152,6 +3200,65 @@ a.save.wa-go svg{width:20px;height:20px}
     if (ctrl && !kp) notas.push(r.kpisError || 'No encontré esta semana en KPIS PRUEBA.');
     if (notas.length) html+='<p class="hint" style="margin:8px 2px 0">'+esc(notas.join(' '))+'</p>';
     return html;
+  }
+  /* ---------- Control semanal, versión para socios: lo importante arriba y en palabras ---------- */
+  function repN(r,k){ var x=repNum(r.app||{},k); return x===null?0:x; }
+  function repPrev(sem){ var c=(state.repCache||{})[addDays(sem,-7)+'|1']; return (c && !c.error) ? c : null; }
+  function repHero(d, prev){
+    var tot=(d.ramas||[]).reduce(function(a,r){ return a+repN(r,'firm'); },0), ptot=prev?(prev.ramas||[]).reduce(function(a,r){ return a+repN(r,'firm'); },0):null;
+    var cmp = ptot===null ? '' : (tot>ptot?' · <b style="color:var(--green)">'+(tot-ptot)+' más</b> que la semana anterior ('+ptot+')':(tot<ptot?' · '+(ptot-tot)+' menos que la semana anterior ('+ptot+')':' · igual que la semana anterior'));
+    return '<div class="rs-hero"><div class="rs-n"><b class="num">'+tot+'</b><span>'+(tot===1?'cliente nuevo firmó':'clientes nuevos firmaron')+'<br>en la semana</span></div>'+
+      '<div class="rs-chips">'+(d.ramas||[]).map(function(r){ var pr=prev?(prev.ramas||[]).filter(function(x){ return x.rama===r.rama; })[0]:null; return '<span class="rs-chip">'+ramaLabel(r.rama)+' '+repN(r,'firm')+(pr?' <i>(antes '+repN(pr,'firm')+')</i>':'')+'</span>'; }).join('')+'</div>'+
+      '<p class="rs-sub">Cuenta a todos los que pasaron a <b>Caso en proceso</b> entre el lunes y el domingo, se haya agendado la consulta en la app o no'+cmp+'.</p></div>';
+  }
+  function repCard(r, prev){
+    var open=(state.repOpen||{})[r.rama+':tile'], firm=repN(r,'firm'), vnf=repN(r,'vnf'), ns=repN(r,'ns'), reag=repN(r,'reag'), cons=repN(r,'cons'), agend=repN(r,'agend'), llam=repN(r,'llam');
+    var vino=firm+vnf, debian=cons-reag, asis=pct(vino,debian), tasa=pct(firm,vino);
+    var L=r.listas||{}; L.vino=(L.firm||[]).concat(L.vnf||[]).sort(function(a,b){ return String(a.n).localeCompare(String(b.n)); });
+    var h='<div class="rs-card"><h2>'+ramaLabel(r.rama)+'</h2>';
+    // En una frase
+    var fr=[];
+    if (cons) fr.push('Tenían turno <b>'+cons+'</b>'+(reag?' ('+reag+' '+(reag===1?'pidió':'pidieron')+' pasarlo a otro día)':'')+'. Vinieron <b>'+vino+'</b>'+(debian>0?' de '+debian+(asis!==null?' ('+asis+' %)':''):'')+(ns?' y '+ns+' no '+(ns===1?'vino':'vinieron'):'')+'.');
+    else fr.push('Esta semana no hubo consultas con turno.');
+    if (vino) fr.push('De los que vinieron, firmaron <b>'+firm+'</b>'+(tasa!==null?' ('+tasa+' %)':'')+'.');
+    if (firm>vino) fr.push('Hay más firmados que consultas: algunos firmaron sin pasar por una consulta con turno esta semana.');
+    if (agend) fr.push('Se agendaron <b>'+agend+'</b> '+(agend===1?'turno nuevo':'turnos nuevos')+' para las próximas consultas.');
+    h+='<p class="rs-frase">'+fr.join(' ')+'</p>';
+    if (r.pend && r.pend.length) h+='<div class="rp-pend"><b>⚠ Faltan cargar '+plural(r.pend.length,'resultado','resultados')+'</b> de consultas que ya pasaron, y los números todavía no los cuentan:<ul class="rp-list">'+r.pend.map(function(p){ var tx=esc(p.n)+' · '+esc(shortDate(p.fecha))+(p.hora?' '+esc(p.hora):'')+(p.abogada?' · '+esc(p.abogada):''); return '<li>'+(findLead(p.id)?'<button data-open="'+esc(p.id)+'">'+tx+'</button>':'<span>'+tx+'</span>')+'</li>'; }).join('')+'</ul></div>';
+    var T=[
+      {k:'firm', n:firm, l:'Firmaron', d:'clientes nuevos', cls:'firm'},
+      {k:'vino', n:vino, l:'Vinieron', d:asis!==null?asis+' % de los que tenían turno':'a la consulta'},
+      {k:'vnf', n:vnf, l:'No firmaron', d:'vinieron y no firmaron, o no era caso'},
+      {k:'ns', n:ns, l:'No vinieron', d:'faltaron sin reagendar'},
+      {k:'cons', n:cons, l:'Consultas', d:'tenían turno esta semana'},
+      {k:'reag', n:reag, l:'Reagendaron', d:'pidieron otro día'},
+      {k:'agend', n:agend, l:'Turnos nuevos', d:'se agendaron esta semana'}
+    ];
+    if (r.rama==='ART' || r.rama==='TRANSITO') T.push({k:'llam', n:llam, l:'Llamadas', d:'se agendó una llamada'});
+    h+='<div class="rs-grid">'+T.map(function(t){ return '<button class="rs-t '+(t.cls||'')+(open===t.k?' on':'')+'" data-reptile="'+esc(r.rama)+'|'+t.k+'" '+(t.n?'':'disabled')+' aria-expanded="'+(open===t.k)+'"><b class="num">'+t.n+'</b><span>'+t.l+'</span><small>'+t.d+'</small></button>'; }).join('')+'</div>';
+    if (open){ var tt=T.filter(function(t){ return t.k===open; })[0]; if (tt) h+='<div class="rs-names"><h4>'+esc(tt.l)+' · '+ramaLabel(r.rama)+'</h4>'+repLista(r, open)+'</div>'; }
+    // Control con la carga de los intakers y KPIs, cerrado
+    var cOn=!!(state.repCtl||{})[r.rama], difs=repDifs(r);
+    h+='<button class="rs-ctl'+(difs.length?' mal':'')+'" data-repctl="'+esc(r.rama)+'" aria-expanded="'+cOn+'"><span>'+(difs.length?'⚠ La carga de los intakers o los KPIs no coinciden ('+difs.length+')':(r.carga||r.kpis?'✓ La carga de los intakers y los KPIs coinciden':'Control con la carga de los intakers y los KPIs'))+'</span><small>'+(cOn?'Ocultar ▴':'Ver ▾')+'</small></button>';
+    if (cOn) h+=repRama(r, true, true);
+    return h+'</div>';
+  }
+  function repDifs(r){
+    var difs=[], app=r.app||{};
+    REP_FILAS.forEach(function(f){
+      if (f.ramas && f.ramas.indexOf(r.rama)===-1) return;
+      var a=repNum(app,f.k), c=f.sinCarga?null:repNum(r.carga,f.k), k=repNum(r.kpis,f.k);
+      if (a===null) return;
+      if (c!==null && c!==a) difs.push(f.l); else if (k!==null && k!==a) difs.push(f.l);
+    });
+    return difs;
+  }
+  function repComo(){
+    return '<details class="rs-como"><summary>¿De dónde salen estos números?</summary><div>'+
+      'Salen solos del <b>HISTORIAL</b> de cada planilla de leads, donde queda anotado cada cambio de fase, se haga desde la app o desde la planilla. La semana va de lunes a domingo.<br>'+
+      '<b>Firmaron</b>: pasaron a Caso en proceso. <b>Consultas</b>: tenían turno esa semana. <b>Vinieron</b>: firmaron o vinieron y no firmaron. <b>No vinieron</b>: no show. <b>Reagendaron</b>: avisaron y pasaron a otro día. <b>Turnos nuevos</b>: consultas que se agendaron esa semana (pueden ser para la semana siguiente).<br>'+
+      'El botón de cada rama compara estos números con lo que cargaron los intakers en CARGA SEMANAL y con la planilla KPIS PRUEBA.<br>'+
+      'El <b>Resumen agenda</b> es otra vista: cuenta solo las consultas con turno cargado en la agenda de la app, por el día del turno.</div></details>';
   }
   function repModoSeg(){ var m=state.repModo||'control'; return '<div class="seg2 rep4" role="tablist"><button data-repmodo="control" class="'+(m==='control'?'on':'')+'" role="tab" aria-selected="'+(m==='control')+'">Control semanal</button><button data-repmodo="resumen" class="'+(m==='resumen'?'on':'')+'" role="tab" aria-selected="'+(m==='resumen')+'">Resumen agenda</button>'+(state.data && state.data.finAcceso ? '<button data-repmodo="finanzas" class="'+(m==='finanzas'?'on':'')+'" role="tab" aria-selected="'+(m==='finanzas')+'">Finanzas</button>' : '')+'<button data-repmodo="ritmo" class="'+(m==='ritmo'?'on':'')+'" role="tab" aria-selected="'+(m==='ritmo')+'">Ritmo del mes</button></div>'; }
   /* ---------- Ritmo del mes: cuántos clientes deberíamos llevar a esta altura (sale de las pestañas de ingresos) ---------- */
@@ -3278,12 +3385,17 @@ a.save.wa-go svg{width:20px;height:20px}
     else if (d.error) body='<div class="err-box">'+esc(d.error)+'<br><button data-repretry>Reintentar</button></div>';
     else {
       body+= ctrl
-        ? semCaja+'<p class="hint" style="margin:10px 2px 0"><b>Planilla</b>: lo que la app cuenta sola desde el HISTORIAL de cada planilla de leads. <b>Intakers</b>: lo que cargaron a mano en CARGA SEMANAL. <b>KPIs</b>: la planilla KPIS PRUEBA'+(d.kpisAct?' (actualizada '+esc(d.kpisAct)+')':'')+'. En rojo, lo que no coincide con la planilla. Tocá una fila para ver los nombres.</p>'+(d.kpisAcceso?'':'<div class="warn">No pude abrir KPIS PRUEBA con tu cuenta.</div>')
+        ? semCaja+(d.kpisAcceso?'':'<div class="warn">No pude abrir KPIS PRUEBA con tu cuenta.</div>')
         : semCaja+'<div class="note" style="margin-top:12px">1. Tocá cada fila y revisá la lista de personas.<br>2. Completá lo que esté en rojo.<br>3. Pasá los números a <b>CARGA SEMANAL</b>, columnas C a H, en la fila de esta semana.</div>';
-      (d.ramas||[]).forEach(function(r){ body+=repRama(r, ctrl); });
-      if (!(d.ramas||[]).length) body+=emptyBox('No hay planillas de ART o Laboral para este reporte');
+      if (ctrl){
+        var prv=repPrev(state.repSem); if (!prv) setTimeout(function(){ loadRep(true, addDays(state.repSem,-7), true); }, 300);
+        body+=repHero(d, prv);
+        (d.ramas||[]).forEach(function(r){ body+=repCard(r, prv); });
+        body+=repComo();
+      } else (d.ramas||[]).forEach(function(r){ body+=repRama(r, ctrl); });
+      if (!(d.ramas||[]).length) body+=emptyBox('No hay planillas de leads para este reporte');
     }
-    return { h1: ctrl?'Reportes':'Reporte de la semana', p:'ART y Laboral · '+(cual?cual.toLowerCase()+', ':'')+semTxt, extra:(ctrl?repModoSeg():'')+nav, body:(ctrl?equipoBtn():'')+(viejo?notaViejo(viejo.t):'')+body };
+    return { h1: ctrl?'Reportes':'Reporte de la semana', p:(cual?cual+', ':'Semana del ')+semTxt, extra:(ctrl?repModoSeg():'')+nav, body:(ctrl?equipoBtn():'')+(viejo?notaViejo(viejo.t):'')+body };
   }
 
   /* ---------- Disponibilidad por persona (cada una elige su modo) ---------- */
@@ -3777,7 +3889,7 @@ a.save.wa-go svg{width:20px;height:20px}
 
   /* ---------- eventos ---------- */
   document.addEventListener('click', function(ev){
-    var t = ev.target.closest('[data-repsemq],[data-pindesbloq],[data-fin],[data-equipo],[data-view],[data-undo],[data-agotra],[data-agbuscartodo],[data-ficha],[data-pinok],[data-pinback],[data-pinreset],[data-salir],[data-fimodo],[data-fase],[data-notasave],[data-datosave],[data-mnfase],[data-mnsin],[data-dupfase],[data-derivar],[data-reagsindia],[data-dvsel],[data-dvhora],[data-dvsave],[data-deon],[data-debrush],[data-decopia],[data-deamplio],[data-dedia],[data-dequick],[data-decopy],[data-devolver],[data-defijo],[data-definde],[data-demodo],[data-desave],[data-decancel],[data-repweek],[data-reprow],[data-repmodo],[data-rtrama],[data-rtfresco],[data-repretry],[data-agmode],[data-wgday],[data-agrama],[data-agfase],[data-agmas],[data-agmes],[data-agvista],[data-agclr],[data-agnuevo],[data-mnrama],[data-mnorigen],[data-mnsig],[data-mncrear],[data-open],[data-result],[data-bloq],[data-nuevo],[data-week],[data-day],[data-sum],[data-chip],[data-abog],[data-close],[data-res],[data-motivo],[data-save],[data-bqwho],[data-bqtodo],[data-savebq],[data-delbq],[data-retry],[data-pastefor],[data-pasteall],[data-rvcheck],[data-rvtoggle],[data-rvsave],[data-rvback],[data-yo],[data-yocambiar],[data-visto],[data-conf],[data-escribir],[data-agendar],[data-agcorregir],[data-agdia],[data-slot],[data-agcorr],[data-saveag],[data-savecampos]');
+    var t = ev.target.closest('[data-reptile],[data-repctl],[data-repsemq],[data-pindesbloq],[data-fin],[data-equipo],[data-view],[data-undo],[data-agotra],[data-agbuscartodo],[data-ficha],[data-pinok],[data-pinback],[data-pinreset],[data-salir],[data-fimodo],[data-fase],[data-notasave],[data-datosave],[data-mnfase],[data-mnsin],[data-dupfase],[data-derivar],[data-reagsindia],[data-dvsel],[data-dvhora],[data-dvsave],[data-deon],[data-debrush],[data-decopia],[data-deamplio],[data-dedia],[data-dequick],[data-decopy],[data-devolver],[data-defijo],[data-definde],[data-demodo],[data-desave],[data-decancel],[data-repweek],[data-reprow],[data-repmodo],[data-rtrama],[data-rtfresco],[data-repretry],[data-agmode],[data-wgday],[data-agrama],[data-agfase],[data-agmas],[data-agmes],[data-agvista],[data-agclr],[data-agnuevo],[data-mnrama],[data-mnorigen],[data-mnsig],[data-mncrear],[data-open],[data-result],[data-bloq],[data-nuevo],[data-week],[data-day],[data-sum],[data-chip],[data-abog],[data-close],[data-res],[data-motivo],[data-save],[data-bqwho],[data-bqtodo],[data-savebq],[data-delbq],[data-retry],[data-pastefor],[data-pasteall],[data-rvcheck],[data-rvtoggle],[data-rvsave],[data-rvback],[data-yo],[data-yocambiar],[data-visto],[data-conf],[data-escribir],[data-agendar],[data-agcorregir],[data-agdia],[data-slot],[data-agcorr],[data-saveag],[data-savecampos]');
     if (!t) return;
     if (t.hasAttribute('data-pindesbloq')){ var nd=t.getAttribute('data-pindesbloq'); t.disabled=true; t.textContent='Desbloqueando…'; call('desbloquearPin', {nombre:nd}).then(function(p){ if (state.data) state.data.pines=p; if (state.sheet) renderSheet(); render(); toast('Listo: '+nd+' ya puede entrar de nuevo.'); }).catch(function(e){ t.disabled=false; toast((e&&e.message)||'No se pudo desbloquear.', true); }); return; }
     if (t.hasAttribute('data-fin')){ finClick(t); return; }
@@ -3809,6 +3921,8 @@ a.save.wa-go svg{width:20px;height:20px}
       if (t.hasAttribute('data-decancel')){ state.dispEdit=null; render(); return; }
     }
     if (t.hasAttribute('data-repweek')){ state.repSem=addDays(state.repSem||repDefault(), 7*(+t.getAttribute('data-repweek'))); state.repOpen={}; render(); window.scrollTo(0,0); return; }
+    if (t.hasAttribute('data-reptile')){ var pt=t.getAttribute('data-reptile').split('|'); state.repOpen=state.repOpen||{}; state.repOpen[pt[0]+':tile']=state.repOpen[pt[0]+':tile']===pt[1]?null:pt[1]; render(); return; }
+    if (t.hasAttribute('data-repctl')){ var rc=t.getAttribute('data-repctl'); state.repCtl=state.repCtl||{}; state.repCtl[rc]=!state.repCtl[rc]; render(); return; }
     if (t.hasAttribute('data-reprow')){ var ro=t.getAttribute('data-reprow'); state.repOpen=state.repOpen||{}; state.repOpen[ro]=!state.repOpen[ro]; render(); return; }
     if (t.hasAttribute('data-repmodo')){ state.repModo=t.getAttribute('data-repmodo'); render(); return; }
     if (t.hasAttribute('data-repsemq')){ var q=t.getAttribute('data-repsemq'), m0q=mondayOf(nowBA().date); store('repSemPref', q); state.repSem = q==='esta' ? m0q : addDays(m0q,-7); state.repOpen={}; render(); return; }
