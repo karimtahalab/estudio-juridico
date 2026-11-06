@@ -657,6 +657,8 @@ textarea:focus,.inp:focus,select:focus{outline:none;box-shadow:0 0 0 2.5px var(-
 .vc-ban .vc-bt{display:flex;gap:6px}
 .vc-ban button{border:0;border-radius:10px;padding:7px 12px;font:inherit;font-weight:800;background:rgba(255,255,255,.18);color:#fff;cursor:pointer}
 .vc-ban .vc-salir{background:#fff;color:#2b1d73}
+.de-mia.vc-menu{background:color-mix(in srgb,#5B3FD0 16%,var(--paper));box-shadow:0 0 0 1.5px color-mix(in srgb,#5B3FD0 60%,transparent) inset;margin-top:12px}
+.de-mia.vc-menu .de-mia-go{color:#8C74FF}
 .vc-lista{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:8px}
 .vc-p{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:12px;border:0;border-radius:14px;background:var(--paper);box-shadow:0 0 0 1px var(--line) inset;color:var(--ink);font:inherit;text-align:left;cursor:pointer}
 .vc-p b{font-size:16px}
@@ -2508,6 +2510,7 @@ a.save.wa-go svg{width:20px;height:20px}
       return xs.length ? '<p class="grp-lbl">'+t+'</p><div class="who-grid">'+xs.map(function(e){ return '<button class="who'+(e.nombre===cur?' on':'')+'" data-yo="'+esc(e.nombre)+'">'+esc(e.nombre)+'</button>'; }).join('')+'</div>' : ''; };
     var soloPin=!!(state.sheet && state.sheet.pines);
     var html= soloPin ? '<div class="grab"></div><div class="sh-head"><div class="sh-who"><h2>Equipo y PINs</h2><p class="hint" style="margin:4px 0 0">Si alguien se olvidó su PIN, reseteálo acá. La próxima vez que entre, elige uno nuevo.</p></div>'+cerrar+'</div>' : '<div class="grab"></div><div class="sh-head"><div class="sh-who"><h2>¿Quién sos?</h2><p class="hint" style="margin:4px 0 0">Elegí tu nombre y poné tu PIN. El celular lo recuerda: no hace falta ponerlo cada vez.</p></div>'+cerrar+'</div>'+
+      (state.me && state.me.rol==='admin' && !state.verComo ? '<button class="de-mia vc-menu" data-vcabrir><span>👁</span><span><b>Ver la app como otra persona</b><small>Para ver lo que ve cada uno. Solo mirar: no se guarda nada.</small></span><span class="de-mia-go">›</span></button>' : '')+
       grp('abogada','Abogados y abogadas')+grp('intaker','Intakers')+grp('admin','Administración')+grp('produccion','Filmación y edición');
     var pines=state.me && state.me.rol==='admin' && state.data && state.data.pines;
     if (pines){
