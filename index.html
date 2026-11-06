@@ -659,6 +659,7 @@ textarea:focus,.inp:focus,select:focus{outline:none;box-shadow:0 0 0 2.5px var(-
 .vc-ban .vc-salir{background:#fff;color:#2b1d73}
 .de-mia.vc-menu{background:color-mix(in srgb,#5B3FD0 16%,var(--paper));box-shadow:0 0 0 1.5px color-mix(in srgb,#5B3FD0 60%,transparent) inset;margin-top:12px}
 .de-mia.vc-menu .de-mia-go{color:#8C74FF}
+.hbtn.yo.vc{background:#5B3FD0;color:#fff}
 .vc-lista{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:8px}
 .vc-p{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:12px;border:0;border-radius:14px;background:var(--paper);box-shadow:0 0 0 1px var(--line) inset;color:var(--ink);font:inherit;text-align:left;cursor:pointer}
 .vc-p b{font-size:16px}
@@ -1182,6 +1183,7 @@ a.save.wa-go svg{width:20px;height:20px}
   // Lo que se puede repetir sin duplicar nada: si se corta internet o el servidor no contesta, se reintenta solo antes de avisar
   var REINTENTA={getData:1, saveAction:1, cambiarFase:1, saveResumenes:1, editarDatos:1, deshacerResultado:1};
   // Finanzas: cada pedido lleva la llave (PIN de finanzas). Vive solo en la memoria de la app: al cerrarla, se vuelve a pedir
+  var VC_SALE={equipoLogin:1, tienePin:1, login:1, crearPin:1, logout:1, resetPin:1, desbloquearPin:1};
   var VER_FN={getData:1, getReporte:1, getRitmo:1, leadsDeFase:1, getLead:1, getCreativos:1, getEstudios:1, verEstudio:1, verRecibo:1}; // lo único que se pide en "Ver como"
   var FIN_FN={getFin2:1, getFin2Panel:1, saveFin2:1, resolverRepFin2:1, getFinanzas:1, saveFinanza:1, borrarFinanza:1};
   function esCorte(e){ return /Sin conexi|no respondi|Failed to fetch|NetworkError|Load failed|network|timeout|JSON|Unexpected token/i.test(String((e&&e.message)||e)); }
@@ -1203,6 +1205,7 @@ a.save.wa-go svg{width:20px;height:20px}
     if (Array.isArray(arg)) arg = {items:arg};
     if (arg === undefined || arg === null) arg = {};
     if (typeof arg==='object'){ arg.tok = store('tok') || ''; if (state.me) arg.who = state.me.nombre; if (FIN_FN[fn]) arg.ftok = finTok(); }
+    if (state.verComo && VC_SALE[fn]) vcSalir(true); // entrar con PIN o cambiar de persona: primero se sale de "Ver como"
     if (state.verComo){ // "Ver como": solo mirar. Lo que guarda algo no sale de la app
       if (!VER_FN[fn]) return Promise.reject(new Error('👁 Estás viendo la app como '+state.verComo+': es solo para mirar y no se guarda nada. Tocá Salir arriba para hacer cambios.'));
       if (typeof arg==='object') arg.verComo = state.verComo;
@@ -1666,7 +1669,7 @@ a.save.wa-go svg{width:20px;height:20px}
     alignRs();
     renderNav();
     // En modo prueba, arriba a la derecha se ve quién está usando la app y se toca para cambiar de persona o rol
-    var by=$('btnYo'); if (by){ by.hidden=false; by.innerHTML='<span>'+esc(state.me?state.me.nombre:'¿Quién sos?')+'</span><span aria-hidden="true">▾</span>'; }
+    var by=$('btnYo'); if (by){ by.hidden=false; by.classList.toggle('vc', !!state.verComo); by.innerHTML='<span>'+(state.verComo?'👁 ':'')+esc(state.me?state.me.nombre:'¿Quién sos?')+'</span><span aria-hidden="true">▾</span>'; }
     // Pegar resúmenes: solo quienes los cargan (intakers y administración); buscar: solo quien ve leads o consultas
     var rolYo=state.me&&state.me.rol; $('btnPaste').hidden = !(rolYo==='intaker' || rolYo==='admin'); $('btnSearch').hidden = rolYo==='produccion';
   }
@@ -1722,16 +1725,18 @@ a.save.wa-go svg{width:20px;height:20px}
     state.abog = e.rol==='abogada' ? n : 'Todas'; state.view = e.rol==='intaker' ? 'tareas' : 'agenda';
     closeSheet(); render(); window.scrollTo(0,0); load(false, true);
   }
-  function vcSalir(){
+  function vcSalir(callado){
     var pv=state.vcPrev||{}; state.verComo=null; state.vcPrev=null;
     if (pv.me) state.me=pv.me; state.abog = pv.abog===undefined ? null : pv.abog; if (pv.view) state.view=pv.view;
     state.dispEdit=null; state.f2={}; state.otras={}; state.busq=null; state.otrasPre=false; repInvalidar();
-    render(); window.scrollTo(0,0); load(false, true); toast('Volviste a tu vista');
+    if (callado) return;
+    closeSheet(); render(); window.scrollTo(0,0); load(false, true); toast('Volviste a tu vista');
   }
   function sheetVerComo(){
     var yo=(state.vcPrev&&state.vcPrev.me&&state.vcPrev.me.nombre) || (state.me&&state.me.nombre), eq=((state.data&&state.data.equipo)||[]).filter(function(e){ return e.nombre!==yo; });
     var grupos=[['abogada','Abogadas'],['intaker','Intakers'],['produccion','Filmación y edición'],['admin','Administración']];
     var html=head('👁','','Ver la app como…','<div class="mt"><span class="cp">Solo para mirar</span></div>')+
+      (state.verComo ? '<button class="save" style="margin-top:12px;width:100%" data-vcsalir>← Volver a mi vista ('+esc(yo||'')+')</button>' : '')+
       '<p class="hint" style="margin:10px 2px 4px">Ves exactamente lo que ve esa persona: sus pestañas, su agenda y sus reportes. No se puede guardar nada, así que no se rompe nada. Finanzas no se abre porque pide el PIN de esa persona.</p>';
     grupos.forEach(function(g){
       var xs=eq.filter(function(e){ return e.rol===g[0]; }); if (!xs.length) return;
@@ -4110,7 +4115,7 @@ a.save.wa-go svg{width:20px;height:20px}
     if (t.hasAttribute('data-bloq')){ openSheet({type:'bloq', id:t.getAttribute('data-bloq')}); return; }
     if (t.hasAttribute('data-nuevo')){ openSheet({type:'nuevo', fecha:t.getAttribute('data-nuevo')}); return; }
     if (t.hasAttribute('data-yo')){ yoElegir(t.getAttribute('data-yo')); return; }
-    if (t.hasAttribute('data-yocambiar')){ openSheet({type:'yo'}); return; }
+    if (t.hasAttribute('data-yocambiar')){ openSheet({type: state.verComo ? 'vercomo' : 'yo'}); return; }
     if (t.hasAttribute('data-vcabrir')){ openSheet({type:'vercomo'}); return; }
     if (t.hasAttribute('data-vcsalir')){ vcSalir(); return; }
     if (t.hasAttribute('data-vercomo')){ vcEntrar(t.getAttribute('data-vercomo')); return; }
