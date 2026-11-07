@@ -1274,8 +1274,8 @@ a.save.wa-go svg{width:20px;height:20px}
   /* ---------- Registro de uso: errores y tiempos de carga reales (se manda agrupado cada 10 minutos) ---------- */
   var APP_V='';
   try{ if (window.caches && caches.keys) caches.keys().then(function(ks){ var k=(ks||[]).filter(function(x){ return /^consultas-/.test(x); })[0]; if (k) APP_V=k.slice(10); }).catch(function(){}); }catch(e){}
-  var USO={fns:{}, lentos:[], errs:{}, carga:[], ult:[], enviando:false};
-  var USO_NO={logUso:1, saveFeedback:1};
+  var USO={fns:{}, lentos:[], errs:{}, carga:[], enviando:false};
+  var USO_NO={logUso:1};
   var USO_LENTO=4000; // un pedido de más de 4 segundos queda anotado aparte
   function usoDisp(){
     var ua=navigator.userAgent||'', so=/iPhone|iPad/.test(ua)?'iPhone':(/Android/.test(ua)?'Android':(/Mac/.test(ua)?'Mac':(/Windows/.test(ua)?'Windows':'Otro')));
@@ -1291,7 +1291,6 @@ a.save.wa-go svg{width:20px;height:20px}
   function usoError(msg, donde){
     msg=String(msg||'').slice(0,300); if (!msg) return;
     var k=donde+'|'+msg, x=USO.errs[k]||(USO.errs[k]={d:donde, msg:msg, n:0}); x.n++;
-    USO.ult.push(msg); if (USO.ult.length>5) USO.ult.shift();
   }
   window.addEventListener('error', function(e){ try{ usoError((e && e.message)||'Error', 'pantalla'+(e && e.lineno?' (línea '+e.lineno+')':'')); }catch(x){} });
   window.addEventListener('unhandledrejection', function(e){ try{ var r=e && e.reason; usoError((r && r.message) || String(r||'Promesa rechazada'), 'pantalla (promesa)'); }catch(x){} });
@@ -1320,34 +1319,6 @@ a.save.wa-go svg{width:20px;height:20px}
   }
   setInterval(usoEnviar, 600000);
   document.addEventListener('visibilitychange', function(){ if (document.visibilityState==='hidden') usoEnviar(); });
-
-  /* ---------- "Algo no anda o tengo una idea": reporte del equipo que le llega a Karim ---------- */
-  var FB_TIPOS=[['problema','🔴 Algo no anda'],['cuesta','🐢 Me cuesta o es lento'],['idea','💡 Tengo una idea']];
-  var VIEW_TXT={agenda:'Agenda', tareas:'Tareas', agendar:'Agendar', reporte:'Reporte', reportes:'Reportes', falta:'Falta cargar', guiones:'Guiones', finanzas:'Finanzas'};
-  function fbAbrir(){
-    var desde=(VIEW_TXT[state.view]||state.view||'')+(state.sheet && state.sheet.type!=='yo' && state.sheet.type!=='feedback' ? ' › '+state.sheet.type : '');
-    state.draft={tipo:null, texto:'', desde:desde, hecho:false}; openSheet({type:'feedback'});
-  }
-  function sheetFeedback(){
-    var d=state.draft||{};
-    var html=head('💬','','Algo no anda o tengo una idea','<div class="mt"><span class="cp">Le llega a Karim</span></div>');
-    if (d.hecho) return html+'<div class="ok-box"><b>¡Gracias! Le llegó a Karim.</b><span>Lo revisamos y, si hay que cambiar algo en la app, se arregla en los próximos días.</span></div><button class="save" data-close style="margin-top:14px">Listo</button>';
-    html+='<div class="field"><span class="lbl">¿Qué es?</span><div class="pick">'+FB_TIPOS.map(function(t){ var on=d.tipo===t[0]; return '<button class="'+(on?'on':'')+'" data-fbtipo="'+t[0]+'" aria-pressed="'+on+'">'+t[1]+'</button>'; }).join('')+'</div></div>';
-    html+='<div class="field"><label for="fbTexto">Contalo como se lo dirías por WhatsApp</label><textarea id="fbTexto" rows="5" placeholder="'+(d.tipo==='idea'?'Ej.: estaría bueno ver el teléfono en la lista sin abrir la ficha':(d.tipo==='cuesta'?'Ej.: para cargar el resultado tengo que tocar muchas veces':'Ej.: toqué Firmó y no se guardó'))+'">'+esc(d.texto||'')+'</textarea></div>';
-    html+='<p class="hint" style="margin:4px 2px 0">Se manda con tu nombre'+(d.desde?', la pantalla en la que estabas ('+esc(d.desde)+')':'')+' y los últimos errores de la app, así se encuentra más rápido.</p>';
-    html+='<div class="save-wrap"><button class="save" data-fbenviar '+(d.tipo?'':'disabled')+'>'+(d.tipo?'Mandar':'Elegí qué es')+'</button></div>';
-    return html;
-  }
-  function fbEnviar(){
-    var d=state.draft||{}, ta=$('fbTexto'); if (ta) d.texto=ta.value;
-    if (!d.tipo) return;
-    if (String(d.texto||'').trim().length<3){ toast('Contá en una frase qué pasó.', true); if (ta) ta.focus(); return; }
-    busySheet(true, 'Mandando…');
-    var lentos=Object.keys(USO.fns).map(function(k){ return k+' '+USO.fns[k].max+'ms'; }).slice(0,8);
-    call('saveFeedback', {tipo:d.tipo, texto:d.texto, pantalla:d.desde||'', ctx:{v:APP_V, disp:usoDisp(), errores:USO.ult.slice(), lentos:lentos, offline:!!state.offline}}).then(function(){
-      d.hecho=true; renderSheet();
-    }).catch(function(e){ renderSheet(); toast((e&&e.message)||'No se pudo mandar. Probá de nuevo.', true); });
-  }
 
   /* ---------- Comentarios de Sol a los intakers (les llegan a Tareas; cualquiera de los dos lo marca Hecho) ---------- */
   function comSolPend(){
@@ -1384,10 +1355,7 @@ a.save.wa-go svg{width:20px;height:20px}
     }).catch(function(e){ renderSheet(); toast((e&&e.message)||'No se pudo mandar.', true); });
   }
   document.addEventListener('click', function(ev){
-    var t=ev.target.closest && ev.target.closest('[data-fbabrir],[data-fbtipo],[data-fbenviar],[data-comsol],[data-comsolenviar]'); if (!t) return;
-    if (t.hasAttribute('data-fbabrir')){ fbAbrir(); return; }
-    if (t.hasAttribute('data-fbtipo') && state.sheet && state.sheet.type==='feedback'){ var ta=$('fbTexto'); if (ta) state.draft.texto=ta.value; state.draft.tipo=t.getAttribute('data-fbtipo'); renderSheet(); return; }
-    if (t.hasAttribute('data-fbenviar') && state.sheet && state.sheet.type==='feedback'){ fbEnviar(); return; }
+    var t=ev.target.closest && ev.target.closest('[data-comsol],[data-comsolenviar]'); if (!t) return;
     if (t.hasAttribute('data-comsol')){ state.draft={nota:''}; openSheet({type:'comsol', id:t.getAttribute('data-comsol')}); return; }
     if (t.hasAttribute('data-comsolenviar') && state.sheet && state.sheet.type==='comsol'){ comSolEnviar(); return; }
   });
@@ -1793,7 +1761,7 @@ a.save.wa-go svg{width:20px;height:20px}
     $('ttl').innerHTML = '<h1>'+v.h1+'</h1><p>'+v.p+'</p>';
     $('headExtra').innerHTML = v.extra || '';
     $('offline').classList.toggle('on', state.offline);
-    $('main').innerHTML = vcBanner() + trAvisoBanner() + pinBanner() + dupBanner() + internasBanner() + v.body + '<div class="foot">'+(state.snapT?'Mostrando lo guardado a las '+state.snapT+'. Actualizando…':'Actualizado a las '+nowBA().hm)+(state.verComo?'':(state.me?'. Usás la app como '+esc(state.me.nombre)+' ('+({abogada:'parte de abogadas', intaker:'parte de intakers', admin:'administración', produccion:'filmación y edición'}[state.me.rol]||state.me.rol)+')'+' <button data-yocambiar>Cambiar</button>':'')+(state.me && state.me.rol==='admin'?' · <button data-vcabrir>👁 Ver como otra persona</button>':''))+(state.me && !state.verComo?'<br><button data-fbabrir>💬 Algo no anda o tengo una idea</button>':'')+'</div>';
+    $('main').innerHTML = vcBanner() + trAvisoBanner() + pinBanner() + dupBanner() + internasBanner() + v.body + '<div class="foot">'+(state.snapT?'Mostrando lo guardado a las '+state.snapT+'. Actualizando…':'Actualizado a las '+nowBA().hm)+(state.verComo?'':(state.me?'. Usás la app como '+esc(state.me.nombre)+' ('+({abogada:'parte de abogadas', intaker:'parte de intakers', admin:'administración', produccion:'filmación y edición'}[state.me.rol]||state.me.rol)+')'+' <button data-yocambiar>Cambiar</button>':'')+(state.me && state.me.rol==='admin'?' · <button data-vcabrir>👁 Ver como otra persona</button>':''))+'</div>';
     alignRs();
     renderNav();
     // En modo prueba, arriba a la derecha se ve quién está usando la app y se toca para cambiar de persona o rol
@@ -1878,7 +1846,7 @@ a.save.wa-go svg{width:20px;height:20px}
   function renderSheet(){
     if (!state.sheet) return;
     var y=$('sheet').scrollTop;
-    var ty=state.sheet.type, html = ({lead:sheetLead, bloq:sheetBloq, pegar:sheetPegar, nuevo:sheetNuevo, escribir:sheetEscribir, agendar:sheetAgendar, derivar:sheetDerivar, ficha:sheetFicha, yo:sheetYo, manual:sheetManual, dup:sheetDup, fin:sheetFin, interna:sheetInterna, marca:sheetMarca, guion:sheetGuion, creprint:sheetCrePrint, fin2:sheetFin2, vercomo:sheetVerComo, feedback:sheetFeedback, comsol:sheetComSol, traslado:sheetTraslado, recibo:sheetRecibo, reintegros:sheetReintegros, sinenv:sheetSinEnv})[ty]();
+    var ty=state.sheet.type, html = ({lead:sheetLead, bloq:sheetBloq, pegar:sheetPegar, nuevo:sheetNuevo, escribir:sheetEscribir, agendar:sheetAgendar, derivar:sheetDerivar, ficha:sheetFicha, yo:sheetYo, manual:sheetManual, dup:sheetDup, fin:sheetFin, interna:sheetInterna, marca:sheetMarca, guion:sheetGuion, creprint:sheetCrePrint, fin2:sheetFin2, vercomo:sheetVerComo, comsol:sheetComSol, traslado:sheetTraslado, recibo:sheetRecibo, reintegros:sheetReintegros, sinenv:sheetSinEnv})[ty]();
     if (html===null){ closeSheet(); return; }
     $('sheet').innerHTML = html; $('sheet').scrollTop=y;
   }
@@ -2644,7 +2612,6 @@ a.save.wa-go svg{width:20px;height:20px}
     var soloPin=!!(state.sheet && state.sheet.pines);
     var html= soloPin ? '<div class="grab"></div><div class="sh-head"><div class="sh-who"><h2>Equipo y PINs</h2><p class="hint" style="margin:4px 0 0">Si alguien se olvidó su PIN, reseteálo acá. La próxima vez que entre, elige uno nuevo.</p></div>'+cerrar+'</div>' : '<div class="grab"></div><div class="sh-head"><div class="sh-who"><h2>¿Quién sos?</h2><p class="hint" style="margin:4px 0 0">Elegí tu nombre y poné tu PIN. El celular lo recuerda: no hace falta ponerlo cada vez.</p></div>'+cerrar+'</div>'+
       (state.me && state.me.rol==='admin' && !state.verComo ? '<button class="de-mia vc-menu" data-vcabrir><span>👁</span><span><b>Ver la app como otra persona</b><small>Para ver lo que ve cada uno. Solo mirar: no se guarda nada.</small></span><span class="de-mia-go">›</span></button>' : '')+
-      (state.me && !state.verComo ? '<button class="de-mia vc-menu" data-fbabrir><span>💬</span><span><b>Algo no anda o tengo una idea</b><small>Le llega a Karim con la pantalla en la que estás.</small></span><span class="de-mia-go">›</span></button>' : '')+
       grp('abogada','Abogados y abogadas')+grp('intaker','Intakers')+grp('admin','Administración')+grp('produccion','Filmación y edición');
     var pines=state.me && state.me.rol==='admin' && state.data && state.data.pines;
     if (pines){
