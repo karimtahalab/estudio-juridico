@@ -1,5 +1,6 @@
 // Conteo del reporte semanal (repConsultas_) con el código del motor, sobre un HISTORIAL bajado en JSON (solo lectura).
 // Uso: node pruebas/probar_conteo_reporte.js <historial.json> ["Nombre:marca,..."]  — compara ../prod_nuevo.gs (antes) y prod_v76.gs (después).
+const fs = require('fs'), vm = require('vm');
 function cargar(f) {
   const ctx = { console, Utilities: {}, SpreadsheetApp: {}, PropertiesService: {}, CacheService: {}, LockService: {}, Session: {}, DriveApp: {}, UrlFetchApp: {}, ScriptApp: {}, ContentService: {}, HtmlService: {}, CalendarApp: {}, MailApp: {}, Logger: { log() {} } };
   vm.createContext(ctx);
