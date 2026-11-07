@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Prueba de la rama mejora/2026-11-07-reportes-sol con DATOS FALSOS.
 Uso: python3 pruebas/probar_reportes_sol.py <carpeta_con_index.html> <carpeta_salida>
-Comentarios de Sol -> Tareas de Fran y Pri -> Hecho; "Algo no anda o tengo una idea"; registro de uso.
+Comentarios de Sol -> Tareas de Fran y Pri -> Hecho; registro de uso (sin botón de reportes).
 Bloquea todo pedido a Google y lo responde con datos inventados (como correr.py)."""
 import sys, os, json, threading, functools, http.server, socketserver, re, copy
 from playwright.sync_api import sync_playwright
@@ -110,19 +110,8 @@ with sync_playwright() as pw:
     ok(page.query_selector('#sheet.on') and not page.query_selector('#sheet [data-comsol]'), 'Mica abre la misma ficha y no ve el botón de comentarios (solo Sol)')
     page.click('#sheet [data-close]'); page.wait_for_timeout(500)
     page.click('#nav button[data-view="agenda"]'); page.wait_for_timeout(700)
-    # 2) "Algo no anda o tengo una idea" desde el pie
-    fb = page.query_selector('.foot [data-fbabrir]'); ok(bool(fb), 'Botón "Algo no anda o tengo una idea" en el pie')
-    if fb:
-        fb.scroll_into_view_if_needed(); shot(page, '04_mica_pie_boton'); fb.click(); page.wait_for_timeout(500); shot(page, '05_feedback_vacio')
-        ok(page.get_attribute('#sheet [data-fbenviar]', 'disabled') is not None, 'Mandar deshabilitado hasta elegir el tipo')
-        page.fill('#fbTexto', '[PRUEBA] Toqué Firmó y tardó mucho en guardar.')
-        page.click('#sheet [data-fbtipo="cuesta"]'); page.wait_for_timeout(300)
-        ok(page.input_value('#fbTexto').startswith('[PRUEBA] Toqué'), 'Elegir el tipo no borra lo escrito')
-        page.click('#sheet [data-fbenviar]'); page.wait_for_timeout(800); shot(page, '06_feedback_enviado')
-        f = API.compartido['feedback'][-1] if API.compartido['feedback'] else {}
-        ok(f.get('who') == 'Mica' and f.get('tipo') == 'cuesta' and 'Agenda' in (f.get('pantalla') or ''), 'Le llegó al motor con quién, tipo y pantalla (%s)' % f.get('pantalla'))
-        ok('ok-box' in page.inner_html('#sheet'), 'Muestra "¡Gracias! Le llegó a Karim."')
-        page.click('#sheet [data-close]'); page.wait_for_timeout(400)
+    # 2) Ya no hay botón de reportes (Karim lo sacó)
+    ok(not page.query_selector('[data-fbabrir]'), 'No aparece "Algo no anda o tengo una idea"')
     # 3) Registro de uso: al salir de la app se manda agrupado
     page.evaluate("() => { Object.defineProperty(document, 'visibilityState', {configurable:true, get:()=>'hidden'}); Object.defineProperty(document, 'hidden', {configurable:true, get:()=>true}); document.dispatchEvent(new Event('visibilitychange')); }")
     page.wait_for_timeout(800)
@@ -149,12 +138,9 @@ with sync_playwright() as pw:
         shot(page, '08_fran_hecho')
     ok(any(x['tipo'] == 'control' and not x['abierta'] and 'Fran' in x['resp'] for x in lead['internas']), 'En el lead queda Hecho por Fran')
     ctx.close()
-    # 5) Celular chico: hoja de reportes sin scroll horizontal
+    # 5) Celular chico: Tareas con el comentario sin scroll horizontal
     ctx, page = abrir(browser, 'Pri', (360, 640))
-    page.click('#btnYo') if page.query_selector('#btnYo:not([hidden])') else None; page.wait_for_timeout(500)
-    y = page.query_selector('#sheet [data-fbabrir]'); ok(bool(y), 'También está en "¿Quién sos?" (botón de arriba)')
-    if y: y.click(); page.wait_for_timeout(500)
-    shot(page, '09_feedback_360')
+    page.click('#nav button[data-view="tareas"]'); page.wait_for_timeout(600); shot(page, '09_pri_tareas_360')
     ok(not page.evaluate("document.documentElement.scrollWidth > document.documentElement.clientWidth + 1"), 'Sin scroll horizontal en 360 px')
     ctx.close(); browser.close()
 srv.shutdown()
