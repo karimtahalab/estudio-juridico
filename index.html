@@ -1219,8 +1219,10 @@ a.save.wa-go svg{width:20px;height:20px}
     if (w){ state.wPend=(state.wPend||0)+1; state.wSeq=(state.wSeq||0)+1; }
     var p=new Promise(function(res, rej){
       var intento=function(k){
-        call1(fn, arg).then(function(x){ if (REP_CAMBIA[fn]) repInvalidar(); if (FIN_FN[fn] && state.ftok) state.ftokT=Date.now(); res(x); }, function(e){
+        var t0u=Date.now();
+        call1(fn, arg).then(function(x){ usoPedido(fn, Date.now()-t0u, ''); if (REP_CAMBIA[fn]) repInvalidar(); if (FIN_FN[fn] && state.ftok) state.ftokT=Date.now(); res(x); }, function(e){
           var msg = (e && e.message) ? e.message : String(e);
+          usoPedido(fn, Date.now()-t0u, msg);
           if (/FIN\|/.test(msg)){ finCerrar(true); rej(new Error(msg.replace(/^.*FIN\|/, ''))); return; }
           if (/AUTH\|/.test(msg)){ sinSesion(); rej(new Error(msg.replace(/^.*AUTH\|/, ''))); return; }
           if (k<esperas.length && esCorte(e)){ setTimeout(function(){ intento(k+1); }, esperas[k]); return; }
@@ -1258,6 +1260,7 @@ a.save.wa-go svg{width:20px;height:20px}
         state.abog = (saved && (saved==='Todas' || (d.abogadas||[]).indexOf(saved)!==-1)) ? saved : ((d.user && d.user.abogada) || 'Todas');
       }
       render();
+      if (!USO.cargo){ if (d.__snap){ if (!USO.cargoSnap){ USO.cargoSnap=1; usoCarga('abrir app (lo guardado)'); } } else { USO.cargo=1; usoCarga('abrir app (datos nuevos)'); } }
       if (state.sheet && (state.sheet.type==='lead' || state.sheet.type==='bloq') && !escribiendo()) renderSheet();
       if (state.primeraVez){ state.primeraVez=false; if (!state.me && d.modoPrueba) openSheet({type:'yo', first:true}); }
       if ($('search').classList.contains('on')) renderSearch();
@@ -1268,6 +1271,126 @@ a.save.wa-go svg{width:20px;height:20px}
       } else { state.offline = true; render(); }
     }).then(function(){ state.busy=false; $('btnRefresh').classList.remove('spin'); });
   }
+  /* ---------- Registro de uso: errores y tiempos de carga reales (se manda agrupado cada 10 minutos) ---------- */
+  var APP_V='';
+  try{ if (window.caches && caches.keys) caches.keys().then(function(ks){ var k=(ks||[]).filter(function(x){ return /^consultas-/.test(x); })[0]; if (k) APP_V=k.slice(10); }).catch(function(){}); }catch(e){}
+  var USO={fns:{}, lentos:[], errs:{}, carga:[], ult:[], enviando:false};
+  var USO_NO={logUso:1, saveFeedback:1};
+  var USO_LENTO=4000; // un pedido de más de 4 segundos queda anotado aparte
+  function usoDisp(){
+    var ua=navigator.userAgent||'', so=/iPhone|iPad/.test(ua)?'iPhone':(/Android/.test(ua)?'Android':(/Mac/.test(ua)?'Mac':(/Windows/.test(ua)?'Windows':'Otro')));
+    var inst=false; try{ inst=!!(window.matchMedia && matchMedia('(display-mode: standalone)').matches) || !!navigator.standalone; }catch(e){}
+    return so+' '+window.innerWidth+'x'+window.innerHeight+(inst?' instalada':' navegador');
+  }
+  function usoPedido(fn, ms, err){
+    if (USO_NO[fn] || state.verComo) return;
+    var b=USO.fns[fn]||(USO.fns[fn]={n:0, s:0, max:0, e:0, msg:''}); b.n++; b.s+=ms; if (ms>b.max) b.max=ms;
+    if (err){ b.e++; if (!b.msg) b.msg=String(err).slice(0,200); }
+    if (ms>=USO_LENTO && USO.lentos.length<30) USO.lentos.push({d:fn, ms:ms, det:(state.view||'')+(state.sheet?' > '+state.sheet.type:'')+(err?' · error: '+String(err).slice(0,160):'')});
+  }
+  function usoError(msg, donde){
+    msg=String(msg||'').slice(0,300); if (!msg) return;
+    var k=donde+'|'+msg, x=USO.errs[k]||(USO.errs[k]={d:donde, msg:msg, n:0}); x.n++;
+    USO.ult.push(msg); if (USO.ult.length>5) USO.ult.shift();
+  }
+  window.addEventListener('error', function(e){ try{ usoError((e && e.message)||'Error', 'pantalla'+(e && e.lineno?' (línea '+e.lineno+')':'')); }catch(x){} });
+  window.addEventListener('unhandledrejection', function(e){ try{ var r=e && e.reason; usoError((r && r.message) || String(r||'Promesa rechazada'), 'pantalla (promesa)'); }catch(x){} });
+  function usoCarga(donde){ try{ var ms=Math.round(performance.now()); if (ms>0 && ms<600000) USO.carga.push({d:donde, ms:ms}); }catch(e){} }
+  function usoEnviar(){
+    if (USO.enviando || state.verComo || !store('tok') || !state.me) return;
+    var items=[], ks=Object.keys(USO.fns);
+    if (ks.length){
+      var res={}, peor='', pm=0;
+      ks.forEach(function(k){ var b=USO.fns[k]; res[k]=[b.n, Math.round(b.s/b.n), b.max, b.e]; if (b.max>pm){ pm=b.max; peor=k; } });
+      var tot=ks.reduce(function(a,k){ return a+USO.fns[k].n; },0), err=ks.reduce(function(a,k){ return a+USO.fns[k].e; },0);
+      items.push({t:'resumen', d:'pedidos (más lento: '+peor+')', n:tot, prom:Math.round(ks.reduce(function(a,k){ return a+USO.fns[k].s; },0)/tot), max:pm, e:err, det:JSON.stringify(res)});
+      ks.forEach(function(k){ var b=USO.fns[k]; if (b.e) items.push({t:'aviso', d:k, n:b.e, det:b.msg}); });
+    }
+    USO.lentos.forEach(function(x){ items.push({t:'lento', d:x.d, n:1, prom:x.ms, max:x.ms, det:x.det}); });
+    Object.keys(USO.errs).forEach(function(k){ var x=USO.errs[k]; items.push({t:'error', d:x.d, n:x.n, det:x.msg}); });
+    USO.carga.forEach(function(x){ items.push({t:'carga', d:x.d, n:1, prom:x.ms, max:x.ms}); });
+    if (!items.length) return;
+    var copia={fns:USO.fns, lentos:USO.lentos, errs:USO.errs, carga:USO.carga};
+    USO.fns={}; USO.lentos=[]; USO.errs={}; USO.carga=[]; USO.enviando=true;
+    call('logUso', {items:items.slice(0,80), v:APP_V, disp:usoDisp()}).catch(function(){
+      // Si no salió (sin señal), se vuelve a juntar para la próxima
+      Object.keys(copia.fns).forEach(function(k){ var a=copia.fns[k], b=USO.fns[k]; if (!b) USO.fns[k]=a; else { b.n+=a.n; b.s+=a.s; b.e+=a.e; if (a.max>b.max) b.max=a.max; } });
+      USO.lentos=copia.lentos.concat(USO.lentos).slice(0,30); Object.keys(copia.errs).forEach(function(k){ if (!USO.errs[k]) USO.errs[k]=copia.errs[k]; }); USO.carga=copia.carga.concat(USO.carga).slice(0,10);
+    }).then(function(){ USO.enviando=false; });
+  }
+  setInterval(usoEnviar, 600000);
+  document.addEventListener('visibilitychange', function(){ if (document.visibilityState==='hidden') usoEnviar(); });
+
+  /* ---------- "Algo no anda o tengo una idea": reporte del equipo que le llega a Karim ---------- */
+  var FB_TIPOS=[['problema','🔴 Algo no anda'],['cuesta','🐢 Me cuesta o es lento'],['idea','💡 Tengo una idea']];
+  var VIEW_TXT={agenda:'Agenda', tareas:'Tareas', agendar:'Agendar', reporte:'Reporte', reportes:'Reportes', falta:'Falta cargar', guiones:'Guiones', finanzas:'Finanzas'};
+  function fbAbrir(){
+    var desde=(VIEW_TXT[state.view]||state.view||'')+(state.sheet && state.sheet.type!=='yo' && state.sheet.type!=='feedback' ? ' › '+state.sheet.type : '');
+    state.draft={tipo:null, texto:'', desde:desde, hecho:false}; openSheet({type:'feedback'});
+  }
+  function sheetFeedback(){
+    var d=state.draft||{};
+    var html=head('💬','','Algo no anda o tengo una idea','<div class="mt"><span class="cp">Le llega a Karim</span></div>');
+    if (d.hecho) return html+'<div class="ok-box"><b>¡Gracias! Le llegó a Karim.</b><span>Lo revisamos y, si hay que cambiar algo en la app, se arregla en los próximos días.</span></div><button class="save" data-close style="margin-top:14px">Listo</button>';
+    html+='<div class="field"><span class="lbl">¿Qué es?</span><div class="pick">'+FB_TIPOS.map(function(t){ var on=d.tipo===t[0]; return '<button class="'+(on?'on':'')+'" data-fbtipo="'+t[0]+'" aria-pressed="'+on+'">'+t[1]+'</button>'; }).join('')+'</div></div>';
+    html+='<div class="field"><label for="fbTexto">Contalo como se lo dirías por WhatsApp</label><textarea id="fbTexto" rows="5" placeholder="'+(d.tipo==='idea'?'Ej.: estaría bueno ver el teléfono en la lista sin abrir la ficha':(d.tipo==='cuesta'?'Ej.: para cargar el resultado tengo que tocar muchas veces':'Ej.: toqué Firmó y no se guardó'))+'">'+esc(d.texto||'')+'</textarea></div>';
+    html+='<p class="hint" style="margin:4px 2px 0">Se manda con tu nombre'+(d.desde?', la pantalla en la que estabas ('+esc(d.desde)+')':'')+' y los últimos errores de la app, así se encuentra más rápido.</p>';
+    html+='<div class="save-wrap"><button class="save" data-fbenviar '+(d.tipo?'':'disabled')+'>'+(d.tipo?'Mandar':'Elegí qué es')+'</button></div>';
+    return html;
+  }
+  function fbEnviar(){
+    var d=state.draft||{}, ta=$('fbTexto'); if (ta) d.texto=ta.value;
+    if (!d.tipo) return;
+    if (String(d.texto||'').trim().length<3){ toast('Contá en una frase qué pasó.', true); if (ta) ta.focus(); return; }
+    busySheet(true, 'Mandando…');
+    var lentos=Object.keys(USO.fns).map(function(k){ return k+' '+USO.fns[k].max+'ms'; }).slice(0,8);
+    call('saveFeedback', {tipo:d.tipo, texto:d.texto, pantalla:d.desde||'', ctx:{v:APP_V, disp:usoDisp(), errores:USO.ult.slice(), lentos:lentos, offline:!!state.offline}}).then(function(){
+      d.hecho=true; renderSheet();
+    }).catch(function(e){ renderSheet(); toast((e&&e.message)||'No se pudo mandar. Probá de nuevo.', true); });
+  }
+
+  /* ---------- Comentarios de Sol a los intakers (les llegan a Tareas; cualquiera de los dos lo marca Hecho) ---------- */
+  function comSolPend(){
+    if (rol()!=='intaker') return [];
+    var out=[], vistos={};
+    ((state.data && state.data.paraMi)||[]).forEach(function(l){ if (!l || vistos[l.id]) return; vistos[l.id]=1;
+      (l.internas||[]).forEach(function(x){ if (x.tipo==='control' && x.abierta && x.a==='Intakers') out.push({l:l, x:x}); }); });
+    return out.sort(function(a,b){ return String(cuandoIso(a.x.cuando)+a.x.cuando.slice(11)).localeCompare(cuandoIso(b.x.cuando)+b.x.cuando.slice(11)); });
+  }
+  function comSolHtml(){
+    var xs=comSolPend(); if (!xs.length) return '';
+    var de=xs[0].x.de||'Sol';
+    return secTarea('Comentarios de '+esc(de), xs.length, 'Lo que '+esc(de)+' vio al controlar. Cuando lo resuelvas, tocá <b>✔ Hecho</b> y les desaparece a los dos.',
+      '<ul class="todo">'+xs.map(function(r){
+        return '<li class="pa-li"><button data-ficha="'+esc(r.l.id)+'"><span class="w"><b>'+esc(r.l.nombre||'Sin nombre')+' · '+ramaLabel(r.l.rama)+'</b><span>'+esc(r.x.nota||'')+'</span><span style="display:block;font-size:12px">'+esc(r.x.cuando)+'</span></span></button><button class="pa-ag" data-intresp="'+esc(r.l.id)+'|'+r.x.i+'|Hecho">✔ Hecho</button></li>'; }).join('')+'</ul>');
+  }
+  function puedeComSol(l){ return !!(l && !l.parcial && P().comentar && !state.verComo); }
+  function sheetComSol(){
+    var l=findLead(state.sheet.id); if (!l) return null;
+    var d=state.draft||{}, prev=(l.internas||[]).filter(function(x){ return x.tipo==='control'; });
+    var html='<div class="grab"></div><div class="sh-head"><div class="sh-who"><h2>Comentario para los intakers</h2><div class="mt"><span class="rama r-'+ramaKey(l.rama)+'">'+ramaLabel(l.rama)+'</span><span class="cp">'+esc(l.nombre||'Sin nombre')+'</span></div></div><button class="close" data-close aria-label="Cerrar">'+I.x+'</button></div>';
+    if (prev.length) html+='<div class="blk"><h3 class="blk-t">Ya le dejaste</h3><div class="box">'+prev.map(function(x){ return '<div class="kv stack"><span>'+esc(x.cuando)+'</span><b class="'+(x.abierta?'int-open':'')+'">'+esc(x.nota||'')+' · '+esc(x.abierta?'Pendiente':(x.estado+(x.resp?' '+x.resp:'')))+'</b></div>'; }).join('')+'</div></div>';
+    html+='<div class="field"><label for="csNota">¿Qué tienen que hacer o corregir?</label><textarea id="csNota" rows="4" placeholder="Ej.: falta el resumen, llamalo de nuevo, la fase no es C">'+esc(d.nota||'')+'</textarea></div>';
+    html+='<div class="save-wrap"><button class="save" data-comsolenviar>Mandárselo a los intakers</button><p class="hint" style="text-align:center;margin-top:8px">Les aparece en Tareas, en "Comentarios de Sol", a los dos. Cuando uno lo resuelve lo marca Hecho y vos lo ves acá.</p></div>';
+    return html;
+  }
+  function comSolEnviar(){
+    var id=state.sheet && state.sheet.id, ta=$('csNota'), nota=ta?ta.value.trim():''; if (!id) return;
+    if (!nota){ toast('Escribí el comentario.', true); if (ta) ta.focus(); return; }
+    (state.draft||(state.draft={})).nota=nota; busySheet(true, 'Mandando…');
+    call('pedirInterna', {id:id, tipo:'control', a:'Intakers', nota:nota}).then(function(r){
+      if (r && r.lead) replaceAny(r.lead);
+      closeSheet(); toast('✔ Les llegó a los intakers en Tareas');
+    }).catch(function(e){ renderSheet(); toast((e&&e.message)||'No se pudo mandar.', true); });
+  }
+  document.addEventListener('click', function(ev){
+    var t=ev.target.closest && ev.target.closest('[data-fbabrir],[data-fbtipo],[data-fbenviar],[data-comsol],[data-comsolenviar]'); if (!t) return;
+    if (t.hasAttribute('data-fbabrir')){ fbAbrir(); return; }
+    if (t.hasAttribute('data-fbtipo') && state.sheet && state.sheet.type==='feedback'){ var ta=$('fbTexto'); if (ta) state.draft.texto=ta.value; state.draft.tipo=t.getAttribute('data-fbtipo'); renderSheet(); return; }
+    if (t.hasAttribute('data-fbenviar') && state.sheet && state.sheet.type==='feedback'){ fbEnviar(); return; }
+    if (t.hasAttribute('data-comsol')){ state.draft={nota:''}; openSheet({type:'comsol', id:t.getAttribute('data-comsol')}); return; }
+    if (t.hasAttribute('data-comsolenviar') && state.sheet && state.sheet.type==='comsol'){ comSolEnviar(); return; }
+  });
   function toastUndo(msg, fn){
     var t=$('toast'), pos=state.sheet?' top':'';
     t.innerHTML='<span>'+esc(msg)+'</span><button data-undo>Deshacer</button>';
@@ -1670,7 +1793,7 @@ a.save.wa-go svg{width:20px;height:20px}
     $('ttl').innerHTML = '<h1>'+v.h1+'</h1><p>'+v.p+'</p>';
     $('headExtra').innerHTML = v.extra || '';
     $('offline').classList.toggle('on', state.offline);
-    $('main').innerHTML = vcBanner() + trAvisoBanner() + pinBanner() + dupBanner() + internasBanner() + v.body + '<div class="foot">'+(state.snapT?'Mostrando lo guardado a las '+state.snapT+'. Actualizando…':'Actualizado a las '+nowBA().hm)+(state.verComo?'':(state.me?'. Usás la app como '+esc(state.me.nombre)+' ('+({abogada:'parte de abogadas', intaker:'parte de intakers', admin:'administración', produccion:'filmación y edición'}[state.me.rol]||state.me.rol)+')'+' <button data-yocambiar>Cambiar</button>':'')+(state.me && state.me.rol==='admin'?' · <button data-vcabrir>👁 Ver como otra persona</button>':''))+'</div>';
+    $('main').innerHTML = vcBanner() + trAvisoBanner() + pinBanner() + dupBanner() + internasBanner() + v.body + '<div class="foot">'+(state.snapT?'Mostrando lo guardado a las '+state.snapT+'. Actualizando…':'Actualizado a las '+nowBA().hm)+(state.verComo?'':(state.me?'. Usás la app como '+esc(state.me.nombre)+' ('+({abogada:'parte de abogadas', intaker:'parte de intakers', admin:'administración', produccion:'filmación y edición'}[state.me.rol]||state.me.rol)+')'+' <button data-yocambiar>Cambiar</button>':'')+(state.me && state.me.rol==='admin'?' · <button data-vcabrir>👁 Ver como otra persona</button>':''))+(state.me && !state.verComo?'<br><button data-fbabrir>💬 Algo no anda o tengo una idea</button>':'')+'</div>';
     alignRs();
     renderNav();
     // En modo prueba, arriba a la derecha se ve quién está usando la app y se toca para cambiar de persona o rol
@@ -1755,7 +1878,7 @@ a.save.wa-go svg{width:20px;height:20px}
   function renderSheet(){
     if (!state.sheet) return;
     var y=$('sheet').scrollTop;
-    var ty=state.sheet.type, html = ({lead:sheetLead, bloq:sheetBloq, pegar:sheetPegar, nuevo:sheetNuevo, escribir:sheetEscribir, agendar:sheetAgendar, derivar:sheetDerivar, ficha:sheetFicha, yo:sheetYo, manual:sheetManual, dup:sheetDup, fin:sheetFin, interna:sheetInterna, marca:sheetMarca, guion:sheetGuion, creprint:sheetCrePrint, fin2:sheetFin2, vercomo:sheetVerComo, traslado:sheetTraslado, recibo:sheetRecibo, reintegros:sheetReintegros, sinenv:sheetSinEnv})[ty]();
+    var ty=state.sheet.type, html = ({lead:sheetLead, bloq:sheetBloq, pegar:sheetPegar, nuevo:sheetNuevo, escribir:sheetEscribir, agendar:sheetAgendar, derivar:sheetDerivar, ficha:sheetFicha, yo:sheetYo, manual:sheetManual, dup:sheetDup, fin:sheetFin, interna:sheetInterna, marca:sheetMarca, guion:sheetGuion, creprint:sheetCrePrint, fin2:sheetFin2, vercomo:sheetVerComo, feedback:sheetFeedback, comsol:sheetComSol, traslado:sheetTraslado, recibo:sheetRecibo, reintegros:sheetReintegros, sinenv:sheetSinEnv})[ty]();
     if (html===null){ closeSheet(); return; }
     $('sheet').innerHTML = html; $('sheet').scrollTop=y;
   }
@@ -2521,6 +2644,7 @@ a.save.wa-go svg{width:20px;height:20px}
     var soloPin=!!(state.sheet && state.sheet.pines);
     var html= soloPin ? '<div class="grab"></div><div class="sh-head"><div class="sh-who"><h2>Equipo y PINs</h2><p class="hint" style="margin:4px 0 0">Si alguien se olvidó su PIN, reseteálo acá. La próxima vez que entre, elige uno nuevo.</p></div>'+cerrar+'</div>' : '<div class="grab"></div><div class="sh-head"><div class="sh-who"><h2>¿Quién sos?</h2><p class="hint" style="margin:4px 0 0">Elegí tu nombre y poné tu PIN. El celular lo recuerda: no hace falta ponerlo cada vez.</p></div>'+cerrar+'</div>'+
       (state.me && state.me.rol==='admin' && !state.verComo ? '<button class="de-mia vc-menu" data-vcabrir><span>👁</span><span><b>Ver la app como otra persona</b><small>Para ver lo que ve cada uno. Solo mirar: no se guarda nada.</small></span><span class="de-mia-go">›</span></button>' : '')+
+      (state.me && !state.verComo ? '<button class="de-mia vc-menu" data-fbabrir><span>💬</span><span><b>Algo no anda o tengo una idea</b><small>Le llega a Karim con la pantalla en la que estás.</small></span><span class="de-mia-go">›</span></button>' : '')+
       grp('abogada','Abogados y abogadas')+grp('intaker','Intakers')+grp('admin','Administración')+grp('produccion','Filmación y edición');
     var pines=state.me && state.me.rol==='admin' && state.data && state.data.pines;
     if (pines){
@@ -2671,7 +2795,7 @@ a.save.wa-go svg{width:20px;height:20px}
     };
   }
   // El número en la pestaña: confirmaciones pendientes y consultas de hoy o mañana sin resumen
-  function tareasUrgentes(){ if (!puede('confirmar')) return 0; var t=tareasDe(), lim=nextHabil(nowBA().date); return t.hoy.length+t.previa.length+t.sinRes.filter(function(l){ return l.fecha<=lim; }).length; }
+  function tareasUrgentes(){ if (!puede('confirmar')) return 0; var t=tareasDe(), lim=nextHabil(nowBA().date); return t.hoy.length+t.previa.length+t.sinRes.filter(function(l){ return l.fecha<=lim; }).length+comSolPend().length; }
   /* ---------- Agendar (intakers): leads por agendar con buscador y filtros ---------- */
   var AG_FASES=[{k:'sindia',l:'Agendadas sin día'},{k:'sin',l:'Sin clasificar'},{k:'A',l:'A'},{k:'Llamada pendiente',l:'Llamada pendiente'},{k:'B',l:'B'}];
   function agState(){ var s=state.ag || (state.ag={q:'', marca:'todas', rama:'todas', fase:'todas', n:40}); if (!s.mes) s.mes='todos'; if (!s.vista) s.vista=store('agvista')==='lista'?'lista':'fichas'; return s; }
@@ -3772,6 +3896,7 @@ a.save.wa-go svg{width:20px;height:20px}
     var dw=dow(nowBA().date); if (dw===6 || dw===0 || dw===1) body+='<button class="btn3" data-view="reporte" style="margin-top:12px">📊 Armar el reporte de la semana para CARGA SEMANAL</button>';
     body += secTarea('Confirmar hoy', t.hoy.length, 'Mensaje del día para las consultas de hoy. Tocá lo que respondió.', '<ol class="dk">'+t.hoy.map(function(l){ return tkRow(l,'confDia'); }).join('')+'</ol>');
     body += secTarea('Mensaje previo', t.previa.length, 'Consultas de los próximos días que todavía no tienen la confirmación previa.', '<ol class="dk">'+t.previa.map(function(l){ return tkRow(l,'confPrev'); }).join('')+'</ol>');
+    body += comSolHtml();
     body += respuestasHtml();
     body += secTarea('Sin resumen', t.sinRes.length, 'Escribí el resumen para que la abogada lo tenga antes de la consulta.', '<ul class="todo">'+t.sinRes.map(srRow).join('')+'</ul>');
     // Sin contactar: arriba solo los nuevos sin clasificar; los C y los "Falta enviar leads" quedan en un botón que se abre al tocarlo
@@ -3786,7 +3911,7 @@ a.save.wa-go svg{width:20px;height:20px}
     body += secTarea('Sin contactar', sc.length, 'Leads nuevos sin clasificar: todavía no tienen fase ni el nombre de Fran o de Pri en la planilla. Primero los que hace más que entraron. Tocá el número para copiarlo. Cuando le mandes el primer mensaje, tocá <b>✓ Contacté</b> y queda tu nombre en la planilla.',
       scHtml(sc)) + otrosHtml;
     if (pa.length) body += '<button class="btn3" data-view="agendar">Ver todos los leads por agendar ('+pa.length+')</button>';
-    total += sc.length;
+    total += sc.length + comSolPend().length;
     return { h1:'Tareas', p: total ? plural(total,'cosa para hacer','cosas para hacer')+(sc.length?', '+sc.length+' sin contactar':'') : (pa.length?pa.length+' por agendar':'Todo al día'), extra:seg(), body:body };
   }
   function saveConf(id, campo, valor, sinUndo){
@@ -4261,13 +4386,13 @@ a.save.wa-go svg{width:20px;height:20px}
   function intCfg(){ return (state.data && state.data.internas) || null; }
   function intQuienes(tipo, l){ var c=intCfg(); if (!c) return []; var r=String(l.rama||'').toUpperCase(); return ((c[tipo]||{})[r]||[]).filter(function(a){ return a!==yoNombre(); }); }
   function puedeInterna(l){ return !l.parcial && puede('agendar') && (intQuienes('criterio', l).length + intQuienes('llamada', l).length) > 0; }
-  function intAbiertaMia(l){ return (l.internas||[]).filter(function(x){ return x.a===yoNombre() && x.abierta; }); }
-  function intTipoTxt(x){ return x.tipo==='llamada' ? 'Llamada derivada' : '¿Es caso?'; }
+  function intAbiertaMia(l){ return (l.internas||[]).filter(function(x){ return x.abierta && (x.a===yoNombre() || (x.a==='Intakers' && rol()==='intaker')); }); }
+  function intTipoTxt(x){ return x.tipo==='llamada' ? 'Llamada derivada' : (x.tipo==='control' ? 'Comentario' : '¿Es caso?'); }
   function respuestaHtml(l, x){
     var ops=((state.data.respuestas||{})[x.tipo]||[]).filter(function(o){ return o!==x.estado; });
-    return '<div class="blk int-ask"><h3 class="blk-t">'+esc(x.de)+(x.tipo==='llamada'?' te derivó la llamada':' te pregunta si es caso')+'<small>'+esc(x.cuando)+(x.estado!=='Pendiente'?' · ahora: '+esc(x.estado):'')+'</small></h3>'+
+    return '<div class="blk int-ask"><h3 class="blk-t">'+esc(x.de)+(x.tipo==='llamada'?' te derivó la llamada':(x.tipo==='control'?' les dejó un comentario':' te pregunta si es caso'))+'<small>'+esc(x.cuando)+(x.estado!=='Pendiente'?' · ahora: '+esc(x.estado):'')+'</small></h3>'+
       (x.nota?'<div class="note">'+esc(x.nota)+'</div>':'')+
-      '<p class="hint" style="margin:6px 2px 8px">Tocá lo que hiciste y se saca de tus pendientes. '+(x.estado==='Lo llamo yo'?'La marcaste "Lo llamo yo": cuando ya lo hayas resuelto, tocá cómo terminó o "Listo".':'"Lo llamo yo" la deja abierta hasta que la resuelvas.')+'</p>'+
+      '<p class="hint" style="margin:6px 2px 8px">Tocá lo que hiciste y se saca de tus pendientes. '+(x.tipo==='control'?'Cuando lo resuelvas, tocá Hecho: les desaparece a los dos intakers.':x.estado==='Lo llamo yo'?'La marcaste "Lo llamo yo": cuando ya lo hayas resuelto, tocá cómo terminó o "Listo".':'"Lo llamo yo" la deja abierta hasta que la resuelvas.')+'</p>'+
       '<textarea id="intResp" placeholder="Comentario para '+esc(x.de)+' (opcional)"></textarea>'+
       '<div class="pick int-ops">'+ops.map(function(o){ return '<button data-intresp="'+esc(l.id)+'|'+x.i+'|'+esc(o)+'">'+esc(o)+'</button>'; }).join('')+'</div></div>';
   }
@@ -4278,12 +4403,14 @@ a.save.wa-go svg{width:20px;height:20px}
     if (xs.length) html += '<div class="blk"><h3 class="blk-t">Consultas internas</h3><div class="box">'+xs.map(function(x){
       return '<div class="kv stack"><span>'+esc(x.cuando)+' · '+esc(x.de)+' → '+esc(x.a)+' · '+intTipoTxt(x)+'</span><b class="'+(x.abierta?'int-open':'')+'">'+esc(x.estado)+(x.nota?' · '+esc(x.nota):'')+(x.resp?' · '+esc(x.resp):'')+'</b></div>'; }).join('')+'</div></div>';
     if (puedeInterna(l)) html += '<button class="btn3" data-intnueva="'+esc(l.id)+'">💬 Consultar si es caso o derivar la llamada</button>';
+    if (puedeComSol(l)) html += '<button class="btn3" data-comsol="'+esc(l.id)+'">📝 Dejar un comentario a los intakers</button>';
     return html;
   }
   function internasBanner(){
-    var xs=(state.data && state.data.paraMi)||[]; if (!xs.length || state.view==='finanzas') return '';
+    var noCtl=function(l){ return intAbiertaMia(l).filter(function(x){ return x.tipo!=='control'; }); }; // los comentarios de Sol van a Tareas
+    var xs=((state.data && state.data.paraMi)||[]).filter(function(l){ return noCtl(l).length; }); if (!xs.length || state.view==='finanzas') return '';
     return '<div class="int-ban" role="region" aria-label="Consultas para vos"><b>💬 '+plural(xs.length,'consulta para vos','consultas para vos')+'</b>'+xs.slice(0,8).map(function(l){
-      var x=intAbiertaMia(l)[0]||{};
+      var x=noCtl(l)[0]||{};
       return '<button class="int-it" data-ficha="'+esc(l.id)+'"><span><b>'+esc(l.nombre||'Sin nombre')+'</b> · '+ramaLabel(l.rama)+'</span><small>'+esc(x.de||'')+(x.tipo==='llamada'?' te derivó la llamada':' pregunta si es caso')+(x.estado==='Lo llamo yo'?' · la tomaste vos':'')+'</small></button>'; }).join('')+'</div>';
   }
   // Para los intakers: respuestas de los últimos días a lo que consultaron
