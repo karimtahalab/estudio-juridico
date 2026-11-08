@@ -53,6 +53,20 @@ def _lead(i, nombre, tel, rama, fecha, hora, abogada, fase="A", confPrev="", con
     l.update(kw)
     return l
 
+def sin_contactar():
+    """Leads nuevos sin nombre de intaker en la primera columna (ficticios)."""
+    xs = [
+        _lead(71, "Brenda Nueva Ficticia", "2615550171", "LABORAL", "", "", "", fase="", ingreso=D(0)),
+        _lead(72, "Gustavo Sin Contactar Demo", "2615550172", "ART", "", "", "", fase="", ingreso=D(-1)),
+        _lead(73, "Lorena Prueba Tránsito", "2615550173", "TRANSITO", "", "", "", fase="", ingreso=D(-2)),
+        _lead(74, "Hernán Lead Inventado", "2615550174", "LABORAL", "", "", "", fase="", ingreso=D(0)),
+        _lead(75, "Valeria ART Demo", "2615550175", "ART", "", "", "", fase="", ingreso=D(0)),
+        _lead(76, "Carlos Viejo C Test", "2615550176", "LABORAL", "", "", "", fase="C", ingreso=D(-4)),
+    ]
+    for l in xs: l["intaker"] = ""; l["levanto"] = ""
+    return xs
+
+
 def leads_agendados():
     return [
         _lead(1, "Rubén Prueba Gómez", "2615550101", "ART", D(0), "09:00", "Mica", fase="Agendado", confPrev="Confirmó", confDia="Confirmó", resumen=RES_LARGO,
@@ -95,6 +109,7 @@ class FakeApi:
     def __init__(self):
         self.leads = leads_agendados()
         self.pa = por_agendar()
+        self.sc = sin_contactar()
         self.bloqueos = [{"id": "B1", "fecha": D(0), "abogada": "Cele", "desde": "13:00", "hasta": "14:00", "todoDia": False, "aclaracion": "Trámite en tribunales (prueba)"}]
         self.disp = {"modos": {}, "fijo": {}, "fechas": {}}
         self.pin_bloq = {"Julián": True}
@@ -120,7 +135,7 @@ class FakeApi:
         return [a for a in ABOGADAS if any(r in ag for r in RAMAS_POR_PERSONA.get(a, []))]
 
     def _find(self, i):
-        for xs in [self.leads, self.pa] + list(OTRAS.values()):
+        for xs in [self.leads, self.pa, self.sc] + list(OTRAS.values()):
             for l in xs:
                 if l["id"] == i: return l
         return None
@@ -132,7 +147,7 @@ class FakeApi:
             "permisos": PERMISOS.get(who, {}),
             "equipo": eq, "abogadas": self._abogadas(who), "ramasPorPersona": RAMAS_POR_PERSONA,
             "leads": [l for l in self.leads if self._ve(who, l)],
-            "porAgendar": [l for l in self.pa if l["rama"] in PERMISOS.get(who, {}).get("leads", [])],
+            "porAgendar": [l for l in self.pa + [x for x in self.sc if x["fase"] in ("", "A", "B", "Llamada pendiente")] if l["rama"] in PERMISOS.get(who, {}).get("leads", [])],
             "bloqueos": self.bloqueos, "horario": {"desde": "09:00", "hasta": "19:00"}, "duracion": 30,
             "disponibilidad": self.disp, "dispRango": {"desde": "08:00", "hasta": "21:00"}, "modoDefecto": "bloqueos",
             "motivos": ["Lo va a pensar", "Le pareció caro", "Ya tiene abogado", "No tiene los papeles", "Otro"],
@@ -140,6 +155,7 @@ class FakeApi:
             "respuestas": {"criterio": ["Es caso", "No es caso", "Falta info"], "llamada": ["Lo llamé", "No atendió"]},
             "feriados": [], "internas": {"criterio": {"ART": ["Mica", "Cele"], "LABORAL": ["Mica", "Estefanía"], "TRANSITO": ["Juan"]},
                                          "llamada": {"ART": ["Mica"], "LABORAL": ["Mica"], "TRANSITO": ["Juan"]}, "telefonos": {}},
+            "sinContactar": [copy.deepcopy(l) for l in self.sc if l["rama"] in PERMISOS.get(who, {}).get("leads", []) and next((e["rol"] for e in EQUIPO if e["nombre"] == who), "") in ("intaker", "admin")],
             "paraMi": [], "visto": None, "diasPorAgendar": 90, "duplicados": [],
         }
         if who in ("Karim", "Julián"):
@@ -175,7 +191,10 @@ class FakeApi:
                     l["motivo"] = arg.get("motivo") or ""; l["detalle"] = arg.get("detalle") or ""
                 else: l[arg.get("action")] = arg.get("value")
             elif fn == "deshacerResultado": l.update({k: arg.get(k, "") for k in ("fase", "motivo", "detalle")})
-            elif fn == "cambiarFase": l["fase"] = arg.get("fase")
+            elif fn == "cambiarFase":
+                l["fase"] = arg.get("fase")
+                # Como anotarIntaker_ del motor: el primer cambio de fase de un intaker deja su nombre
+                if who in ("Fran", "Pri") and l in self.sc: self.sc.remove(l); l["intaker"] = who; self.pa.insert(0, l)
             elif fn == "editarDatos": l.update({k: arg[k] for k in ("nombre", "tel", "email") if arg.get(k) is not None})
             elif fn == "agregarNota": l["comentarios"] = l["comentarios"] + [{"label": "%s · hoy" % who, "text": arg.get("texto", "")}]
             elif fn == "agendar":
@@ -197,6 +216,16 @@ class FakeApi:
                 if l: l["resumen"] = it.get("texto", ""); out.append(copy.deepcopy(l))
             return True, {"leads": out, "faltan": []}
         if fn == "saveVisto": return True, {}
+        if fn == "levantarLead":
+            l = self._find(arg.get("id"))
+            if not l: return False, "No encontré esa consulta (prueba)."
+            if who not in ("Fran", "Pri"): return False, "Esto lo marcan los intakers (Fran o Pri)."
+            if l.get("intaker"): return True, {"lead": copy.deepcopy(l), "ya": l["intaker"]}
+            l["intaker"] = who
+            if l in self.sc:
+                self.sc.remove(l)
+                if l["fase"] in ("", "A", "B", "Llamada pendiente"): self.pa.insert(0, l)
+            return True, {"lead": copy.deepcopy(l), "ya": ""}
         if fn == "saveBloqueo":
             self.seq += 1; b = {k: arg.get(k) for k in ("fecha", "desde", "hasta", "todoDia", "abogada", "aclaracion")}; b["id"] = "B%d" % self.seq
             self.bloqueos.append(b); return True, self.bloqueos

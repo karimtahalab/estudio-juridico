@@ -19,6 +19,7 @@ Cómo correrlo: `python3 pruebas/correr.py <carpeta con index.html> <carpeta de 
 | mejora/2026-11-06-* (cli-rep, disponibilidad, repetidos, reportes-claros, sc-lista, semana-rama, sin-contactar, tareas-reportes, ver-como) | Ramas armadas en chats con Karim | Aplicadas (en main) |
 | mejora/2026-11-07 | En 360px el nombre de la consulta usa hasta 2 renglones (antes se cortaba en todas las tarjetas); Cerrar (X) de las hojas a 44px; "Cambiar" y "Ver como otra persona" del pie con zona táctil de 45px | Aplicada (en main desde el 07/11) |
 | mejora/2026-11-07-reportes-sol | Registro de uso y comentarios de Sol (motor v75/v76) | Aplicada (en main desde el 07/11) |
+| mejora/2026-11-08-flujo-sin-contactar | Flujo semanal: Sin contactar → primer mensaje → fase sin abrir la ficha (auto "Contacté" al volver de WhatsApp con Deshacer, sección "Falta la fase" con botones A/B/Llamada/C, barra para ir directo). Sin motor. | Pendiente de aprobar |
 | mejora/2026-11-08 | Pedidos colgados: las lecturas se cortan a los 35 s y se repiten solas; al volver a la app se repiten las que llevan más de 12 s en camino. Escrituras sin cambios. Sin motor. | Pendiente de aprobar |
 
 ## 2026-11-05 (primera noche)
@@ -113,3 +114,16 @@ Cómo correrlo: `python3 pruebas/correr.py <carpeta con index.html> <carpeta de 
 - Ideas grandes:
   - getData tarda 4-14 s y se pide en cada Actualizar y al volver a la app: que el motor guarde la respuesta armada 30-60 s en CacheService por persona y la invalide al guardar (pares en un JSON de "Cambios del motor pendientes", a medir primero en la copia).
   - Agenda en 360x640: plegar "Marcar mi disponibilidad" a una línea en pantallas bajas (sube la próxima consulta ~35 px). Sigue pendiente lo de los chips a 40-44 px.
+
+## Flujos rediseñados (tarea semanal de los domingos)
+| Fecha | Flujo | Para quién | Toques antes → después | Rama | Motor |
+|---|---|---|---|---|---|
+| 2026-11-08 | Sin contactar → primer mensaje → Contacté → fase | Intakers (Fran, Pri) | 13 → 8 (2 leads, con navegación); por lead: 5 → 2 si contesta enseguida, 7 → 1-3 si contesta después. Hojas 2 → 0, scroll ~2.000 px → 0-360 px | mejora/2026-11-08-flujo-sin-contactar | Solo pantalla |
+
+### 2026-11-08 — Sin contactar (intakers)
+- Por qué este: en USO (06-07/11) lo que más se repite de Fran es cambiarFase y editarDatos desde "tareas > ficha" y "agendar > ficha" (12 cambiarFase, 4-6 s cada uno, la pantalla ya lo muestra al instante) y levantarLead 5 veces. Es la primera semana de la tarea: no hay flujos repetidos.
+- Antes (banco, Fran, 390 y 360): "Sin contactar" está al fondo de Tareas (~1.400-1.500 px de scroll). Para clasificar: ficha → Cambiar fase → fase → cerrar. Si toca "✓ Contacté" (sin Deshacer) el lead desaparece de Tareas y cuando contesta hay que buscarlo en Agendar. 13 toques, 2 hojas, ~2.000 px de scroll, 6 pedidos.
+- Después: barra "📨 N leads sin contactar · M sin fase · Ver ›" arriba de Tareas; al volver de WhatsApp (4 s o más afuera) queda marcado solo con Deshacer (el pedido sale a los 10 s o al salir de la app); sección nueva "Falta la fase" (sin fase, ya con nombre de intaker, últimos 7 días) con A/B/Llamada/C/Otra en la fila; después de elegir queda "✓ Quedó en X" con Agendar. Si elige fase con el Contacté pendiente, no manda levantarLead (cambiarFase ya deja el nombre). 8 toques, 0 hojas, 0-360 px, 4 pedidos.
+- Banco: datos_falsos.py ahora tiene sinContactar (6 leads) y levantarLead; cambiarFase de un intaker deja su nombre (como anotarIntaker_). Nuevos flujo_sc.py (antes/después), flujo_sc_util.py y probar_sin_contactar.py (17/17: vuelve a los 2 s no marca, Deshacer no manda, ✓ sale a los 10 s o al salir, fase + Deshacer, Otra abre la ficha, error del motor vuelve a Sin contactar, Karim sin cambios).
+- Regresión correr.py (Mica, Fran, Karim, Sol, Juan, Estefanía; 390 y 360): sin errores en main ni en la rama, mismas pestañas por rol, sin scroll horizontal nuevo.
+- Para más adelante: el envío de plantillas por la API de WhatsApp (Wsp.gs, en otra conversación) encaja acá: el "Primer mensaje" se mandaría desde la misma fila y levantarLead ya se llama solo.
