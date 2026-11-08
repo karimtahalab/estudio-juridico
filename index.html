@@ -1192,14 +1192,23 @@ a.save.wa-go svg{width:20px;height:20px}
   var VER_FN={getData:1, getReporte:1, getRitmo:1, leadsDeFase:1, getLead:1, getCreativos:1, getEstudios:1, verEstudio:1, verRecibo:1}; // lo único que se pide en "Ver como"
   var FIN_FN={getFin2:1, getFin2Panel:1, saveFin2:1, resolverRepFin2:1, getFinanzas:1, saveFinanza:1, borrarFinanza:1};
   function esCorte(e){ return /Sin conexi|no respondi|Failed to fetch|NetworkError|Load failed|network|timeout|JSON|Unexpected token/i.test(String((e&&e.message)||e)); }
+  // Lecturas (no guardan nada): si se cuelgan (el celular se bloqueó a mitad del pedido, la señal se cortó sin aviso) se cortan y se vuelven a pedir.
+  // Antes un pedido colgado dejaba la pantalla esperando sin fin y frenaba las actualizaciones (registro de uso: getFin2 esperó 18 minutos).
+  var LEE={getData:1, getReporte:1, getRitmo:1, leadsDeFase:1, getLead:1, getCreativos:1, getEstudios:1, getFin2:1, getFin2Panel:1, getFinanzas:1, tienePin:1};
+  var LEE_MAX=35000;      // más de 35 s sin respuesta: se corta (lo normal es 2-5 s; lo más lento visto, 14 s)
+  var LEE_VUELVE=12000;   // al volver a la app, una lectura que lleva más de 12 s en camino se corta y se repite
+  var LEE_PEND=[];
   function call1(fn, arg){
     return new Promise(function(res, rej){
       // App instalable (pantalla publicada aparte): habla con el mismo servidor por POST
       if (window.API_URL){
-        fetch(window.API_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({fn:fn, arg:arg}), redirect:'follow' })
+        var ctl=(LEE[fn] && window.AbortController) ? new AbortController() : null, pend=null, listo=false, tmo=null;
+        var cerrar=function(){ listo=true; clearTimeout(tmo); if (pend){ var i=LEE_PEND.indexOf(pend); if (i!==-1) LEE_PEND.splice(i,1); } };
+        if (ctl){ pend={fn:fn, t0:Date.now(), cortar:function(){ if (listo) return; cerrar(); try{ ctl.abort(); }catch(e){} rej(new Error('El servidor no respondió a tiempo. Probá de nuevo.')); }}; LEE_PEND.push(pend); tmo=setTimeout(pend.cortar, LEE_MAX); }
+        fetch(window.API_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({fn:fn, arg:arg}), redirect:'follow', signal: ctl ? ctl.signal : undefined })
           .then(function(r){ if (!r.ok) throw new Error('El servidor no respondió ('+r.status+'). Probá de nuevo.'); return r.json(); })
-          .then(function(x){ if (x && x.ok) res(x.data); else rej(new Error((x && x.error) || 'Error del servidor.')); })
-          .catch(function(e){ rej(/fetch|network|load failed/i.test(String(e && e.message)) ? new Error('Sin conexión. Revisá internet y probá de nuevo.') : e); });
+          .then(function(x){ if (listo && ctl) return; cerrar(); if (x && x.ok) res(x.data); else rej(new Error((x && x.error) || 'Error del servidor.')); })
+          .catch(function(e){ if (listo && ctl) return; cerrar(); rej(/fetch|network|load failed/i.test(String(e && e.message)) ? new Error('Sin conexión. Revisá internet y probá de nuevo.') : e); });
         return;
       }
       google.script.run.withSuccessHandler(res).withFailureHandler(rej)[fn](arg);
@@ -1215,7 +1224,7 @@ a.save.wa-go svg{width:20px;height:20px}
       if (!VER_FN[fn]) return Promise.reject(new Error('👁 Estás viendo la app como '+state.verComo+': es solo para mirar y no se guarda nada. Tocá Salir arriba para hacer cambios.'));
       if (typeof arg==='object') arg.verComo = state.verComo;
     }
-    var w=!!ESCRIBE[fn], esperas=REINTENTA[fn] ? [1500, 4000] : [];
+    var w=!!ESCRIBE[fn], esperas=REINTENTA[fn] ? [1500, 4000] : (LEE[fn] ? [1500] : []);
     if (w){ state.wPend=(state.wPend||0)+1; state.wSeq=(state.wSeq||0)+1; }
     var p=new Promise(function(res, rej){
       var intento=function(k){
@@ -1318,6 +1327,8 @@ a.save.wa-go svg{width:20px;height:20px}
     }).then(function(){ USO.enviando=false; });
   }
   setInterval(usoEnviar, 600000);
+  // Al volver a la app: las lecturas que quedaron colgadas mientras estaba en segundo plano se cortan y se repiten solas
+  document.addEventListener('visibilitychange', function(){ if (document.hidden) return; var ahora=Date.now(); LEE_PEND.slice().forEach(function(p){ if (ahora-p.t0>LEE_VUELVE) p.cortar(); }); });
   document.addEventListener('visibilitychange', function(){ if (document.visibilityState==='hidden') usoEnviar(); });
 
   /* ---------- Comentarios de Sol a los intakers (les llegan a Tareas; cualquiera de los dos lo marca Hecho) ---------- */
