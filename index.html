@@ -532,6 +532,16 @@ textarea:focus,.inp:focus,select:focus{outline:none;box-shadow:0 0 0 2.5px var(-
 .f2rep-it span{color:var(--ink-2);font-size:13px}
 .f2rep-bt{display:flex;flex-direction:column;gap:6px;align-items:flex-end;flex:none}
 @media (min-width:700px){.cl .lv .lv-t{display:inline}}
+.cl.ff li{grid-template-columns:minmax(0,1fr) auto;row-gap:6px;padding:8px 8px 10px 12px}
+.cl.ff li.ok{background:var(--paper-2)}
+.cl.ff .cn{grid-column:1;grid-row:1} .cl.ff .ib{grid-column:2;grid-row:1;width:44px;height:44px}
+.next-bar.sc-ir{min-height:44px}
+.cl.ff .cn b{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.ff-f{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.ff-f button.fz{flex:1 1 auto;min-height:44px;min-width:44px;justify-content:center;padding:0 8px;font-size:15px;cursor:pointer}
+.ff-ok{display:inline-flex;align-items:center;gap:6px;font-weight:700;font-size:14px;color:var(--ink-2);min-height:44px}
+.ff-ag{display:inline-flex;align-items:center;gap:6px;margin-left:auto;min-height:44px;padding:0 14px;border:0;border-radius:10px;font:inherit;font-size:14px;font-weight:700;color:var(--blue);background:color-mix(in srgb,var(--blue) 10%,transparent);cursor:pointer}
+.ff-ag svg{width:16px;height:16px}
 .cl .lv{min-width:40px;font:inherit;font-weight:700;font-size:15px;color:var(--blue);background:color-mix(in srgb,var(--blue) 10%,transparent);border:0;border-radius:10px;padding:0 10px;min-height:40px;cursor:pointer;white-space:nowrap}
 .cl .ce{grid-column:1/-1;min-width:0;text-align:left;background:none;border:0;padding:0 0 4px;font:inherit;font-size:12.5px;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
 @media (min-width:700px){
@@ -3847,18 +3857,110 @@ a.save.wa-go svg{width:20px;height:20px}
   document.addEventListener('click', function(ev){ if (ev.target.closest('[data-scotros]')){ state.scOtros=!state.scOtros; render(); } });
   document.addEventListener('click', function(ev){
     var t=ev.target.closest('[data-levante]'); if (!t) return;
-    var id=t.getAttribute('data-levante'), l=findLead(id), hechos=state.scHechos||(state.scHechos={});
-    hechos[id]=1; render(); toast('✓ '+((l&&l.nombre)||'Lead')+': queda tu nombre en la planilla');
+    scLevantar(t.getAttribute('data-levante'), false);
+  });
+  /* ---------- Sin contactar → primer mensaje → fase, sin abrir la ficha (flujo semanal 08/11) ----------
+     - Tocar WhatsApp (o copiar el número) en Sin contactar y volver a la app: queda marcado "Contacté" solo, con Deshacer.
+     - "✓ Contacté" también tiene Deshacer: el pedido sale a los 10 s (o apenas la persona sale de la app).
+     - Los que ya tienen el nombre de un intaker y siguen sin fase quedan en "Ya les escribiste · falta la fase",
+       con los botones de fase en la misma fila (cambiarFase ya deja el nombre del intaker en la planilla). */
+  var SC_FASES=[['A','A'],['B','B'],['Llamada pendiente','Llamada'],['C','C']];
+  function scPuedeFase(){ return rol()==='intaker' && puede('agendar'); }
+  function scLevantar(id, auto){
+    var l=findLead(id), hechos=state.scHechos||(state.scHechos={}), pend=state.scPend||(state.scPend={});
+    if (pend[id] || !l) return;
+    scFlush();
+    hechos[id]=1; (state.scRecien||(state.scRecien={}))[id]=Date.now(); render();
+    var nom=l.nombre||'Lead';
+    var undo=function(){
+      if (!pend[id]) return; clearTimeout(pend[id]); delete pend[id]; delete hechos[id]; delete state.scRecien[id]; render();
+      toast(nom+' volvió a Sin contactar.');
+    };
+    pend[id]=setTimeout(function(){ scMandar(id); }, 10000);
+    pend[id+'#undo']=undo;
+    toastUndo((auto?'✓ Le escribiste a ':'✓ Contactaste a ')+nom+': queda tu nombre en la planilla', undo);
+  }
+  function scMandar(id){
+    var pend=state.scPend||{}, hechos=state.scHechos||(state.scHechos={});
+    if (!pend[id]) return; clearTimeout(pend[id]); var undo=pend[id+'#undo']; delete pend[id]; delete pend[id+'#undo'];
+    if (state.undo && state.undo===undo){ state.undo=null; var tt=$('toast'); if (tt && /undo/.test(tt.className)) tt.className='toast'+(state.sheet?' top':''); }
     call('levantarLead', {id:id}).then(function(r){
-      if (r && r.ya) toast('Ya lo había levantado '+r.ya+'.');
+      if (r && r.ya && r.ya!==((state.me&&state.me.nombre)||'')) toast('Ya lo había levantado '+r.ya+'.');
       if (state.data) state.data.sinContactar=(state.data.sinContactar||[]).filter(function(x){ return x.id!==id; });
+      if (r && r.lead) replaceAny(r.lead);
       delete hechos[id]; render();
-    }).catch(function(e){ delete hechos[id]; render(); toast((e&&e.message)||'No se pudo guardar. Probá de nuevo.', true); });
+    }).catch(function(e){ delete hechos[id]; if (state.scRecien) delete state.scRecien[id]; render(); toast((e&&e.message)||'No se pudo guardar. Probá de nuevo.', true); });
+  }
+  function scFlush(){ Object.keys(state.scPend||{}).forEach(function(k){ if (k.indexOf('#')===-1) scMandar(k); }); }
+  // Salir a WhatsApp desde Sin contactar: al volver (4 s o más afuera) queda marcado
+  var scSalida=null;
+  document.addEventListener('click', function(ev){
+    if (rol()!=='intaker') return;
+    var t=ev.target.closest && ev.target.closest('.cl.sc a.wa, .cl.sc .ct'); if (!t) return;
+    var li=t.closest('li'), b=li && li.querySelector('[data-levante]'); if (!b) return;
+    scSalida={id:b.getAttribute('data-levante'), t:Date.now(), fuera:0};
+  }, true);
+  function scFuera(){ if (scSalida && !scSalida.fuera) scSalida.fuera=Date.now(); scFlush(); }
+  function scVuelve(){
+    var x=scSalida; if (!x || !x.fuera) return;
+    var afuera=Date.now()-x.fuera; x.fuera=0;
+    if (Date.now()-x.t > 20*60000){ scSalida=null; return; }
+    scSalida=null;
+    if (afuera < 4000) return; // volvió enseguida: no le llegó a escribir
+    if ((state.scHechos||{})[x.id]) return;
+    if (!scLista().some(function(l){ return l.id===x.id; })) return;
+    scLevantar(x.id, true);
+  }
+  document.addEventListener('visibilitychange', function(){ if (document.visibilityState==='hidden') scFuera(); else scVuelve(); });
+  window.addEventListener('blur', function(){ if (scSalida && !scSalida.fuera) scSalida.fuera=Date.now(); });
+  window.addEventListener('focus', scVuelve);
+  window.addEventListener('pagehide', scFlush);
+  function ffLista(){
+    if (!scPuedeFase() || !state.data) return [];
+    var sc={}; scLista().forEach(function(l){ sc[l.id]=1; });
+    var desde=addDays(nowBA().date,-7), cl=state.scClasif||{}, vis={}, out=[];
+    (state.data.porAgendar||[]).forEach(function(l){
+      if (vis[l.id] || sc[l.id] || l.sinDia) return;
+      if ((!l.fase && l.ingreso && l.ingreso>=desde) || cl[l.id]){ vis[l.id]=1; out.push(l); }
+    });
+    Object.keys(state.scRecien||{}).concat(Object.keys(cl)).forEach(function(id){ if (!vis[id] && !sc[id]){ var l=findLead(id); if (l){ vis[id]=1; out.push(l); } } });
+    return out.sort(function(a,b){ return String(a.ingreso).localeCompare(String(b.ingreso)); });
+  }
+  function ffRow(l){
+    var f=l.fase, hecho=!!f && !!(state.scClasif||{})[l.id], hace=haceTxt(l);
+    var meta=esc(ramaLabel(l.rama))+(hace?' · '+esc(hace):'')+(l.intaker?' · le escribió '+esc(l.intaker):'');
+    var h='<li class="'+(hecho?'ok':'')+'"><button class="cn" data-ficha="'+esc(l.id)+'" aria-label="Abrir ficha de '+esc(l.nombre||'Sin nombre')+'"><b>'+esc(l.nombre||'Sin nombre')+'</b><span class="cs">'+meta+'</span></button>'+
+      (phone(l.tel)?'<a class="ib wa" href="'+waHref(l.tel)+'" target="_blank" rel="noopener" aria-label="WhatsApp a '+esc(l.nombre||'')+'">'+I.chat+'</a>':'<span></span>');
+    if (hecho) h+='<div class="ff-f"><span class="ff-ok">✓ Quedó en '+faseTag(f)+'</span>'+(['A','B','Llamada pendiente'].indexOf(f)!==-1?'<button class="ff-ag" data-agendar="'+esc(l.id)+'">'+I.cal+'Agendar</button>':'')+'</div>';
+    else h+='<div class="ff-f" role="group" aria-label="Fase de '+esc(l.nombre||'')+'">'+SC_FASES.map(function(x){ return '<button class="fz fz-'+faseKey(x[0])+'" data-scfase="'+esc(x[0])+'" data-scid="'+esc(l.id)+'">'+x[1]+'</button>'; }).join('')+
+      '<button class="fz fz-sin" data-scfase="" data-scid="'+esc(l.id)+'" aria-label="Otra fase (abre la ficha)">Otra</button></div>';
+    return h+'</li>';
+  }
+  function ffHtml(ff){
+    if (!ff.length) return '';
+    var n=ff.filter(function(l){ return !l.fase; }).length, max=state.ffMas?400:8;
+    return '<div id="ffSec"></div><h2 class="sec-t">Falta la fase'+(n?' <span class="cnt num">'+n+'</span>':'')+'</h2>'+
+      '<p class="sec-sub">Ya les escribieron (tienen el nombre de Fran o de Pri) y todavía no tienen fase. Cuando contesten, tocá la fase acá mismo: se guarda al instante y podés deshacer.</p>'+
+      '<ul class="cl ff">'+ff.slice(0,max).map(ffRow).join('')+'</ul>'+
+      (ff.length>max?'<button class="btn3" data-ffmas>Ver los '+ff.length+'</button>':'');
+  }
+  document.addEventListener('click', function(ev){
+    var t=ev.target.closest && ev.target.closest('[data-scfase],[data-ffmas],[data-scir]'); if (!t) return;
+    if (t.hasAttribute('data-ffmas')){ state.ffMas=true; render(); return; }
+    if (t.hasAttribute('data-scir')){ var a=$(t.getAttribute('data-scir')); if (a){ var tp=document.querySelector('.top'), h=tp?tp.getBoundingClientRect().bottom:0; window.scrollTo(0, window.scrollY+a.getBoundingClientRect().top-Math.max(0,h)-6); } return; }
+    var id=t.getAttribute('data-scid'), f=t.getAttribute('data-scfase'); if (!id) return;
+    if (!f){ openSheet({type:'ficha', id:id}); state.fichaUI={modo:'fase'}; renderSheet(); return; }
+    // Si "Contacté" estaba esperando el Deshacer, no hace falta mandarlo: cambiarFase ya deja el nombre del intaker (un pedido menos)
+    var pend=state.scPend||{}; if (pend[id]){ clearTimeout(pend[id]); delete pend[id]; delete pend[id+'#undo']; }
+    (state.scClasif||(state.scClasif={}))[id]=f;
+    cambiarFaseUI(id, f);
   });
   function viewTareas(){
     var t=tareasDe(), pa=t.porAgendar;
     var total=t.hoy.length+t.previa.length+t.sinRes.length;
     var body='';
+    var scN=scLista().filter(function(l){ return !(!!l.fase || /^falta enviar/i.test(String(l.levanto||''))); }).length, ffL=ffLista(), ffN=ffL.filter(function(l){ return !l.fase; }).length;
+    if (rol()==='intaker' && (scN || ffN)) body += '<button class="next-bar sc-ir" data-scir="'+(ffL.length?'ffSec':'scSec')+'"><span>📨 '+[scN?plural(scN,'lead sin contactar','leads sin contactar'):'', ffN?ffN+' sin fase':''].filter(Boolean).join(' · ')+'</span><b>Ver ›</b></button>';
     body += trSecTareas() + repSecTareas();
     var dw=dow(nowBA().date); if (dw===6 || dw===0 || dw===1) body+='<button class="btn3" data-view="reporte" style="margin-top:12px">📊 Armar el reporte de la semana para CARGA SEMANAL</button>';
     body += secTarea('Confirmar hoy', t.hoy.length, 'Mensaje del día para las consultas de hoy. Tocá lo que respondió.', '<ol class="dk">'+t.hoy.map(function(l){ return tkRow(l,'confDia'); }).join('')+'</ol>');
@@ -3875,7 +3977,9 @@ a.save.wa-go svg{width:20px;height:20px}
       otrosHtml='<button class="rs-ctl" data-scotros aria-expanded="'+abierto+'" style="margin-top:14px"><span>Ya clasificados o "Falta enviar leads" sin nombre de intaker ('+otros.length+')</span><small>'+(abierto?'Ocultar ▴':'Ver ▾')+'</small></button>'+
         (abierto?'<p class="hint" style="margin:8px 2px 0">Tienen fase (casi todos C) pero ningún nombre de Fran ni de Pri en la primera columna.</p>'+scHtml(otros):'');
     }
-    body += secTarea('Sin contactar', sc.length, 'Leads nuevos sin clasificar: todavía no tienen fase ni el nombre de Fran o de Pri en la planilla. Primero los que hace más que entraron. Tocá el número para copiarlo. Cuando le mandes el primer mensaje, tocá <b>✓ Contacté</b> y queda tu nombre en la planilla.',
+    body += ffHtml(ffL) + '<div id="scSec"></div>'+secTarea('Sin contactar', sc.length, rol()==='intaker' ?
+      'Leads nuevos: todavía no tienen fase ni el nombre de Fran o de Pri en la planilla. Primero los que hace más que entraron. Tocá 💬 para escribirle: al volver a la app queda tu nombre en la planilla (podés deshacer). Si le escribiste desde otro lado, tocá <b>✓</b>.' :
+      'Leads nuevos sin clasificar: todavía no tienen fase ni el nombre de Fran o de Pri en la planilla. Primero los que hace más que entraron. Tocá el número para copiarlo. Cuando le mandes el primer mensaje, tocá <b>✓ Contacté</b> y queda tu nombre en la planilla.',
       scHtml(sc)) + otrosHtml;
     if (pa.length) body += '<button class="btn3" data-view="agendar">Ver todos los leads por agendar ('+pa.length+')</button>';
     total += sc.length + comSolPend().length;
