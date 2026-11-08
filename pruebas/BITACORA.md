@@ -17,7 +17,9 @@ Cómo correrlo: `python3 pruebas/correr.py <carpeta con index.html> <carpeta de 
 | mejora/2026-11-06 | Crear PIN: el paso "Repetí el PIN" ya no muestra "Son 4 números." en rojo antes de escribir (el PIN se mandaba dos veces); "Editar" del Resumen del caso con zona táctil de 44px | Aplicada (en main desde el 06/11) |
 
 | mejora/2026-11-06-* (cli-rep, disponibilidad, repetidos, reportes-claros, sc-lista, semana-rama, sin-contactar, tareas-reportes, ver-como) | Ramas armadas en chats con Karim | Aplicadas (en main) |
-| mejora/2026-11-07 | En 360px el nombre de la consulta usa hasta 2 renglones (antes se cortaba en todas las tarjetas); Cerrar (X) de las hojas a 44px; "Cambiar" y "Ver como otra persona" del pie con zona táctil de 45px | Pendiente de aprobar |
+| mejora/2026-11-07 | En 360px el nombre de la consulta usa hasta 2 renglones (antes se cortaba en todas las tarjetas); Cerrar (X) de las hojas a 44px; "Cambiar" y "Ver como otra persona" del pie con zona táctil de 45px | Aplicada (en main desde el 07/11) |
+| mejora/2026-11-07-reportes-sol | Registro de uso y comentarios de Sol (motor v75/v76) | Aplicada (en main desde el 07/11) |
+| mejora/2026-11-08 | Pedidos colgados: las lecturas se cortan a los 35 s y se repiten solas; al volver a la app se repiten las que llevan más de 12 s en camino. Escrituras sin cambios. Sin motor. | Pendiente de aprobar |
 
 ## 2026-11-05 (primera noche)
 - Armé el banco (rama pruebas-nocturnas, carpeta pruebas/).
@@ -96,3 +98,18 @@ Cómo correrlo: `python3 pruebas/correr.py <carpeta con index.html> <carpeta de 
   - Guardado (verificado al recargar el editor) y "actualizar" corrido a mano a la 01:11 (es lo que corre el disparador cada hora). Resultado en la planilla: Laboral NOV 02-08 → consultas 10, firmaron 5, vinieron y no firmaron 4, no show 0, pidieron reagendar 1, reagendados que vinieron 0. ART y Tránsito coinciden con la app.
   - Maria Cecilia (ART): marcada a mano en HISTORIAL de ART, fila 408, columna M ("Vino y no era caso (marcado a mano el 07/11 según la agenda...)"), y encabezado M1 "Resultado cargado en la app". Ahora cuenta como "no era caso" en la app y en KPIs.
   - Copia de los pares: Drive, carpeta "Cambios del motor pendientes", "APLICADO KPIs (07-11) - misma-regla-que-la-app.json".
+
+## 2026-11-08 (domingo)
+- mejora/2026-11-07 y mejora/2026-11-07-reportes-sol ya están en main: marcadas como aplicadas. No había ramas pendientes.
+- Registro de uso real (USO, 06/11 y 07/11; solo usaron la app Karim y Fran, nada el 08/11 hasta la noche):
+  - Pedidos colgados: getFin2 de Karim esperó 1.081.694 ms (18 min) y terminó en "Sin conexión" (Finanzas). getData de Fran 2 veces "Sin conexión" tras ~6 s (Tareas). Causa en la pantalla: call1 no tenía tiempo máximo; mientras getData está en camino, load() no vuelve a pedir (state.busy), así que un pedido colgado frenaba todas las actualizaciones y Finanzas quedaba en "cargando" (f2Load no repite si hay uno cargando).
+  - getData lento seguido: 4-14 s (Karim 14 s en Agenda, Fran 10-11 s en Tareas/Agendar). Es del motor.
+  - fin2Calentar 43-47 s (la pantalla no lo espera). cambiarFase 4-6 s (la pantalla ya lo muestra al instante). getCreativos 8 s una vez.
+  - 1 aviso de PIN de finanzas incorrecto (Karim). Sin errores de pantalla.
+- Roles probados: Juan, Estefanía, Sol, Pri (crea PIN) en 390 y 360; regresión con Mica, Fran y Karim. Sin errores de JavaScript ni pedidos fallidos en main ni en la rama. Mismas pestañas por rol. Permisos OK con datos falsos.
+- Nuevo en el banco: pruebas/probar_colgados.py (A: Actualizar con getData colgado, sale y vuelve a los 15 s; B: se queda mirando 40 s; C: cargar resultado con el servidor que no contesta 65 s). main: A y B quedan girando para siempre. Rama: A y B se recuperan solos (2 pedidos de getData), C manda saveAction una sola vez (las escrituras no se cortan).
+- Nota del banco: el audit marca "Cambiar" del pie 59x25 pero tiene zona táctil extendida con ::after (ok). Las diferencias de captura main/rama son de animaciones (fondo de hoja, puntos del PIN).
+- Mejora propuesta: mejora/2026-11-08 (ver tabla). Sin cambios de motor.
+- Ideas grandes:
+  - getData tarda 4-14 s y se pide en cada Actualizar y al volver a la app: que el motor guarde la respuesta armada 30-60 s en CacheService por persona y la invalide al guardar (pares en un JSON de "Cambios del motor pendientes", a medir primero en la copia).
+  - Agenda en 360x640: plegar "Marcar mi disponibilidad" a una línea en pantallas bajas (sube la próxima consulta ~35 px). Sigue pendiente lo de los chips a 40-44 px.
