@@ -183,7 +183,7 @@ main{padding:4px 16px 8px}
 .ib{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:var(--paper-2);box-shadow:0 0 0 1px var(--line) inset}
 .ib svg{width:20px;height:20px}
 .ib.wa{color:var(--wa)}
-.it-cta{grid-column:1/-1;margin:0 12px 12px 88px;height:42px;border-radius:12px;background:var(--orange-bg);color:var(--orange);font-weight:800;font-size:15px;display:flex;align-items:center;justify-content:center;gap:8px}
+.it-cta{grid-column:1/-1;margin:0 12px 12px 88px;height:44px;border-radius:12px;background:var(--orange-bg);color:var(--orange);font-weight:800;font-size:15px;display:flex;align-items:center;justify-content:center;gap:8px}
 .now{display:flex;align-items:center;gap:8px;padding:6px 12px 6px 0;border-top:1px solid var(--line);color:var(--mint-ink);font-weight:800;font-size:13px}
 .now::before{content:"";width:72px;height:2px;background:var(--mint);flex:none}
 .now::after{content:"";flex:1;height:2px;background:var(--mint);opacity:.35}
@@ -226,6 +226,7 @@ main{padding:4px 16px 8px}
 .sec-t{display:flex;align-items:center;gap:10px;margin:20px 2px 4px;font-size:17px;font-weight:800}
 .sec-t .lk{margin-left:auto;height:34px;padding:0 12px;border-radius:999px;background:var(--paper);box-shadow:0 0 0 1px var(--line) inset;font-size:13.5px;font-weight:700;display:inline-flex;align-items:center;gap:6px}
 .sec-t .lk svg{width:15px;height:15px}
+.sec-t .lk{position:relative} .sec-t .lk::after{content:'';position:absolute;left:0;right:0;top:-5px;bottom:-5px}
 
 /* ===== Resumen ===== */
 .sum-head{margin-top:14px;display:flex;align-items:flex-end;gap:12px}
@@ -416,7 +417,7 @@ textarea:focus,.inp:focus,select:focus{outline:none;box-shadow:0 0 0 2.5px var(-
 .sec-sub{margin:-2px 2px 10px;font-size:13.5px;color:var(--ink-3)}
 .done{margin:0 2px;font-size:14.5px;font-weight:700;color:var(--green)}
 .tk .tk-acts{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 12px 12px 16px}
-.cbtn{height:42px;border-radius:12px;font-weight:700;font-size:14.5px;background:var(--paper-2);box-shadow:0 0 0 1px var(--line) inset;white-space:nowrap}
+.cbtn{height:44px;border-radius:12px;font-weight:700;font-size:14.5px;background:var(--paper-2);box-shadow:0 0 0 1px var(--line) inset;white-space:nowrap}
 .cbtn.ok{color:var(--green)} .cbtn.no{color:var(--red)}
 .cbtn.ok.on{background:var(--green-bg);box-shadow:0 0 0 2px var(--green) inset}
 .cbtn.no.on{background:var(--red-bg);box-shadow:0 0 0 2px var(--red) inset}
@@ -1805,7 +1806,14 @@ a.save.wa-go svg{width:20px;height:20px}
     renderSheet();
     if (state.sheet!==sh) return; // no había nada para mostrar: no se abre un panel vacío
     $('scrim').classList.add('on'); $('sheet').classList.add('on'); $('sheet').scrollTop=0;
-    if (sh.focusResult){ setTimeout(function(){ var r=$('resBlk'); if (r) r.scrollIntoView({behavior:'smooth',block:'start'}); }, 280); }
+    if (sh.focusResult){ setTimeout(function(){
+      // Baja hasta que se vean las opciones y Guardar, sin esconder el nombre de la persona (así se sabe de quién es la consulta).
+      var S=$('sheet'), r=$('resBlk'); if (!S || !r || state.sheet!==sh) return;
+      var sr=S.getBoundingClientRect(), abajo=Math.min(sr.bottom, innerHeight), nm=S.querySelector('.sh-who h2'), fin=S.querySelector('[data-save]')||r.querySelector('.res')||r;
+      var falta=fin.getBoundingClientRect().bottom-abajo+12, tope=nm ? nm.getBoundingClientRect().top-sr.top-8 : r.getBoundingClientRect().top-sr.top;
+      var y=Math.max(0, Math.min(falta, tope, r.getBoundingClientRect().top-sr.top));
+      if (y>0) S.scrollTo({top:S.scrollTop+y, behavior:'smooth'});
+    }, 280); }
   }
   /* ---------- Ver como: administración mira la app como la ve otra persona (solo lectura) ---------- */
   var VC_ROL={abogada:'abogada', intaker:'intaker', admin:'administración', produccion:'filmación y edición'};
