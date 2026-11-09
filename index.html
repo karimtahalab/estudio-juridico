@@ -532,6 +532,16 @@ textarea:focus,.inp:focus,select:focus{outline:none;box-shadow:0 0 0 2.5px var(-
 .f2rep-it span{color:var(--ink-2);font-size:13px}
 .f2rep-bt{display:flex;flex-direction:column;gap:6px;align-items:flex-end;flex:none}
 @media (min-width:700px){.cl .lv .lv-t{display:inline}}
+.cl.ff li{grid-template-columns:minmax(0,1fr) auto;row-gap:6px;padding:8px 8px 10px 12px}
+.cl.ff li.ok{background:var(--paper-2)}
+.cl.ff .cn{grid-column:1;grid-row:1} .cl.ff .ib{grid-column:2;grid-row:1;width:44px;height:44px}
+.next-bar.sc-ir{min-height:44px}
+.cl.ff .cn b{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.ff-f{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.ff-f button.fz{flex:1 1 auto;min-height:44px;min-width:44px;justify-content:center;padding:0 8px;font-size:15px;cursor:pointer}
+.ff-ok{display:inline-flex;align-items:center;gap:6px;font-weight:700;font-size:14px;color:var(--ink-2);min-height:44px}
+.ff-ag{display:inline-flex;align-items:center;gap:6px;margin-left:auto;min-height:44px;padding:0 14px;border:0;border-radius:10px;font:inherit;font-size:14px;font-weight:700;color:var(--blue);background:color-mix(in srgb,var(--blue) 10%,transparent);cursor:pointer}
+.ff-ag svg{width:16px;height:16px}
 .cl .lv{min-width:40px;font:inherit;font-weight:700;font-size:15px;color:var(--blue);background:color-mix(in srgb,var(--blue) 10%,transparent);border:0;border-radius:10px;padding:0 10px;min-height:40px;cursor:pointer;white-space:nowrap}
 .cl .ce{grid-column:1/-1;min-width:0;text-align:left;background:none;border:0;padding:0 0 4px;font:inherit;font-size:12.5px;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
 @media (min-width:700px){
@@ -976,6 +986,43 @@ a.save.wa-go svg{width:20px;height:20px}
 .pin-dots i{width:14px;height:14px;border-radius:50%;box-shadow:0 0 0 2px var(--line) inset}
 .pin-dots i.on{background:var(--ink);box-shadow:none}
 .btn3.danger{color:var(--red)}
+  /* ===== WhatsApp oficial (Wsp) ===== */
+  .wsp-b{border:0;background:#e7f8ee;color:#0a7a3e;border-radius:10px;padding:6px 10px;font-weight:600;font-size:14px;cursor:pointer;white-space:nowrap}
+  .wsp-sq{width:40px;height:40px;padding:0;display:inline-flex;align-items:center;justify-content:center;font-size:17px}
+  .cl .ib.wsp-pair{width:auto;height:auto;display:flex;gap:6px;align-items:center;background:none;box-shadow:none;border:0;padding:0}
+  .pa-acts.wsp3{grid-template-columns:44px 44px 44px 1fr}.pa-acts .wsp-sq{width:44px;height:44px}
+  .wsp-vacio{visibility:hidden}
+  .wsp-ov{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:flex-end;justify-content:center;z-index:99999}
+  .wsp-ov.on{display:flex}
+  .wsp-box{background:#fff;color:#111;width:100%;max-width:520px;max-height:88vh;overflow:auto;border-radius:16px 16px 0 0;padding:18px 16px 16px;box-shadow:0 -6px 24px rgba(0,0,0,.2);box-sizing:border-box}
+  @media (min-width:700px){.wsp-ov{align-items:center}.wsp-box{border-radius:16px}}
+  .wsp-box h3{margin:0 0 6px;font-size:17px}
+  .wsp-to{margin:0 0 10px;font-size:13px;color:#555}.wsp-to.prueba{color:#9a5b00;font-weight:600}
+  .wsp-msg{background:#dcf8c6;border-radius:10px;padding:12px;line-height:1.45;font-size:15px;color:#111}
+  .wsp-aviso{color:#9a5b00;font-size:13px;margin:10px 0 0}.wsp-err{color:#b00020}.wsp-load,.wsp-hint{color:#555;font-size:13px}
+  .wsp-acts{display:flex;gap:10px;margin-top:14px}.wsp-acts button{flex:1;padding:12px;border-radius:12px;border:0;font-weight:700;font-size:15px;cursor:pointer}
+  .wsp-no{background:#eee;color:#222}.wsp-si{background:#25d366;color:#fff}.wsp-si:disabled{opacity:.6}
+  .wsp-g{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:#666;margin:12px 0 6px}
+  .wsp-op{display:block;width:100%;text-align:left;border:1px solid #e3e3e3;background:#fafafa;border-radius:10px;padding:10px 12px;margin:0 0 6px;cursor:pointer;color:#111;font-size:14px}
+  .wsp-op small{display:block;color:#666;font-size:12px;margin-top:2px;font-weight:400}.wsp-op.sug{border-color:#25d366;background:#effcf3}.wsp-op:disabled{opacity:.55;cursor:default}
+/* ===== Revisión nov 2026: usabilidad ===== */
+/* La barra pegada de abajo (Guardar / "Elegí…") deja pasar los toques a lo que queda debajo mientras el botón está deshabilitado */
+.save-wrap{pointer-events:none}.save-wrap>*{pointer-events:auto}.save:disabled{pointer-events:none}
+/* Compu: el contenido no se estira de punta a punta en pantallas anchas */
+@media (min-width:1100px){.top-row,.head-extra,main,.search-top,.search-body{max-width:1080px;margin-left:auto;margin-right:auto}.nav{padding-left:calc((100% - 1080px)/2);padding-right:calc((100% - 1080px)/2)}.toast{max-width:1048px;margin:0 auto}}
+/* Ficha: acciones secundarias en dos columnas (ocupan la mitad de alto) */
+.fi-sec{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.fi-sec .btn3{margin-top:0;height:auto;min-height:44px;font-size:14px;line-height:1.2;padding:6px 8px;text-align:center}.fi-sec .btn3:last-child:nth-child(odd){grid-column:1/-1}.fi-sec .btn3.on{box-shadow:0 0 0 2px var(--blue) inset;background:var(--blue-bg)}
+/* Mensaje oficial de WhatsApp en "¿Confirmó que viene?" y marca de "mandado" en Tareas */
+.cbs.wsp{grid-template-columns:1fr 1fr 46px}.cbs .wsp-b{height:42px;padding:0;display:inline-flex;align-items:center;justify-content:center;font-size:18px;border-radius:12px}
+.cp.wsp-ya{color:#0a7a3e;background:#e7f8ee}
+/* Entorno de prueba: la barra de abajo crece para que el cartel rojo no tape los nombres de las pestañas */
+body:has(#entorno-prueba) .nav{padding-bottom:calc(26px + env(safe-area-inset-bottom))}body:has(#entorno-prueba){padding-bottom:calc(106px + env(safe-area-inset-bottom))}body:has(#entorno-prueba) .toast{bottom:calc(114px + env(safe-area-inset-bottom))}
+.cl.sc li.sc-of .sc-env{grid-column:3/5;grid-row:1;height:40px;padding:0 12px;font-size:15px;font-weight:800;white-space:nowrap}
+@media (min-width:700px){.cl.sc li.sc-of .sc-env{grid-column:4/6}}
+.sc-preg{position:fixed;left:12px;right:12px;bottom:calc(94px + env(safe-area-inset-bottom));z-index:61;background:var(--paper);color:var(--ink);border-radius:16px;padding:14px;box-shadow:0 8px 30px rgba(0,0,0,.25),0 0 0 2px var(--blue) inset;max-width:520px;margin:0 auto}
+.sc-preg p{margin:0 2px 10px;font-size:16px}.sc-preg div{display:grid;grid-template-columns:2fr 1fr;gap:8px}
+.sc-preg button{min-height:48px;border:0;border-radius:12px;font:inherit;font-weight:800;font-size:16px;cursor:pointer}.sc-preg .sp-si{background:var(--blue);color:#fff}.sc-preg .sp-no{background:var(--paper-2);color:var(--ink-2)}
+body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-bottom))}
 </style>
 </head>
 <body>
@@ -1235,13 +1282,13 @@ a.save.wa-go svg{width:20px;height:20px}
     return p;
   }
   var recibir = null;
-  function load(silent, fresh){
+  function load(silent, fresh, revalidar){
     if (!store('tok')){ abrirIngreso(); return; }
     if (state.busy) return;
     if (fresh){ state.otras={}; state.busq=null; state.otrasPre=false; } // Actualizar: las otras fases se vuelven a pedir
     state.busy = true; $('btnRefresh').classList.add('spin');
     var seq0=state.wSeq||0, vc0=state.verComo||'';
-    call('getData', {fresh: !!fresh, who: store('yo') || ''}).then(recibir = function(d){
+    call('getData', {fresh: !!fresh, revalidar: !!revalidar, swr: 1, who: store('yo') || ''}).then(recibir = function(d){
       if (!d.__snap && (state.verComo||'')!==vc0){ setTimeout(function(){ load(false, true); }, 300); return; } // se entró o salió de "Ver como" mientras llegaba
       // Si mientras llegaba se guardó algo (o sigue guardándose), esta lectura puede ser de antes: no se usa y se pide otra al terminar
       if (!d.__snap && state.data && (state.wPend || (state.wSeq||0)!==seq0)){ if (state.wPend) state.wRecargar=true; else setTimeout(function(){ load(true); }, 300); return; }
@@ -1260,6 +1307,8 @@ a.save.wa-go svg{width:20px;height:20px}
         state.abog = (saved && (saved==='Todas' || (d.abogadas||[]).indexOf(saved)!==-1)) ? saved : ((d.user && d.user.abogada) || 'Todas');
       }
       render();
+      // Llegó la lectura de respaldo (de hasta 10 min): se muestra ya y se pide la nueva atrás
+      if (d.desact && !d.__snap) setTimeout(function(){ load(true, false, true); }, 30);
       if (!USO.cargo){ if (d.__snap){ if (!USO.cargoSnap){ USO.cargoSnap=1; usoCarga('abrir app (lo guardado)'); } } else { USO.cargo=1; usoCarga('abrir app (datos nuevos)'); } }
       if (state.sheet && (state.sheet.type==='lead' || state.sheet.type==='bloq') && !escribiendo()) renderSheet();
       if (state.primeraVez){ state.primeraVez=false; if (!state.me && d.modoPrueba) openSheet({type:'yo', first:true}); }
@@ -1870,10 +1919,15 @@ a.save.wa-go svg{width:20px;height:20px}
       '<div class="mt s-'+s+'"><span class="st">'+ST[s].i+' '+ST[s].l+'</span></div>');
     var cabeza=html; html='';
     html += '<div class="big-acts"><a href="'+telHref(l.tel)+'" target="_top">'+I.call+'Llamar</a><a class="wa" href="'+waHref(l.tel)+'" target="_blank" rel="noopener">'+I.chat+'WhatsApp</a></div>';
+    // Intakers: lo primero después de Llamar/WhatsApp es marcar qué respondió (y mandar el mensaje oficial desde ahí)
+    var confPrimero = puede('confirmar') && isPend(s) && !needsResult(l);
+    if (confPrimero) html += confBlock(l, today);
     if (puede('agendar') && (isPend(s) || needsResult(l) || s==='reagenda' || s==='novino')) html += '<button class="btn3" data-agendar="'+esc(l.id)+'">'+I.cal+'Reagendar</button>';
-    if (puede('agendar') && puedeCorregir(l)) html += '<button class="btn3" data-agcorregir="'+esc(l.id)+'">✏️ Me equivoqué en el horario: corregir (no cuenta como reagenda)</button>';
-    if (puedeDerivar(l)) html += '<button class="btn3" data-derivar="'+esc(l.id)+'">'+I.swap+'Derivar a otra abogada</button>';
-    if (puedeSinDia(l)){ var rq=state.rsdConf===l.id; html += '<button class="btn3'+(rq?' on':'')+'" data-reagsindia="'+esc(l.id)+'">'+(rq?'Tocá de nuevo para confirmar: queda en Reagenda y sale de la agenda':'↻ Pidió reagendar, todavía sin día')+'</button>'; }
+    var sec='';
+    if (puede('agendar') && puedeCorregir(l)) sec += '<button class="btn3" data-agcorregir="'+esc(l.id)+'" title="Me equivoqué al cargar el horario: lo corrijo y no cuenta como reagenda">✏️ Corregir el horario</button>';
+    if (puedeDerivar(l)) sec += '<button class="btn3" data-derivar="'+esc(l.id)+'">'+I.swap+'Derivar a otra abogada</button>';
+    if (puedeSinDia(l)){ var rq=state.rsdConf===l.id; sec += '<button class="btn3'+(rq?' on':'')+'" data-reagsindia="'+esc(l.id)+'">'+(rq?'Tocá de nuevo para confirmar: queda en Reagenda y sale de la agenda':'↻ Pidió reagendar, sin día todavía')+'</button>'; }
+    if (sec) html += '<div class="fi-sec">'+sec+'</div>';
     html += trBlk(l);
     html += internasBlk(l);
     var fu=state.fichaUI||(state.fichaUI={});
@@ -1909,7 +1963,7 @@ a.save.wa-go svg{width:20px;height:20px}
       html += '<div class="blk"><h3 class="blk-t">Resultado</h3><div class="note">Se carga desde el día de la consulta, el '+longDate(l.fecha).toLowerCase()+'.</div></div>';
     }
     var resB=html; html='';
-    html += confBlock(l, today);
+    if (!confPrimero) html += confBlock(l, today);
     if (l.info && l.info.length){
       html += '<div class="blk"><h3 class="blk-t">Lo que contó en el formulario</h3><div class="box">'+
         l.info.map(function(c){ return '<div class="kv stack"><span>'+esc(c.label)+'</span><b>'+esc(c.text)+'</b></div>'; }).join('')+'</div></div>';
@@ -2043,6 +2097,8 @@ a.save.wa-go svg{width:20px;height:20px}
   function estPuedeLocal(l){ return rol()==='admin' || puede('confirmar') || ((P().leads||[]).indexOf(l.rama)!==-1) || !!(state.me && state.me.nombre===l.abogada); }
   function estPuedeBorrar(f){ return rol()==='admin' || !!(state.me && f.por===state.me.nombre); }
   function estRender(){ if (state.sheet && ['lead','ficha','pegar'].indexOf(state.sheet.type)!==-1 && !escribiendo()) renderSheet(); }
+  // El conteo de getData cubre solo estas listas; para un lead traído aparte (otra fase, búsqueda) se pide la lista como siempre
+  function estEnListas(id){ var d=state.data||{}; return ['leads','porAgendar','sinContactar','paraMi'].some(function(k){ return (d[k]||[]).some(function(x){ return x.id===id; }); }); }
   function estLoad(id, fresco){
     state.est=state.est||{}; var c=state.est[id];
     if (c && (c.cargando || (!fresco && c.lista))) return;
@@ -2058,7 +2114,11 @@ a.save.wa-go svg{width:20px;height:20px}
   }
   function estBlk(l){
     if (!estAplica(l)) return '';
-    state.est=state.est||{}; var c=state.est[l.id]; if (!c){ estLoad(l.id); c=state.est[l.id]; }
+    state.est=state.est||{}; var c=state.est[l.id];
+    // Lo que trajo getData ya dice cuántos archivos tiene cada consulta: si no tiene, no hace falta pedir la lista al servidor
+    var nSrv=((state.data && state.data.estudios)||{})[l.id]||0;
+    if (c && c.local && nSrv){ delete state.est[l.id]; c=null; }
+    if (!c){ if (state.data && state.data.estLeidos && !nSrv && estEnListas(l.id)) state.est[l.id]={lista:[], puede:estPuedeLocal(l), max:10, local:true}; else estLoad(l.id); c=state.est[l.id]; }
     var cs=estCats(l), cat=estCatDe(l), todos=c.lista||[], xs=todos.filter(function(f){ return (f.cat||'estudios')===cat; }), n=xs.length, up=c.subiendo;
     var catL=cs.filter(function(x){ return x[0]===cat; })[0][1], vacio=cat==='acta'?'Todavía no hay acta vial cargada.':'Todavía no hay estudios cargados.';
     var h='<div class="blk est" data-estdrop="'+esc(l.id)+'"><h3 class="blk-t">📎 '+(cs.length>1?'Documentos del caso':catL)+(cs.length===1&&n?' ('+n+')':'')+'<small>'+(n?'Tocá uno para verlo.':(c.cargando?'Buscando…':(cs.length>1?'':vacio)))+'</small></h3>';
@@ -2819,7 +2879,7 @@ a.save.wa-go svg{width:20px;height:20px}
     var tel=String(l.tel||'').trim(), em=String(l.email||'').trim(), cuando=ingresoCorto(l);
     return '<li><button class="cn" data-ficha="'+esc(l.id)+'"><b>'+(esNuevoAviso(l)?'🔔 ':'')+esc(l.nombre||'Sin nombre')+'</b><span class="cs">'+faseTag(l.fase)+' '+ramaLabel(l.rama)+(cuando?' · '+esc(cuando):'')+'</span></button>'+
       (tel ? '<button class="ct num" data-copiar="'+esc(phone(tel)||tel)+'" aria-label="Copiar el teléfono de '+esc(l.nombre||'')+'">'+esc(phone(tel)||tel)+'</button>' : '<span></span>')+
-      (phone(tel) ? '<a class="ib wa" href="'+waHref(tel)+'" target="_blank" rel="noopener" aria-label="WhatsApp a '+esc(l.nombre||'')+'">'+I.chat+'</a>' : '<span></span>')+
+      (phone(tel) ? (wspRol()?'<span class="ib wsp-pair">'+(wspMenuBtn(l)||'<span class="wsp-sq wsp-vacio" aria-hidden="true"></span>'):'')+'<a class="ib wa" href="'+waHref(tel)+'" target="_blank" rel="noopener" aria-label="WhatsApp a '+esc(l.nombre||'')+'">'+I.chat+'</a>'+(wspRol()?'</span>':'') : '<span></span>')+
       (em ? '<button class="ce" data-copiar="'+esc(em)+'" aria-label="Copiar el mail">'+esc(em)+'</button>' : '')+'</li>';
   }
   function listaRamas(xs, s){
@@ -2899,14 +2959,14 @@ a.save.wa-go svg{width:20px;height:20px}
     var form=resumenForm(l), yaTurno=!!l.fecha && (l.fase==='Consulta agendada' || l.fase==='Reagenda');
     var nt=(l.comentarios||[]).map(function(c){ return String(c.text||''); }).join('\n').split('\n').filter(function(x){ return x.trim(); });
     var ultima=nt.length ? nt[nt.length-1] : '';
-    var acts=phone(l.tel) ? '<a class="ib wa" href="'+waHref(l.tel)+'" target="_blank" rel="noopener" aria-label="WhatsApp a '+esc(l.nombre)+'">'+I.chat+'</a><a class="ib" href="'+telHref(l.tel)+'" target="_top" aria-label="Llamar a '+esc(l.nombre)+'">'+I.call+'</a>' : '<span></span><span></span>';
+    var acts=phone(l.tel) ? (wspRol()?(wspMenuBtn(l)||'<span class="wsp-sq wsp-vacio" aria-hidden="true"></span>'):'')+'<a class="ib wa" href="'+waHref(l.tel)+'" target="_blank" rel="noopener" aria-label="WhatsApp a '+esc(l.nombre)+'">'+I.chat+'</a><a class="ib" href="'+telHref(l.tel)+'" target="_top" aria-label="Llamar a '+esc(l.nombre)+'">'+I.call+'</a>' : '<span></span><span></span>';
     return '<li class="pa" data-ficha="'+esc(l.id)+'"><div class="pa-top"><div class="pa-who"><b>'+(esNuevoAviso(l)?'🔔 ':'')+esc(l.nombre||'Sin nombre')+'</b><span>'+ramaLabel(l.rama)+(when?' · '+when:'')+((l.intaker||l.inicioChat)?' · '+esc(l.intaker||l.inicioChat):'')+(l.tel?' · '+esc(l.tel):'')+'</span></div>'+faseTag(l.fase)+'</div>'+
       (repDe(l.id)?'<div class="pa-note rep-n">⚠ Posible REPETIDO: '+repTxt(repDe(l.id))+'</div>':'')+
       (form?'<div class="pa-form">'+esc(form)+'</div>':'')+
       (ultima?'<div class="pa-note">💬 '+esc(ultima)+'</div>':'')+
       (l.sinDia?'<div class="pa-note">'+(l.fase==='Reagenda'?'↻ Pidió reagendar y todavía no eligió día: cuando avise, cargale el turno con Agendar.':'📅 En la planilla figura '+esc(faseLbl(l.fase))+' pero sin día ni hora: cargale el turno con Agendar.')+'</div>':'')+
       (yaTurno?'<div class="pa-has">📅 Consulta: '+esc(diaCorto(l.fecha))+' '+esc(l.hora||'')+(l.abogada?' con '+esc(l.abogada):'')+'</div>':'')+
-      '<div class="pa-acts">'+acts+(yaTurno?'<button class="btn2" data-'+(agendada(l.id)?'open':'ficha')+'="'+esc(l.id)+'">Ver la consulta</button>':'<button class="btn2" data-agendar="'+esc(l.id)+'">'+I.cal+' Agendar</button>')+'</div></li>';
+      '<div class="pa-acts'+(phone(l.tel)&&wspRol()?' wsp3':'')+'">'+acts+(yaTurno?'<button class="btn2" data-'+(agendada(l.id)?'open':'ficha')+'="'+esc(l.id)+'">Ver la consulta</button>':'<button class="btn2" data-agendar="'+esc(l.id)+'">'+I.cal+' Agendar</button>')+'</div></li>';
   }
   /* ---------- Ficha del lead: todo lo que se ve en la planilla, ordenado ---------- */
   // En la lista se muestran primero las respuestas que más ayudan a decidir (las de Sí/No solas dicen poco)
@@ -2939,6 +2999,8 @@ a.save.wa-go svg{width:20px;height:20px}
       '</div><button class="close" data-close aria-label="Cerrar">'+I.x+'</button></div>';
     html += repBlk(l.id);
     if (phone(l.tel)) html += '<div class="big-acts"><a href="'+telHref(l.tel)+'" target="_top">'+I.call+'Llamar</a><a class="wa" href="'+waHref(l.tel)+'" target="_blank" rel="noopener">'+I.chat+'WhatsApp</a></div>';
+    html += wspFicha(l);
+    if (rol()==='intaker' && scLista().some(function(x){ return x.id===l.id; })) html += '<button class="btn3" data-levante="'+esc(l.id)+'">✓ Ya lo contacté por otro lado (llamada, otro WhatsApp)</button>';
     if (ag) html += '<div class="pa-has" style="margin:12px 2px 0">Ya tiene consulta: '+esc(diaCorto(l.fecha))+' '+esc(l.hora||'')+(l.abogada?' con '+esc(l.abogada):'')+'</div><button class="btn3" data-open="'+esc(l.id)+'">Ver la consulta</button>';
     else if (puede('agendar')) html += '<button class="btn3 fi-ag" data-agendar="'+esc(l.id)+'">'+I.cal+'Agendar consulta</button>';
     if (ag) html += trBlk(l);
@@ -3100,10 +3162,10 @@ a.save.wa-go svg{width:20px;height:20px}
       '<div class="field"><span class="lbl">Rama</span><div class="pick">'+[['ART','ART'],['LABORAL','Laboral'],['TRANSITO','Tránsito']].filter(function(x){ return leadsRamas().indexOf(x[0])!==-1; }).map(function(x){ return pick('data-mnrama',x[0],x[1],m.rama===x[0]); }).join('')+'</div></div>'+
       '<div class="field"><span class="lbl">¿De dónde viene?</span><div class="pick">'+(state.data.origenes||[]).map(function(o){ return pick('data-mnorigen',o,o,m.origen===o); }).join('')+'</div></div>'+
       '<div class="field"><label for="mnNota">Nota (opcional)</label><textarea id="mnNota" placeholder="Ej.: lo recomendó un cliente">'+esc(m.nota||'')+'</textarea></div>'+
-      '<div class="save-wrap"><button class="save" data-mnsig '+(manualOk()?'':'disabled')+'>Elegir día y horario</button>'+
-        '<div class="mn-sin"><p class="hint" style="margin:0 2px 8px">¿Todavía no quiere agendar? Cargalo sin consulta y queda en Agendar para el seguimiento. ¿En qué fase queda?</p>'+
+      '<div class="mn-sin"><p class="hint" style="margin:0 2px 8px">¿Todavía no quiere agendar? Cargalo sin consulta y queda en Agendar para el seguimiento. ¿En qué fase queda?</p>'+
         '<div class="pick">'+['A','B','Llamada pendiente'].map(function(f){ return pick('data-mnfase', f, f, m.fase===f); }).join('')+'</div>'+
-        '<button class="btn3" data-mnsin '+((manualOk() && m.fase)?'':'disabled')+'>Cargar sin agendar</button></div></div>';
+        '<button class="btn3" data-mnsin '+((manualOk() && m.fase)?'':'disabled')+'>Cargar sin agendar</button></div>'+
+      '<div class="save-wrap"><button class="save" data-mnsig '+(manualOk()?'':'disabled')+'>Elegir día y horario</button></div>';
   }
   function irAHorario(){
     var m=state.manual;
@@ -3806,8 +3868,8 @@ a.save.wa-go svg{width:20px;height:20px}
     var today=nowBA().date;
     return '<li class="it tk">'+
       '<button class="it-main" data-open="'+esc(l.id)+'" aria-label="Abrir ficha de '+esc(l.nombre)+'"><span class="tm num">'+(l.fecha!==today?'<small>'+diaCorto(l.fecha)+'</small>':'')+esc(l.hora||'--:--')+'</span>'+
-        '<span class="tx"><span class="nm">'+esc(l.nombre)+'</span><span class="mt"><span class="rama r-'+ramaKey(l.rama)+'">'+ramaLabel(l.rama)+'</span>'+(l.abogada?'<span class="cp">Con '+esc(l.abogada)+'</span>':'')+'</span></span></button>'+
-      '<span class="it-acts"><a class="ib wa" href="'+waHref(l.tel)+'" target="_blank" rel="noopener" aria-label="WhatsApp a '+esc(l.nombre)+'">'+I.chat+'</a></span>'+
+        '<span class="tx"><span class="nm">'+esc(l.nombre)+'</span><span class="mt"><span class="rama r-'+ramaKey(l.rama)+'">'+ramaLabel(l.rama)+'</span>'+(l.abogada?'<span class="cp">Con '+esc(l.abogada)+'</span>':'')+wspYa(l, wspMomento(l, campo))+'</span></span></button>'+
+      '<span class="it-acts">'+wspBtn(l, wspMomento(l, campo), '')+'<a class="ib wa" href="'+waHref(l.tel)+'" target="_blank" rel="noopener" aria-label="WhatsApp a '+esc(l.nombre)+'">'+I.chat+'</a></span>'+
       '<div class="tk-acts">'+confBtns(l,campo)+'</div></li>';
   }
   function paRow(l){
@@ -3826,11 +3888,21 @@ a.save.wa-go svg{width:20px;height:20px}
     var when = dd===null ? '' : (dd<=0?'entró hoy':(dd===1?'entró ayer':'entró hace '+dd+' días'));
     var esInt = rol()==='intaker';
     return '<li class="pa-li"><button data-ficha="'+esc(l.id)+'" aria-label="Abrir ficha de '+esc(l.nombre||'Sin nombre')+'"><span class="w"><b>'+esc(l.nombre||'Sin nombre')+'</b><span>'+(when||'')+(l.fase?', fase '+esc(faseLbl(l.fase)):', sin clasificar')+(l.levanto?' · dice "'+esc(l.levanto)+'"':'')+'</span></span></button>'+
-      (l.tel?'<a class="ib wa sc-wa" href="'+waHref(l.tel)+'" target="_blank" rel="noopener" aria-label="WhatsApp a '+esc(l.nombre||'')+'">'+I.chat+'</a>':'')+
-      (esInt?'<button class="pa-ag" data-levante="'+esc(l.id)+'">✓ Ya lo contacté</button>':'')+'</li>';
+      (scOficial(l) ? wspBtn(l,'primer_contacto','Enviar') :
+        (l.tel?'<a class="ib wa sc-wa" href="'+waHref(l.tel)+'" target="_blank" rel="noopener" aria-label="WhatsApp a '+esc(l.nombre||'')+'">'+I.chat+'</a>':'')+
+        wspBtn(l,'primer_contacto','Enviar')+(esInt?'<button class="pa-ag" data-levante="'+esc(l.id)+'">✓ Ya lo contacté</button>':''))+'</li>';
   }
+  // ART y Laboral con WhatsApp oficial: un solo camino (📤 Enviar marca solo). Tránsito (o si el oficial está apagado): 💬 + ✓ como antes
+  function scOficial(l){ return wspPuede(l) && !(wspD && wspD.activo===false); }
   function scFila(l){
-    var h=clRow(l);
+    if (scOficial(l)){
+      var tel=String(l.tel||'').trim(), em=String(l.email||'').trim(), cuando=ingresoCorto(l);
+      return '<li class="sc-of"><button class="cn" data-ficha="'+esc(l.id)+'"><b>'+(esNuevoAviso(l)?'🔔 ':'')+esc(l.nombre||'Sin nombre')+'</b><span class="cs">'+faseTag(l.fase)+' '+ramaLabel(l.rama)+(cuando?' · '+esc(cuando):'')+'</span></button>'+
+        '<button class="ct num" data-copiar="'+esc(phone(tel)||tel)+'" aria-label="Copiar el teléfono de '+esc(l.nombre||'')+'">'+esc(phone(tel)||tel)+'</button>'+
+        '<button class="wsp-b sc-env" data-wsp="'+esc(l.id)+'" data-wsp-m="primer_contacto" aria-label="Mandar el primer mensaje oficial a '+esc(l.nombre||'')+'">📤 Enviar</button>'+
+        (em ? '<button class="ce" data-copiar="'+esc(em)+'" aria-label="Copiar el mail">'+esc(em)+'</button>' : '')+'</li>';
+    }
+    var h=clRow(l).replace('data-wspmenu="', 'data-wsp-m="primer_contacto" data-wsp="');
     if (rol()==='intaker') h=h.replace(/<\/li>$/, '<button class="lv" data-levante="'+esc(l.id)+'" aria-label="Ya contacté a '+esc(l.nombre||'')+'" title="Ya lo contacté">✓<span class="lv-t"> Contacté</span></button></li>');
     return h;
   }
@@ -3847,18 +3919,123 @@ a.save.wa-go svg{width:20px;height:20px}
   document.addEventListener('click', function(ev){ if (ev.target.closest('[data-scotros]')){ state.scOtros=!state.scOtros; render(); } });
   document.addEventListener('click', function(ev){
     var t=ev.target.closest('[data-levante]'); if (!t) return;
-    var id=t.getAttribute('data-levante'), l=findLead(id), hechos=state.scHechos||(state.scHechos={});
-    hechos[id]=1; render(); toast('✓ '+((l&&l.nombre)||'Lead')+': queda tu nombre en la planilla');
+    scLevantar(t.getAttribute('data-levante'), false);
+  });
+  /* ---------- Sin contactar → primer mensaje → fase, sin abrir la ficha (flujo semanal 08/11) ----------
+     - Tocar WhatsApp (o copiar el número) en Sin contactar y volver a la app: pregunta "¿Le escribiste?" (Sí / No); con Sí queda "Contacté", con Deshacer.
+     - "✓ Contacté" también tiene Deshacer: el pedido sale a los 10 s (o apenas la persona sale de la app).
+     - Los que ya tienen el nombre de un intaker y siguen sin fase quedan en "Ya les escribiste · falta la fase",
+       con los botones de fase en la misma fila (cambiarFase ya deja el nombre del intaker en la planilla). */
+  var SC_FASES=[['A','A'],['B','B'],['Llamada pendiente','Llamada'],['C','C']];
+  function scPuedeFase(){ return rol()==='intaker' && puede('agendar'); }
+  function scLevantar(id, auto){
+    var l=findLead(id), hechos=state.scHechos||(state.scHechos={}), pend=state.scPend||(state.scPend={});
+    if (pend[id] || !l) return;
+    scFlush();
+    hechos[id]=1; (state.scRecien||(state.scRecien={}))[id]=Date.now(); render();
+    var nom=l.nombre||'Lead';
+    var undo=function(){
+      if (!pend[id]) return; clearTimeout(pend[id]); delete pend[id]; delete hechos[id]; delete state.scRecien[id]; render();
+      toast(nom+' volvió a Sin contactar.');
+    };
+    pend[id]=setTimeout(function(){ scMandar(id); }, 10000);
+    pend[id+'#undo']=undo;
+    toastUndo((auto?'✓ Le escribiste a ':'✓ Contactaste a ')+nom+': queda tu nombre en la planilla', undo);
+  }
+  function scMandar(id){
+    var pend=state.scPend||{}, hechos=state.scHechos||(state.scHechos={});
+    if (!pend[id]) return; clearTimeout(pend[id]); var undo=pend[id+'#undo']; delete pend[id]; delete pend[id+'#undo'];
+    if (state.undo && state.undo===undo){ state.undo=null; var tt=$('toast'); if (tt && /undo/.test(tt.className)) tt.className='toast'+(state.sheet?' top':''); }
     call('levantarLead', {id:id}).then(function(r){
-      if (r && r.ya) toast('Ya lo había levantado '+r.ya+'.');
+      if (r && r.ya && r.ya!==((state.me&&state.me.nombre)||'')) toast('Ya lo había levantado '+r.ya+'.');
       if (state.data) state.data.sinContactar=(state.data.sinContactar||[]).filter(function(x){ return x.id!==id; });
+      if (r && r.lead) replaceAny(r.lead);
       delete hechos[id]; render();
-    }).catch(function(e){ delete hechos[id]; render(); toast((e&&e.message)||'No se pudo guardar. Probá de nuevo.', true); });
+    }).catch(function(e){ delete hechos[id]; if (state.scRecien) delete state.scRecien[id]; render(); toast((e&&e.message)||'No se pudo guardar. Probá de nuevo.', true); });
+  }
+  function scFlush(){ Object.keys(state.scPend||{}).forEach(function(k){ if (k.indexOf('#')===-1) scMandar(k); }); }
+  // Salir a WhatsApp desde Sin contactar: al volver (4 s o más afuera) queda marcado
+  var scSalida=null;
+  document.addEventListener('click', function(ev){
+    if (rol()!=='intaker') return;
+    var t=ev.target.closest && ev.target.closest('.cl.sc a.wa, .cl.sc .ct'); if (!t) return;
+    var li=t.closest('li'), b=li && li.querySelector('[data-levante]'); if (!b) return;
+    scSalida={id:b.getAttribute('data-levante'), t:Date.now(), fuera:0};
+  }, true);
+  function scFuera(){ if (scSalida && !scSalida.fuera) scSalida.fuera=Date.now(); scFlush(); }
+  function scVuelve(){
+    var x=scSalida; if (!x || !x.fuera) return;
+    var afuera=Date.now()-x.fuera; x.fuera=0;
+    if (Date.now()-x.t > 20*60000){ scSalida=null; return; }
+    scSalida=null;
+    if (afuera < 4000) return; // volvió enseguida: no le llegó a escribir
+    if ((state.scHechos||{})[x.id]) return;
+    if (!scLista().some(function(l){ return l.id===x.id; })) return;
+    scPreguntar(x.id); // pregunta en vez de marcar solo: sin falsos "contacté"
+  }
+  document.addEventListener('visibilitychange', function(){ if (document.visibilityState==='hidden') scFuera(); else scVuelve(); });
+  window.addEventListener('blur', function(){ if (scSalida && !scSalida.fuera) scSalida.fuera=Date.now(); });
+  window.addEventListener('focus', scVuelve);
+  window.addEventListener('pagehide', scFlush);
+  // Al volver de WhatsApp: "¿Le escribiste a X?" con Sí / No. No se guarda nada hasta que toque Sí.
+  function scPreguntar(id){ if (!findLead(id)) return; state.scPreg=id; clearTimeout(state.scPregT); state.scPregT=setTimeout(function(){ state.scPreg=null; scPregPintar(); }, 90000); scPregPintar(); }
+  function scPregPintar(){
+    var el=$('scPreg'), id=state.scPreg, l=id && findLead(id);
+    if (!l || (state.scHechos||{})[id] || !scLista().some(function(x){ return x.id===id; })){ if (el) el.remove(); state.scPreg=null; return; }
+    if (!el){ el=document.createElement('div'); el.id='scPreg'; el.className='sc-preg'; el.setAttribute('role','dialog'); document.body.appendChild(el); }
+    el.innerHTML='<p>¿Le escribiste a <b>'+esc(l.nombre||'este lead')+'</b>?</p><div><button class="sp-si" data-scpreg="si">✓ Sí, le escribí</button><button class="sp-no" data-scpreg="no">No</button></div>';
+  }
+  document.addEventListener('click', function(ev){
+    var t=ev.target.closest && ev.target.closest('[data-scpreg]'); if (!t) return;
+    var id=state.scPreg; state.scPreg=null; clearTimeout(state.scPregT); scPregPintar();
+    if (id && t.getAttribute('data-scpreg')==='si') scLevantar(id, true);
+  });
+  function ffLista(){
+    if (!scPuedeFase() || !state.data) return [];
+    var sc={}; scLista().forEach(function(l){ sc[l.id]=1; });
+    var desde=addDays(nowBA().date,-7), cl=state.scClasif||{}, vis={}, out=[];
+    (state.data.porAgendar||[]).forEach(function(l){
+      if (vis[l.id] || sc[l.id] || l.sinDia) return;
+      if ((!l.fase && l.ingreso && l.ingreso>=desde) || cl[l.id]){ vis[l.id]=1; out.push(l); }
+    });
+    Object.keys(state.scRecien||{}).concat(Object.keys(cl)).forEach(function(id){ if (!vis[id] && !sc[id]){ var l=findLead(id); if (l){ vis[id]=1; out.push(l); } } });
+    return out.sort(function(a,b){ return String(a.ingreso).localeCompare(String(b.ingreso)); });
+  }
+  function ffRow(l){
+    var f=l.fase, hecho=!!f && !!(state.scClasif||{})[l.id], hace=haceTxt(l);
+    var meta=esc(ramaLabel(l.rama))+(hace?' · '+esc(hace):'')+(l.intaker?' · le escribió '+esc(l.intaker):'');
+    var h='<li class="'+(hecho?'ok':'')+'"><button class="cn" data-ficha="'+esc(l.id)+'" aria-label="Abrir ficha de '+esc(l.nombre||'Sin nombre')+'"><b>'+esc(l.nombre||'Sin nombre')+'</b><span class="cs">'+meta+'</span></button>'+
+      (phone(l.tel)?'<a class="ib wa" href="'+waHref(l.tel)+'" target="_blank" rel="noopener" aria-label="WhatsApp a '+esc(l.nombre||'')+'">'+I.chat+'</a>':'<span></span>');
+    if (hecho) h+='<div class="ff-f"><span class="ff-ok">✓ Quedó en '+faseTag(f)+'</span>'+(['A','B','Llamada pendiente'].indexOf(f)!==-1?'<button class="ff-ag" data-agendar="'+esc(l.id)+'">'+I.cal+'Agendar</button>':'')+'</div>';
+    else h+='<div class="ff-f" role="group" aria-label="Fase de '+esc(l.nombre||'')+'">'+SC_FASES.map(function(x){ return '<button class="fz fz-'+faseKey(x[0])+'" data-scfase="'+esc(x[0])+'" data-scid="'+esc(l.id)+'">'+x[1]+'</button>'; }).join('')+
+      '<button class="fz fz-sin" data-scfase="" data-scid="'+esc(l.id)+'" aria-label="Otra fase (abre la ficha)">Otra</button></div>';
+    return h+'</li>';
+  }
+  function ffHtml(ff){
+    if (!ff.length) return '';
+    var n=ff.filter(function(l){ return !l.fase; }).length, max=state.ffMas?400:8;
+    return '<div id="ffSec"></div><h2 class="sec-t">Falta la fase'+(n?' <span class="cnt num">'+n+'</span>':'')+'</h2>'+
+      '<p class="sec-sub">Ya les escribieron (tienen el nombre de Fran o de Pri) y todavía no tienen fase. Cuando contesten, tocá la fase acá mismo: se guarda al instante y podés deshacer.</p>'+
+      '<ul class="cl ff">'+ff.slice(0,max).map(ffRow).join('')+'</ul>'+
+      (ff.length>max?'<button class="btn3" data-ffmas>Ver los '+ff.length+'</button>':'');
+  }
+  document.addEventListener('click', function(ev){
+    var t=ev.target.closest && ev.target.closest('[data-scfase],[data-ffmas],[data-scir]'); if (!t) return;
+    if (t.hasAttribute('data-ffmas')){ state.ffMas=true; render(); return; }
+    if (t.hasAttribute('data-scir')){ var a=$(t.getAttribute('data-scir')); if (a){ var tp=document.querySelector('.top'), h=tp?tp.getBoundingClientRect().bottom:0; window.scrollTo(0, window.scrollY+a.getBoundingClientRect().top-Math.max(0,h)-6); } return; }
+    var id=t.getAttribute('data-scid'), f=t.getAttribute('data-scfase'); if (!id) return;
+    if (!f){ openSheet({type:'ficha', id:id}); state.fichaUI={modo:'fase'}; renderSheet(); return; }
+    // Si "Contacté" estaba esperando el Deshacer, no hace falta mandarlo: cambiarFase ya deja el nombre del intaker (un pedido menos)
+    var pend=state.scPend||{}; if (pend[id]){ clearTimeout(pend[id]); delete pend[id]; delete pend[id+'#undo']; }
+    (state.scClasif||(state.scClasif={}))[id]=f;
+    cambiarFaseUI(id, f);
   });
   function viewTareas(){
     var t=tareasDe(), pa=t.porAgendar;
     var total=t.hoy.length+t.previa.length+t.sinRes.length;
     var body='';
+    var scN=scLista().filter(function(l){ return !(!!l.fase || /^falta enviar/i.test(String(l.levanto||''))); }).length, ffL=ffLista(), ffN=ffL.filter(function(l){ return !l.fase; }).length;
+    if (rol()==='intaker' && (scN || ffN)) body += '<button class="next-bar sc-ir" data-scir="'+(ffL.length?'ffSec':'scSec')+'"><span>📨 '+[scN?plural(scN,'lead sin contactar','leads sin contactar'):'', ffN?ffN+' sin fase':''].filter(Boolean).join(' · ')+'</span><b>Ver ›</b></button>';
     body += trSecTareas() + repSecTareas();
     var dw=dow(nowBA().date); if (dw===6 || dw===0 || dw===1) body+='<button class="btn3" data-view="reporte" style="margin-top:12px">📊 Armar el reporte de la semana para CARGA SEMANAL</button>';
     body += secTarea('Confirmar hoy', t.hoy.length, 'Mensaje del día para las consultas de hoy. Tocá lo que respondió.', '<ol class="dk">'+t.hoy.map(function(l){ return tkRow(l,'confDia'); }).join('')+'</ol>');
@@ -3875,7 +4052,9 @@ a.save.wa-go svg{width:20px;height:20px}
       otrosHtml='<button class="rs-ctl" data-scotros aria-expanded="'+abierto+'" style="margin-top:14px"><span>Ya clasificados o "Falta enviar leads" sin nombre de intaker ('+otros.length+')</span><small>'+(abierto?'Ocultar ▴':'Ver ▾')+'</small></button>'+
         (abierto?'<p class="hint" style="margin:8px 2px 0">Tienen fase (casi todos C) pero ningún nombre de Fran ni de Pri en la primera columna.</p>'+scHtml(otros):'');
     }
-    body += secTarea('Sin contactar', sc.length, 'Leads nuevos sin clasificar: todavía no tienen fase ni el nombre de Fran o de Pri en la planilla. Primero los que hace más que entraron. Tocá el número para copiarlo. Cuando le mandes el primer mensaje, tocá <b>✓ Contacté</b> y queda tu nombre en la planilla.',
+    body += ffHtml(ffL) + '<div id="scSec"></div>'+secTarea('Sin contactar', sc.length, rol()==='intaker' ?
+      'Leads nuevos: todavía no tienen fase ni el nombre de Fran o de Pri en la planilla. Primero los que hace más que entraron. <b>ART y Laboral:</b> tocá <b>📤 Enviar</b> y queda tu nombre en la planilla solo. <b>Tránsito:</b> tocá 💬 para escribirle; al volver te pregunta si le escribiste. Si lo contactaste por otro lado (llamada), abrí la ficha y tocá <b>Ya lo contacté</b>.' :
+      'Leads nuevos sin clasificar: todavía no tienen fase ni el nombre de Fran o de Pri en la planilla. Primero los que hace más que entraron. Tocá el número para copiarlo. Cuando le mandes el primer mensaje, tocá <b>✓ Contacté</b> y queda tu nombre en la planilla.',
       scHtml(sc)) + otrosHtml;
     if (pa.length) body += '<button class="btn3" data-view="agendar">Ver todos los leads por agendar ('+pa.length+')</button>';
     total += sc.length + comSolPend().length;
@@ -3893,11 +4072,13 @@ a.save.wa-go svg{width:20px;height:20px}
   }
   function confBlock(l, today){
     var hoyOPas = l.fecha <= today, edit = puede('confirmar');
-    var cell=function(campo){ return edit ? '<div class="cbs">'+confBtns(l,campo)+'</div>' : '<i class="cp'+confCls(l[campo])+'">'+confIcon(l[campo])+' '+esc(l[campo]||'Sin mensaje')+'</i>'; };
-    return '<div class="blk"><h3 class="blk-t">¿Confirmó que viene?<small>'+(edit?'Tocá lo que respondió. Tocá de nuevo para borrarlo.':'Lo cargan los intakers.')+'</small></h3><div class="box">'+
-      '<div class="kv'+(edit?' stack':'')+'"><span>Mensaje previo<small>días antes</small></span>'+cell('confPrev')+'</div>'+
+    // Momento de cada mensaje oficial: previo (confirmación o recordatorio de mañana) y del día
+    var momPrev = wspMomento(l, 'confPrev'), momDia = wspMomento(l, 'confDia');
+    var cell=function(campo, mom){ var w=wspBtn(l, mom, ''); return edit ? '<div class="cbs'+(w?' wsp':'')+'">'+confBtns(l,campo)+w+'</div>'+wspYa(l, mom, true) : '<i class="cp'+confCls(l[campo])+'">'+confIcon(l[campo])+' '+esc(l[campo]||'Sin mensaje')+'</i>'; };
+    return '<div class="blk"><h3 class="blk-t">¿Confirmó que viene?<small>'+(edit?'Tocá lo que respondió. Tocá de nuevo para borrarlo.'+(wspPuede(l)?' Con 📤 le mandás el mensaje oficial.':''):'Lo cargan los intakers.')+'</small></h3><div class="box">'+
+      '<div class="kv'+(edit?' stack':'')+'"><span>Mensaje previo<small>días antes</small></span>'+cell('confPrev', momPrev)+'</div>'+
       '<div class="kv'+(edit && hoyOPas?' stack':'')+'"><span>Mensaje del día<small>'+(l.fecha===today?'hoy':(hoyOPas?'el día de la consulta':shortDate(l.fecha)))+'</small></span>'+
-        (hoyOPas?cell('confDia'):'<b style="font-weight:500;color:var(--ink-3)">Se manda ese día</b>')+'</div>'+
+        (hoyOPas?cell('confDia', momDia):'<b style="font-weight:500;color:var(--ink-3)">Se manda ese día</b>')+'</div>'+
     '</div></div>';
   }
 
@@ -4134,7 +4315,7 @@ a.save.wa-go svg{width:20px;height:20px}
     if (copia){ var n0=JSON.parse(JSON.stringify(copia)); n0.fecha=d.fecha; n0.hora=d.hora; n0.abogada=d.abogada; if (n0.sinDia){ delete n0.sinDia; } else if (!dvz && !corr){ n0.fase='Consulta agendada'; if (n0.fecha!==copia.fecha || n0.hora!==copia.hora){ n0.confPrev=''; n0.confDia=''; } } replaceLead(n0); markSeen(id); }
     closeSheet(); if (copia) openSheet({type:'lead', id:id}); render(); toast(msg);
     call('agendar',{id:id, fecha:d.fecha, hora:d.hora, abogada:d.abogada, corregir:corr}).then(function(nl){
-      replaceLead(nl); markSeen(id); render(); if (state.sheet && state.sheet.type==='lead' && state.sheet.id===id) renderSheet();
+      replaceLead(nl); markSeen(id); render(); if (state.sheet && state.sheet.type==='lead' && state.sheet.id===id) renderSheet(); wspTrasAgendar(nl);
     }).catch(function(e){
       if (copia){ state.data.leads=(state.data.leads||[]).filter(function(x){ return x.id!==id; }); if (reag) state.data.leads.push(copia); else (state.data.porAgendar||(state.data.porAgendar=[])).unshift(copia); }
       render(); openSheet({type:'agendar', id:id}); state.draft=dC; renderSheet();
@@ -5218,6 +5399,194 @@ a.save.wa-go svg{width:20px;height:20px}
       recibir(sn.d);
     }
   }catch(e){}
+
+  /* ===== WhatsApp oficial (Wsp): botones, vista previa y lista de mensajes =====
+   * Todo mensaje se muestra completo antes de salir; sale solo si la persona toca "Enviar".
+   * La lista y la vista previa se arman acá mismo (con los textos aprobados y los envíos que trae wspDatos), así abren al instante.
+   * El servidor vuelve a validar todo al mandar. */
+  function wspRol(){ var r=rol(); return r==='intaker'||r==='admin'; }
+  function wspPuede(l){ var r=rol(); return (r==='intaker'||r==='admin') && !!l && (l.rama==='ART'||l.rama==='LABORAL') && !!phone(l.tel); }
+  function wspPrecargar(){ if (!wspD && !wspDP) setTimeout(function(){ wspDatos().then(function(){ if (!state.sheet && !escribiendo()) render(); }).catch(function(){}); }, 0); }
+  function wspBtn(l, momento, txt){
+    if (!momento || !wspPuede(l)) return '';
+    wspPrecargar();
+    return '<button class="wsp-b" data-wsp="'+esc(l.id)+'" data-wsp-m="'+momento+'" title="Mandar por el WhatsApp oficial" aria-label="Mandar por WhatsApp oficial a '+esc(l.nombre||'')+'">📤'+(txt?' '+esc(txt):'')+'</button>';
+  }
+  function wspFicha(l){ if (!wspPuede(l)) return ''; wspPrecargar(); return '<button class="btn3 wsp-menu" data-wspmenu="'+esc(l.id)+'">📤 Mandar mensaje por WhatsApp</button>'; }
+  function wspMenuBtn(l){ if (!wspPuede(l)) return ''; wspPrecargar(); return '<button class="wsp-b wsp-sq" data-wspmenu="'+esc(l.id)+'" title="Mandar mensaje por WhatsApp" aria-label="Mandar mensaje por WhatsApp a '+esc(l.nombre||'')+'">📤</button>'; }
+  function wspTrasAgendar(l){ if (wspPuede(l) && l.fecha && l.hora) toastAccion('Consulta agendada', '📤 Confirmar por WhatsApp', function(){ wspVer(l.id, {momento:'turno'}); }, 12000); }
+  /** Qué mensaje oficial va con cada confirmación: previo = confirmación (si falta más de un día) o recordatorio de mañana; del día = recordatorio de hoy */
+  function wspMomento(l, campo){ var hoy=nowBA().date, man=addDays(hoy,1); if (!l || !l.fecha) return ''; return campo==='confPrev' ? (l.fecha===man?'previo':(l.fecha>man?'turno':'')) : (l.fecha===hoy?'hoy':''); }
+  function wspTplDe(l, momento){ return momento==='primer_contacto' ? wspAuto(l) : ({turno:'confirmacion_consulta', previo:'recordatorio_consulta_manana', hoy:'recordatorio_consulta_hoy'})[momento]; }
+  /** "📤 hoy a las 09:31": el mensaje oficial de ese momento ya se mandó (según lo que trae wspDatos y lo mandado desde este celular) */
+  function wspYa(l, momento, largo){ if (!momento || !wspD || !wspPuede(l)) return ''; var e=((wspD.envios||{})[l.id]||{})[wspTplDe(l, momento)]; if (!e) return ''; return largo ? '<p class="hint" style="margin:6px 2px 0">📤 Mandado '+esc(wspCuando(e.t))+(e.quien?' por '+esc(e.quien):'')+'.</p>' : '<i class="cp wsp-ya" title="Mensaje oficial mandado '+esc(wspCuando(e.t))+'">📤 '+esc(wspCorto(e.t))+'</i>'; }
+  function wspCorto(ms){ var f=wspFechaDe(ms), h=wspHoy(); return f===h ? wspHoraDe(ms) : (f===addDays(h,-1) ? 'ayer '+wspHoraDe(ms) : wspDDMM(f)); }
+
+  /* --- datos para armar todo localmente (se piden una vez y se renuevan cada 5 minutos) --- */
+  var wspD=null, wspDT=0, wspDP=null;
+  function wspDatos(){
+    if (wspD && Date.now()-wspDT < 5*60000) return Promise.resolve(wspD);
+    if (!wspDP) wspDP=call('wspDatos', {}).then(function(d){ wspD=d; wspDT=Date.now(); wspDP=null; return d; }, function(e){ wspDP=null; throw e; });
+    return wspD ? Promise.resolve(wspD) : wspDP;
+  }
+  var WSP_DIAS=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+  function wspHoy(){ return nowBA().date; }
+  function wspDDMM(f){ var m=String(f).split('-'); return m[2]+'/'+m[1]; }
+  function wspDiaYF(f){ var m=String(f).split('-'), d=new Date(+m[0], +m[1]-1, +m[2]); return WSP_DIAS[d.getDay()]+' '+wspDDMM(f); }
+  function wspNombre(n){ var x=String(n||'').trim().split(/\s+/)[0]||''; return x ? x.charAt(0).toUpperCase()+x.slice(1).toLowerCase() : ''; }
+  function wspFechaDe(ms){ try { return new Intl.DateTimeFormat('en-CA', {timeZone:TZ, year:'numeric', month:'2-digit', day:'2-digit'}).format(new Date(ms)); } catch(x){ return new Date(ms).toISOString().slice(0,10); } }
+  function wspHoraDe(ms){ try { return new Intl.DateTimeFormat('es-AR', {timeZone:TZ, hour:'2-digit', minute:'2-digit', hour12:false}).format(new Date(ms)); } catch(x){ return ''; } }
+  function wspCuando(ms){ var f=wspFechaDe(ms), h=wspHoy(); return f===h ? 'hoy a las '+wspHoraDe(ms) : (f===addDays(h,-1) ? 'ayer a las '+wspHoraDe(ms) : (f===addDays(h,1) ? 'mañana a las '+wspHoraDe(ms) : 'el '+wspDDMM(f))); }
+  function wspTipo(l){ var x=(l.info||[]).filter(function(c){ return /tipo de siniestro/i.test(c.label||''); })[0]; return x ? String(x.text||'') : ''; }
+  function wspAuto(l){ return l.rama==='LABORAL' ? 'inicio_laboral' : (/enfermedad/i.test(wspTipo(l)) ? 'inicio_enfermedad_art' : 'inicio_accidente_art'); }
+  function wspFalta(o, l){
+    var hoy=wspHoy(), man=addDays(hoy,1);
+    if (o.req==='turno' && (!l.fecha || !l.hora)) return 'Esta consulta no tiene día y hora cargados.';
+    if (o.req==='turno' && l.fecha < hoy) return 'La consulta ya pasó.';
+    if (o.req==='manana' && l.fecha!==man) return 'El recordatorio dice "mañana": se manda el día anterior a la consulta.';
+    if (o.req==='manana' && !l.hora) return 'La consulta no tiene hora cargada.';
+    if (o.req==='hoy' && l.fecha!==hoy) return 'Este recordatorio es para las consultas de hoy.';
+    if (o.req==='hoy' && !l.hora) return 'La consulta no tiene hora cargada.';
+    if (o.req==='paso'){
+      var pasada=!!l.fecha && l.fecha<=hoy, yaVino=/^(seguimiento|no show)$/i.test(l.fase||'');
+      if (o.vars.indexOf('diaYFecha')!==-1 && !pasada) return l.fecha ? 'Es para después de la consulta.' : 'No tiene cargado el día de la consulta (se carga al agendar desde la app).';
+      if (!pasada && !yaVino) return 'Es para después de la consulta.';
+    }
+    if (o.tpl==='seguimiento_post_consulta' && !l.abogada) return 'Falta la abogada de la consulta.';
+    return '';
+  }
+  function wspTexto(o, l, D){
+    var t=D.textos[o.tpl]; if (!t) return '';
+    var val={nombre:wspNombre(l.nombre), firma:D.firma, hora:l.hora||'', ddmm:l.fecha?wspDDMM(l.fecha):'', diaYFecha:l.fecha?wspDiaYF(l.fecha):'', abogada:(D.abogadas||{})[l.abogada]||('Dra. '+(l.abogada||''))};
+    var vars=o.vars.map(function(k){ return val[k]; });
+    return t.replace(/\{\{(\d+)\}\}/g, function(m, n){ return vars[+n-1]!==undefined ? vars[+n-1] : m; });
+  }
+  function wspRecomendados(fase, auto){
+    var docs=['seguimiento_estudios_medicos','seguimiento_historia_clinica','recordatorio_semanal_estudios','seguimiento_recuperacion_art'];
+    if (fase==='consulta agendada' || fase==='reagenda') return ['confirmacion_consulta','recordatorio_consulta_manana','recordatorio_consulta_hoy','reagendar_consulta'];
+    if (fase==='seguimiento') return ['seguimiento_post_consulta','reactivacion_post_consulta'].concat(docs);
+    if (fase==='no show') return ['no_vino_a_consulta','reagendar_consulta','reactivacion_post_consulta'];
+    if (fase==='caso en proceso') return docs;
+    if (fase==='c') return ['rechazo_no_es_caso','rechazo_fuera_jurisdiccion','rechazo_abogado_interviniendo','rechazo_prescripcion_art','rechazo_empleo_publico','reactivacion_formulario'];
+    return [auto,'seguimiento_sin_respuesta_1','seguimiento_sin_respuesta_2','seguimiento_sin_respuesta_3','inicio_jurisdiccion','reactivacion_formulario'];
+  }
+  function wspDestino(l, D){ return D.prueba ? (D.destinoPrueba||'MODO PRUEBA') : '+54 9 '+phone(l.tel); }
+  function wspAviso(envio, D){ return envio && Date.now()-envio.t < (D.horas||20)*3600000 ? 'Ya se mandó '+wspCuando(envio.t)+' por '+envio.quien+'.' : ''; }
+  /** Lo mismo que arma el servidor en wspOpciones, pero acá y al instante. */
+  function wspListaLocal(l, D){
+    var envios=(D.envios||{})[l.id]||{}, auto=wspAuto(l), fase=String(l.fase||'').toLowerCase();
+    var ult=[3,2,1].filter(function(n){ return envios['seguimiento_sin_respuesta_'+n]; })[0]||0;
+    var porFase=fase==='seguimiento' ? ['seguimiento_post_consulta','reactivacion_post_consulta'] : (fase==='no show' ? ['no_vino_a_consulta','reagendar_consulta'] : []);
+    var cat=D.catalogo, de=function(t){ return cat.filter(function(x){ return x.tpl===t; })[0]; };
+    var sugFase=porFase.filter(function(t){ var o=de(t); return o && !wspFalta(o,l) && D.textos[t] && !envios[t]; })[0]||'';
+    var previo={1:envios[auto], 2:envios.seguimiento_sin_respuesta_1, 3:envios.seguimiento_sin_respuesta_2}, espera={1:20, 2:44, 3:144};
+    var desde=function(n){ return previo[n] ? previo[n].t+espera[n]*3600000 : 0; };
+    var lista=cat.filter(function(o){
+      if (o.ramas && o.ramas.indexOf(l.rama)===-1) return false;
+      if (o.grupo==='Primer contacto') return o.tpl===auto;
+      return true;
+    }).map(function(o){
+      var falta=wspFalta(o,l), ya=envios[o.tpl], texto=falta ? '' : wspTexto(o,l,D);
+      if (!falta && !texto) falta='Todavía no está aprobado en Meta.';
+      var esSig=o.serie && o.serie===ult+1, temprano=esSig && desde(o.serie) > Date.now();
+      return { tpl:o.tpl, label:o.label, grupo:o.grupo, ok:!falta, falta:falta, texto:texto, aviso:wspAviso(ya,D),
+        ya: ya ? 'Mandado '+wspCuando(ya.t)+' por '+ya.quien : '',
+        nota: temprano ? 'Conviene mandarlo desde '+wspCuando(desde(o.serie)) : '',
+        sugerido: (sugFase ? o.tpl===sugFase : !!(esSig && (ult>0 || envios[auto] || l.intaker) && !temprano)) || (o.grupo==='Primer contacto' && !ya && !l.intaker) };
+    });
+    var rec=wspRecomendados(fase, auto);
+    lista.forEach(function(x){ x.rec=rec.indexOf(x.tpl); });
+    lista.sort(function(x, y){
+      var rx=x.rec===-1?99:x.rec, ry=y.rec===-1?99:y.rec;
+      if ((rx<99)!==(ry<99)) return rx-ry;
+      if (rx<99) return (y.sugerido-x.sugerido) || (y.ok-x.ok) || (rx-ry);
+      return 0;
+    });
+    return { nombre:l.nombre, fase:l.fase||'Sin clasificar', destino:wspDestino(l,D), prueba:!!D.prueba, lista:lista };
+  }
+
+  /* --- ventana --- */
+  var wspSt={};
+  function wspDlg(html){
+    var d=document.getElementById('wspDlg');
+    if (!d){
+      d=document.createElement('div'); d.id='wspDlg'; d.className='wsp-ov'; document.body.appendChild(d);
+      d.addEventListener('click', function(ev){ if (ev.target===d || ev.target.closest('[data-wspx]')) wspCerrar(); });
+    }
+    d.innerHTML='<div class="wsp-box" role="dialog" aria-modal="true">'+html+'</div>'; d.classList.add('on');
+  }
+  function wspCerrar(){ var d=document.getElementById('wspDlg'); if (d){ d.classList.remove('on'); d.innerHTML=''; } }
+  function wspFalla(e, txt){ wspDlg('<p class="wsp-err">'+esc((e&&e.message)||txt)+'</p><div class="wsp-acts"><button class="wsp-no" data-wspx>Cerrar</button></div>'); }
+  function wspMostrar(v){
+    wspSt.v=v;
+    wspDlg('<h3>'+esc(v.label)+'</h3><p class="wsp-to'+(v.prueba?' prueba':'')+'">Para: '+esc(v.destino)+'</p>'+
+      '<div class="wsp-msg">'+esc(v.texto).replace(/\n/g,'<br>')+'</div>'+
+      (v.aviso?'<p class="wsp-aviso">⚠️ '+esc(v.aviso)+'</p>':'')+
+      '<p class="wsp-hint" style="margin-top:10px">Así le va a llegar. Revisalo antes de mandarlo.</p>'+
+      '<div class="wsp-acts"><button class="wsp-no" data-wspx>Cancelar</button><button class="wsp-si" data-wspok>'+(v.aviso?'Enviar igual':'Enviar')+'</button></div>');
+  }
+  /** Botones rápidos (primer mensaje, recordatorios, turno): vista previa al instante si ya están los datos. */
+  function wspVer(id, q){
+    wspSt={id:id, q:q};
+    var l=findLead(id), porMomento={turno:'confirmacion_consulta', previo:'recordatorio_consulta_manana', hoy:'recordatorio_consulta_hoy'};
+    var local=function(D){
+      var tpl=q.tpl || (q.momento==='primer_contacto' ? wspAuto(l) : porMomento[q.momento]);
+      var o=D.catalogo.filter(function(x){ return x.tpl===tpl; })[0]; if (!o) return false;
+      var falta=wspFalta(o,l); if (falta){ wspFalla({message:falta}); return true; }
+      var texto=wspTexto(o,l,D); if (!texto) return false;
+      wspMostrar({label:o.label, texto:texto, destino:wspDestino(l,D), prueba:!!D.prueba, aviso:wspAviso(((D.envios||{})[id]||{})[tpl], D)});
+      return true;
+    };
+    if (l && wspD && wspD.activo && local(wspD)) return;
+    wspDlg('<p class="wsp-load">Armando el mensaje…</p>');
+    call('wspVista', Object.assign({id:id}, q)).then(wspMostrar).catch(function(e){ wspFalla(e, 'No se pudo armar el mensaje.'); });
+  }
+  function wspElegir(tpl){
+    var x=(wspSt.lista||[]).filter(function(y){ return y.tpl===tpl; })[0];
+    if (x && x.texto){ wspSt.q={tpl:tpl}; wspMostrar({label:x.label, texto:x.texto, destino:wspSt.destino, prueba:wspSt.prueba, aviso:x.aviso}); }
+    else wspVer(wspSt.id, {tpl:tpl});
+  }
+  function wspMandar(){
+    var s=wspSt; if (!s.v) return;
+    var b=document.querySelector('[data-wspok]'); if (b){ b.disabled=true; b.textContent='Enviando…'; }
+    call('enviarWsp', Object.assign({id:s.id, forzar:!!s.v.aviso}, s.q)).then(function(r){
+      wspCerrar(); toast('✓ Enviado por WhatsApp: '+r.label+(r.prueba?' (prueba: llegó a tu número)':''));
+      if (wspD){ var e=(wspD.envios=wspD.envios||{}); (e[s.id]=e[s.id]||{})[r.tpl]={t:Date.now(), quien:wspD.yo}; }
+      if (r.levanto && state.data) state.data.sinContactar=(state.data.sinContactar||[]).filter(function(x){ return x.id!==s.id; });
+      if (r.lead && r.lead.id && findLead(r.lead.id)) { try { replaceLead(r.lead); } catch(x){} }
+      render();
+    }).catch(function(e){ if (b){ b.disabled=false; b.textContent='Enviar'; } toast((e&&e.message)||'No se pudo mandar. Usá el botón de WhatsApp de siempre.', true); });
+  }
+  function wspPintarLista(id, o){
+    wspSt={id:id, lista:o.lista, destino:o.destino, prueba:o.prueba};
+    var grupos=[], por={}, recs=o.lista.filter(function(x){ return x.rec>-1; }), tr='Recomendados para esta etapa ('+(o.fase||'')+')';
+    if (recs.length){ grupos.push(tr); por[tr]=recs; }
+    o.lista.forEach(function(x){ if (x.rec>-1) return; var g=recs.length?'Otros · '+x.grupo:x.grupo; if (!por[g]){ por[g]=[]; grupos.push(g); } por[g].push(x); });
+    var h='<h3>WhatsApp a '+esc(o.nombre||'')+'</h3><p class="wsp-to'+(o.prueba?' prueba':'')+'">Para: '+esc(o.destino)+'</p>'+
+      '<p class="wsp-hint">Elegí el mensaje. Antes de mandarlo vas a ver el texto completo.</p>';
+    grupos.forEach(function(g){
+      h+='<div class="wsp-g">'+esc(g)+'</div>'+por[g].map(function(x){
+        return '<button class="wsp-op'+(x.sugerido&&x.ok?' sug':'')+'" data-wsptpl="'+esc(x.tpl)+'"'+(x.ok?'':' disabled')+'><b>'+esc(x.label)+(x.sugerido&&x.ok?' · sugerido':'')+'</b>'+
+          (x.ya?'<small>'+esc(x.ya)+'</small>':'')+(x.nota?'<small>'+esc(x.nota)+'</small>':'')+(x.ok?'':'<small>'+esc(x.falta)+'</small>')+'</button>';
+      }).join('');
+    });
+    wspDlg(h+'<div class="wsp-acts"><button class="wsp-no" data-wspx>Cerrar</button></div>');
+  }
+  function wspMenu(id){
+    var l=findLead(id);
+    if (l && wspD && wspD.activo){ wspPintarLista(id, wspListaLocal(l, wspD)); wspDatos().catch(function(){}); return; }
+    wspSt={id:id}; wspDlg('<p class="wsp-load">Buscando los mensajes para esta persona…</p>');
+    var porServidor=function(){ call('wspOpciones', {id:id}).then(function(o){ wspPintarLista(id, o); }).catch(function(e){ wspFalla(e, 'No se pudo abrir la lista.'); }); };
+    if (!l) return porServidor();
+    wspDatos().then(function(D){ if (D && D.activo) wspPintarLista(id, wspListaLocal(l, D)); else porServidor(); }).catch(porServidor);
+  }
+  document.addEventListener('click', function(ev){
+    var t;
+    if ((t=ev.target.closest('[data-wsp]'))){ ev.preventDefault(); ev.stopPropagation(); wspVer(t.getAttribute('data-wsp'), {momento:t.getAttribute('data-wsp-m')}); return; }
+    if ((t=ev.target.closest('[data-wspmenu]'))){ ev.preventDefault(); ev.stopPropagation(); wspMenu(t.getAttribute('data-wspmenu')); return; }
+    if ((t=ev.target.closest('[data-wsptpl]'))){ ev.preventDefault(); ev.stopPropagation(); wspElegir(t.getAttribute('data-wsptpl')); return; }
+    if ((t=ev.target.closest('[data-wspok]'))){ ev.preventDefault(); ev.stopPropagation(); wspMandar(); return; }
+  }, true);
 })();
 </script>
 <script>
