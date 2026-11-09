@@ -3668,7 +3668,8 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
   function frDe(a, d){ var fe=dispData().fechas[a]||{}; return fe.hasOwnProperty(d) ? fe[d] : fijoDeModo(a, diaSem(d), modoDe(a)); }
   function dispArr(a, d){ return frToArr(frDe(a, d)); }
   function dispOk(a, d, hora){ var av=dispArr(a, d), s=Math.floor(hmin(hora)/SLOT), n=Math.ceil((state.data.duracion||30)/SLOT); for (var i=0;i<n;i++) if (!av[s+i]) return false; return true; }
-  function dispQuien(){ var a=state.abog; return (a && a!=='Todas' && (state.data.abogadas||[]).indexOf(a)!==-1) ? a : null; }
+  // Si en la marca hay una sola persona (Tránsito: Juan) no hay botones para elegirla: igual se muestra su disponibilidad
+  function dispQuien(){ var a=state.abog; if (!a || a==='Todas'){ var ps=personas(); if (ps.length===1) a=ps[0]; } return (a && a!=='Todas' && (state.data.abogadas||[]).indexOf(a)!==-1) ? a : null; }
   function puedeDisp(a){ return rol()==='admin' || !!(state.me && state.me.nombre===a); }
   function fueraDisp(l){ return !!(l.fecha && l.hora && l.abogada && l.fecha>=nowBA().date && (l.fase==='Consulta agendada' || l.fase==='Reagenda') && (state.data.abogadas||[]).indexOf(l.abogada)!==-1 && !dispOk(l.abogada, l.fecha, l.hora)); }
 
