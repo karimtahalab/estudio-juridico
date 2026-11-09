@@ -21,6 +21,7 @@ Cómo correrlo: `python3 pruebas/correr.py <carpeta con index.html> <carpeta de 
 | mejora/2026-11-07-reportes-sol | Registro de uso y comentarios de Sol (motor v75/v76) | Aplicada (en main desde el 07/11) |
 | mejora/2026-11-08-flujo-sin-contactar | Flujo semanal: Sin contactar → primer mensaje → fase sin abrir la ficha (auto "Contacté" al volver de WhatsApp con Deshacer, sección "Falta la fase" con botones A/B/Llamada/C, barra para ir directo). Sin motor. | Pendiente de aprobar |
 | mejora/2026-11-08 | Pedidos colgados: las lecturas se cortan a los 35 s y se repiten solas; al volver a la app se repiten las que llevan más de 12 s en camino. Escrituras sin cambios. Sin motor. | Pendiente de aprobar |
+| mejora/2026-11-09 | Cargar resultado: la hoja ya no esconde la hora y el nombre de la consulta (baja solo lo necesario); Confirmó/No respondió y Cargar resultado a 44 px; Bloquear con zona táctil de 44 px. Sin motor. | Pendiente de aprobar |
 
 ## 2026-11-05 (primera noche)
 - Armé el banco (rama pruebas-nocturnas, carpeta pruebas/).
@@ -114,6 +115,17 @@ Cómo correrlo: `python3 pruebas/correr.py <carpeta con index.html> <carpeta de 
 - Ideas grandes:
   - getData tarda 4-14 s y se pide en cada Actualizar y al volver a la app: que el motor guarde la respuesta armada 30-60 s en CacheService por persona y la invalide al guardar (pares en un JSON de "Cambios del motor pendientes", a medir primero en la copia).
   - Agenda en 360x640: plegar "Marcar mi disponibilidad" a una línea en pantallas bajas (sube la próxima consulta ~35 px). Sigue pendiente lo de los chips a 40-44 px.
+
+## 2026-11-09 (lunes, madrugada)
+- Ramas sin mergear: mejora/2026-11-08 y mejora/2026-11-08-flujo-sin-contactar (2, así que hubo lugar para una nueva). Cambios del motor pendientes: ninguno (los 3 archivos de la carpeta dicen APLICADO).
+- Registro de uso real: no hay filas nuevas desde el 07/11 (nadie usó la app el 08/11 ni hasta esta corrida). Lo del 06-07/11 ya se analizó el 08/11. Dato que quedó: Fran pide getReporte (3-5 s) en segundo plano después de cada cambio de fase (~25 veces el 07/11), porque cada escritura invalida el reporte y el próximo getData lo vuelve a precargar. No traba la pantalla; es carga extra del motor.
+- Roles probados: Cele (abogada), Pri (intaker, crea PIN), Karim (admin), Juan (Tránsito), Estefanía y Sol. 390 y 360 (y 320x480 para el flujo de resultado). Sin errores de JavaScript ni pedidos fallidos en main ni en la rama. Mismas pestañas por rol. Permisos OK con datos falsos (Estefanía solo Agenda y Falta cargar; Juan sin Reportes ni Tareas; Reportes completos solo Karim).
+- Problema encontrado (confuso): "Cargar resultado" abre la ficha y la baja 155 px hasta "¿Qué pasó en la consulta?": la hora y el nombre quedan arriba, fuera de la pantalla (en 390 y 360, todos los roles). Se puede cargar Firmó/No vino sin ver de quién es. Las opciones y Guardar entran sin bajar (390, 360 y 320x480).
+- Chicos que quedaban: Confirmó/No respondió 42 de alto (tarea de todos los días de intakers), Cargar resultado 42, Bloquear 34.
+- Mejora propuesta: mejora/2026-11-09 (ver tabla). Banco: nuevo pruebas/explora_res.py (mide nombre, opciones y Guardar al cargar resultado; CHICO=1 prueba 320x480). main: nombre en -85/-71 px (escondido); rama: nombre visible (70-84 px), opciones y Guardar visibles, sin bajar.
+- Ideas grandes:
+  - Reporte en segundo plano: después de una escritura, volver a pedir getReporte recién al abrir la pestaña o 1 vez cada 2-3 min, en vez de tras cada getData (le saca al motor ~25 pedidos de 4 s por día de Fran). Ojo: la pestaña Reporte tardaría 3-5 s la primera vez después de cambiar algo.
+  - Sigue pendiente lo de getData en CacheService (motor) y plegar "Marcar mi disponibilidad" en pantallas bajas.
 
 ## Flujos rediseñados (tarea semanal de los domingos)
 | Fecha | Flujo | Para quién | Toques antes → después | Rama | Motor |
