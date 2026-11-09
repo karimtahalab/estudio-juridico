@@ -2813,10 +2813,17 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
 
   /* ---------- tareas de los intakers ---------- */
   function tareasDe(){
-    var today=nowBA().date, lim=addDays(today,4), L=leads();
+    var today=nowBA().date, man=addDays(today,1), pasado=addDays(today,2), L=leads();
+    // Recordatorios (3 como máximo): 1º dos días antes, 2º el día antes (si todavía no confirmó) y 3º el mensaje del día
+    var mandadoManana=function(l){ return !!(wspD && ((wspD.envios||{})[l.id]||{}).recordatorio_consulta_manana); };
     return {
       hoy: L.filter(function(l){ return l.fecha===today && isPend(statusOf(l)) && !needsResult(l) && !l.confDia; }).sort(byTime),
-      previa: L.filter(function(l){ return l.fecha>today && l.fecha<=lim && isPend(statusOf(l)) && !l.confPrev; }).sort(byTime),
+      previa: L.filter(function(l){
+        if (!isPend(statusOf(l))) return false;
+        if (l.fecha===pasado) return !l.confPrev;
+        if (l.fecha===man) return !l.confPrev || (l.confPrev==='No respondió' && !mandadoManana(l));
+        return false;
+      }).sort(byTime),
       sinRes: sinResumen(),
       porAgendar: state.data.porAgendar||[]
     };
@@ -3865,11 +3872,16 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
       return '<button class="cbtn '+(ok?'ok':'no')+(v===x?' on':'')+'" data-conf="'+esc(l.id)+'|'+campo+'|'+x+'" aria-pressed="'+(v===x)+'">'+(ok?'✅ Confirmó':'🔴 No respondió')+'</button>';
     }).join('');
   }
+  /** Qué recordatorio toca: 1º (dos días antes), 2º (el día antes) o 3º (mensaje del día). */
+  function tkNum(l, campo){
+    var hoy=nowBA().date, t = campo==='confDia' ? (l.fecha===hoy?'3º · del día':'') : (l.fecha===addDays(hoy,2)?'1º recordatorio':(l.fecha===addDays(hoy,1)?'2º recordatorio':''));
+    return t ? '<i class="cp" style="font-weight:600">'+t+'</i>' : '';
+  }
   function tkRow(l, campo){
     var today=nowBA().date;
     return '<li class="it tk">'+
       '<button class="it-main" data-open="'+esc(l.id)+'" aria-label="Abrir ficha de '+esc(l.nombre)+'"><span class="tm num">'+(l.fecha!==today?'<small>'+diaCorto(l.fecha)+'</small>':'')+esc(l.hora||'--:--')+'</span>'+
-        '<span class="tx"><span class="nm">'+esc(l.nombre)+'</span><span class="mt"><span class="rama r-'+ramaKey(l.rama)+'">'+ramaLabel(l.rama)+'</span>'+(l.abogada?'<span class="cp">Con '+esc(l.abogada)+'</span>':'')+wspYa(l, wspMomento(l, campo))+'</span></span></button>'+
+        '<span class="tx"><span class="nm">'+esc(l.nombre)+'</span><span class="mt">'+tkNum(l, campo)+'<span class="rama r-'+ramaKey(l.rama)+'">'+ramaLabel(l.rama)+'</span>'+(l.abogada?'<span class="cp">Con '+esc(l.abogada)+'</span>':'')+wspYa(l, wspMomento(l, campo))+'</span></span></button>'+
       '<span class="it-acts">'+wspBtn(l, wspMomento(l, campo), '')+'<a class="ib wa" href="'+waHref(l.tel)+'" target="_blank" rel="noopener" aria-label="WhatsApp a '+esc(l.nombre)+'">'+I.chat+'</a></span>'+
       '<div class="tk-acts">'+confBtns(l,campo)+'</div></li>';
   }
@@ -4039,8 +4051,8 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     if (rol()==='intaker' && (scN || ffN)) body += '<button class="next-bar sc-ir" data-scir="'+(ffL.length?'ffSec':'scSec')+'"><span>📨 '+[scN?plural(scN,'lead sin contactar','leads sin contactar'):'', ffN?ffN+' sin fase':''].filter(Boolean).join(' · ')+'</span><b>Ver ›</b></button>';
     body += trSecTareas() + repSecTareas();
     var dw=dow(nowBA().date); if (dw===6 || dw===0 || dw===1) body+='<button class="btn3" data-view="reporte" style="margin-top:12px">📊 Armar el reporte de la semana para CARGA SEMANAL</button>';
-    body += secTarea('Confirmar hoy', t.hoy.length, 'Mensaje del día para las consultas de hoy. Tocá lo que respondió.', '<ol class="dk">'+t.hoy.map(function(l){ return tkRow(l,'confDia'); }).join('')+'</ol>');
-    body += secTarea('Mensaje previo', t.previa.length, 'Consultas de los próximos días que todavía no tienen la confirmación previa.', '<ol class="dk">'+t.previa.map(function(l){ return tkRow(l,'confPrev'); }).join('')+'</ol>');
+    body += secTarea('Mensaje del día', t.hoy.length, 'Último recordatorio (el 3º), para las consultas de hoy. Tocá lo que respondió.', '<ol class="dk">'+t.hoy.map(function(l){ return tkRow(l,'confDia'); }).join('')+'</ol>');
+    body += secTarea('Recordatorios', t.previa.length, '<b>1º recordatorio:</b> consultas de pasado mañana. <b>2º recordatorio:</b> las de mañana que todavía no confirmaron. El 3º es el mensaje del día. Tocá lo que respondió.', '<ol class="dk">'+t.previa.map(function(l){ return tkRow(l,'confPrev'); }).join('')+'</ol>');
     body += comSolHtml();
     body += respuestasHtml();
     body += secTarea('Sin resumen', t.sinRes.length, 'Escribí el resumen para que la abogada lo tenga antes de la consulta.', '<ul class="todo">'+t.sinRes.map(srRow).join('')+'</ul>');
@@ -4077,7 +4089,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     var momPrev = wspMomento(l, 'confPrev'), momDia = wspMomento(l, 'confDia');
     var cell=function(campo, mom){ var w=wspBtn(l, mom, ''); return edit ? '<div class="cbs'+(w?' wsp':'')+'">'+confBtns(l,campo)+w+'</div>'+wspYa(l, mom, true) : '<i class="cp'+confCls(l[campo])+'">'+confIcon(l[campo])+' '+esc(l[campo]||'Sin mensaje')+'</i>'; };
     return '<div class="blk"><h3 class="blk-t">¿Confirmó que viene?<small>'+(edit?'Tocá lo que respondió. Tocá de nuevo para borrarlo.'+(wspPuede(l)?' Con 📤 le mandás el mensaje oficial.':''):'Lo cargan los intakers.')+'</small></h3><div class="box">'+
-      '<div class="kv'+(edit?' stack':'')+'"><span>Mensaje previo<small>días antes</small></span>'+cell('confPrev', momPrev)+'</div>'+
+      '<div class="kv'+(edit?' stack':'')+'"><span>Recordatorios previos<small>1º dos días antes, 2º el día antes</small></span>'+cell('confPrev', momPrev)+'</div>'+
       '<div class="kv'+(edit && hoyOPas?' stack':'')+'"><span>Mensaje del día<small>'+(l.fecha===today?'hoy':(hoyOPas?'el día de la consulta':shortDate(l.fecha)))+'</small></span>'+
         (hoyOPas?cell('confDia', momDia):'<b style="font-weight:500;color:var(--ink-3)">Se manda ese día</b>')+'</div>'+
     '</div></div>';
@@ -5468,7 +5480,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     if (fase==='seguimiento') return ['seguimiento_post_consulta','reactivacion_post_consulta'].concat(docs);
     if (fase==='no show') return ['no_vino_a_consulta','reagendar_consulta','reactivacion_post_consulta'];
     if (fase==='caso en proceso') return docs;
-    if (fase==='c') return ['rechazo_no_es_caso','rechazo_fuera_jurisdiccion','rechazo_abogado_interviniendo','rechazo_prescripcion_art','rechazo_empleo_publico','reactivacion_formulario'];
+    if (fase==='c') return ['rechazo_no_es_caso','rechazo_fuera_jurisdiccion','rechazo_abogado_interviniendo','rechazo_prescripcion_art','rechazo_sin_art','rechazo_empleo_publico','reactivacion_formulario'];
     return [auto,'consulta_tiempo_trabajado','seguimiento_sin_respuesta_1','seguimiento_sin_respuesta_2','seguimiento_sin_respuesta_3','inicio_jurisdiccion','reactivacion_formulario'];
   }
   function wspDestino(l, D){ return D.prueba ? (D.destinoPrueba||'MODO PRUEBA') : '+54 9 '+phone(l.tel); }
