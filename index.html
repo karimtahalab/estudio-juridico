@@ -5469,7 +5469,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     if (fase==='no show') return ['no_vino_a_consulta','reagendar_consulta','reactivacion_post_consulta'];
     if (fase==='caso en proceso') return docs;
     if (fase==='c') return ['rechazo_no_es_caso','rechazo_fuera_jurisdiccion','rechazo_abogado_interviniendo','rechazo_prescripcion_art','rechazo_empleo_publico','reactivacion_formulario'];
-    return [auto,'seguimiento_sin_respuesta_1','seguimiento_sin_respuesta_2','seguimiento_sin_respuesta_3','inicio_jurisdiccion','reactivacion_formulario'];
+    return [auto,'consulta_tiempo_trabajado','seguimiento_sin_respuesta_1','seguimiento_sin_respuesta_2','seguimiento_sin_respuesta_3','inicio_jurisdiccion','reactivacion_formulario'];
   }
   function wspDestino(l, D){ return D.prueba ? (D.destinoPrueba||'MODO PRUEBA') : '+54 9 '+phone(l.tel); }
   function wspAviso(envio, D){ return envio && Date.now()-envio.t < (D.horas||20)*3600000 ? 'Ya se mandó '+wspCuando(envio.t)+' por '+envio.quien+'.' : ''; }
@@ -5477,14 +5477,16 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
   function wspListaLocal(l, D){
     var envios=(D.envios||{})[l.id]||{}, auto=wspAuto(l), fase=String(l.fase||'').toLowerCase();
     var ult=[3,2,1].filter(function(n){ return envios['seguimiento_sin_respuesta_'+n]; })[0]||0;
+    // El primer mensaje ya mandado: el automático o uno alternativo (ej.: cuánto tiempo trabajó)
+    var primero=envios[auto] || (D.catalogo||[]).filter(function(o){ return o.alterno && envios[o.tpl]; }).map(function(o){ return envios[o.tpl]; })[0];
     var porFase=fase==='seguimiento' ? ['seguimiento_post_consulta','reactivacion_post_consulta'] : (fase==='no show' ? ['no_vino_a_consulta','reagendar_consulta'] : []);
     var cat=D.catalogo, de=function(t){ return cat.filter(function(x){ return x.tpl===t; })[0]; };
     var sugFase=porFase.filter(function(t){ var o=de(t); return o && !wspFalta(o,l) && D.textos[t] && !envios[t]; })[0]||'';
-    var previo={1:envios[auto], 2:envios.seguimiento_sin_respuesta_1, 3:envios.seguimiento_sin_respuesta_2}, espera={1:20, 2:44, 3:144};
+    var previo={1:primero, 2:envios.seguimiento_sin_respuesta_1, 3:envios.seguimiento_sin_respuesta_2}, espera={1:20, 2:44, 3:144};
     var desde=function(n){ return previo[n] ? previo[n].t+espera[n]*3600000 : 0; };
     var lista=cat.filter(function(o){
       if (o.ramas && o.ramas.indexOf(l.rama)===-1) return false;
-      if (o.grupo==='Primer contacto') return o.tpl===auto;
+      if (o.grupo==='Primer contacto') return o.tpl===auto || !!o.alterno;
       return true;
     }).map(function(o){
       var falta=wspFalta(o,l), ya=envios[o.tpl], texto=falta ? '' : wspTexto(o,l,D);
@@ -5493,7 +5495,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
       return { tpl:o.tpl, label:o.label, grupo:o.grupo, ok:!falta, falta:falta, texto:texto, aviso:wspAviso(ya,D),
         ya: ya ? 'Mandado '+wspCuando(ya.t)+' por '+ya.quien : '',
         nota: temprano ? 'Conviene mandarlo desde '+wspCuando(desde(o.serie)) : '',
-        sugerido: (sugFase ? o.tpl===sugFase : !!(esSig && (ult>0 || envios[auto] || l.intaker) && !temprano)) || (o.grupo==='Primer contacto' && !ya && !l.intaker) };
+        sugerido: (sugFase ? o.tpl===sugFase : !!(esSig && (ult>0 || primero || l.intaker) && !temprano)) || (o.tpl===auto && !primero && !l.intaker) };
     });
     var rec=wspRecomendados(fase, auto);
     lista.forEach(function(x){ x.rec=rec.indexOf(x.tpl); });
