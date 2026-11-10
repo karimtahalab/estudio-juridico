@@ -5509,7 +5509,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     if (fase==='seguimiento') return ['seguimiento_post_consulta','reactivacion_post_consulta'].concat(docs);
     if (fase==='no show') return ['no_vino_a_consulta','reagendar_consulta','reactivacion_post_consulta'];
     if (fase==='caso en proceso') return docs;
-    if (fase==='c') return ['rechazo_no_es_caso','rechazo_fuera_jurisdiccion','rechazo_abogado_interviniendo','rechazo_prescripcion_art','rechazo_sin_art','rechazo_empleo_publico','reactivacion_formulario'];
+    if (fase==='c') return ['rechazo_no_es_caso','rechazo_fuera_jurisdiccion','rechazo_abogado_interviniendo','rechazo_prescripcion_art','rechazo_sin_art','rechazo_empleo_publico','rechazo_mas_3_meses','reactivacion_formulario'];
     return [auto,'consulta_tiempo_trabajado','seguimiento_sin_respuesta_1','seguimiento_sin_respuesta_2','seguimiento_sin_respuesta_3','inicio_jurisdiccion','reactivacion_formulario'];
   }
   function wspDestino(l, D){ return D.prueba ? (D.destinoPrueba||'MODO PRUEBA') : '+54 9 '+phone(l.tel); }
