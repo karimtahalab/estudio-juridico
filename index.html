@@ -1390,7 +1390,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
       '<ul class="todo">'+xs.map(function(r){
         return '<li class="pa-li"><button data-ficha="'+esc(r.l.id)+'"><span class="w"><b>'+esc(r.l.nombre||'Sin nombre')+' · '+ramaLabel(r.l.rama)+'</b><span>'+esc(r.x.nota||'')+'</span><span style="display:block;font-size:12px">'+esc(r.x.cuando)+'</span></span></button><button class="pa-ag" data-intresp="'+esc(r.l.id)+'|'+r.x.i+'|Hecho">✔ Hecho</button></li>'; }).join('')+'</ul>');
   }
-  function puedeComSol(l){ return !!(l && !l.parcial && P().comentar && !state.verComo); }
+  function puedeComSol(l){ return !!(l && !l.parcial && P().comentar); } // en "Ver como" se muestra igual; al tocarlo avisa que es solo para mirar
   function sheetComSol(){
     var l=findLead(state.sheet.id); if (!l) return null;
     var d=state.draft||{}, prev=(l.internas||[]).filter(function(x){ return x.tipo==='control'; });
@@ -1411,6 +1411,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
   }
   document.addEventListener('click', function(ev){
     var t=ev.target.closest && ev.target.closest('[data-comsol],[data-comsolenviar]'); if (!t) return;
+    if (t.hasAttribute('data-comsol') && state.verComo){ toast('👁 Así lo ve '+state.verComo+'. Estás viendo la app como '+state.verComo+': para dejar un comentario tiene que entrar ella.'); return; }
     if (t.hasAttribute('data-comsol')){ state.draft={nota:''}; openSheet({type:'comsol', id:t.getAttribute('data-comsol')}); return; }
     if (t.hasAttribute('data-comsolenviar') && state.sheet && state.sheet.type==='comsol'){ comSolEnviar(); return; }
   });
