@@ -1,5 +1,5 @@
 // Guarda la pantalla en el celular: abre al instante y se actualiza sola en segundo plano.
-const V = 'consultas-20261110151319';
+const V = 'consultas-20261110152748';
 const BASE = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-180.png', './favicon.png'];
 // cache: 'reload' = baja la versión nueva del servidor (sin esto podía guardar la pantalla anterior que el navegador tenía de hace minutos)
 self.addEventListener('install', e => { e.waitUntil(caches.open(V).then(c => c.addAll(BASE.map(u => new Request(u, { cache: 'reload' })))).then(() => self.skipWaiting())); });
