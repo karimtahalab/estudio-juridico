@@ -3026,7 +3026,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     html += '<div class="blk"><h3 class="blk-t">Contacto</h3><div class="box">'+fkv('Teléfono', l.tel||'—', 'num')+fkv('Email', l.email)+'</div></div>';
     if (l.info && l.info.length) html += '<div class="blk"><h3 class="blk-t">Lo que contó en el formulario</h3><div class="box">'+l.info.map(function(c){ return fkv(c.label, c.text, 'pre'); }).join('')+'</div></div>';
     html += estBlk(l);
-    html += '<div class="blk"><h3 class="blk-t">🗒️ Notas sobre el cliente<small>Lo que los intakers le dejan a la abogada sobre esta persona.</small></h3>'+((l.comentarios && l.comentarios.length) ?
+    html += '<div class="blk"><h3 class="blk-t">🗒️ Notas sobre el cliente<small>Lo que los intakers le dejan a la abogada/o sobre esta persona.</small></h3>'+((l.comentarios && l.comentarios.length) ?
       '<div class="notes">'+l.comentarios.map(function(c){ return fkv(c.label, c.text, 'pre'); }).join('')+'</div>' :
       '<div class="note">Todavía no hay notas. Tocá "＋ Nota" para dejar una.</div>')+'</div>';
     html += '<div class="blk"><h3 class="blk-t">De dónde vino</h3><div class="box">'+origenRows(l)+'</div></div>';
@@ -3039,7 +3039,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
         '<p class="hint" style="margin:10px 2px 0">Consulta Agendada y Reagenda se ponen al agendar. NO SHOW y Caso en proceso, cuando la abogada carga el resultado: así cuentan bien en los KPIs y disparan los Zaps que corresponden.</p></div>';
     }
     if (u.modo==='nota'){
-      return '<div class="fi-panel"><label for="notaTxt" class="hint" style="display:block;margin:0 2px 6px">Nota sobre el cliente, para la abogada</label><textarea id="notaTxt" placeholder="Ej.: no atiende, le escribí por WhatsApp">'+esc(u.nota||'')+'</textarea>'+
+      return '<div class="fi-panel"><label for="notaTxt" class="hint" style="display:block;margin:0 2px 6px">Nota sobre el cliente, para la abogada/o</label><textarea id="notaTxt" placeholder="Ej.: no atiende, le escribí por WhatsApp">'+esc(u.nota||'')+'</textarea>'+
         '<button class="save" data-notasave'+((u.nota||'').trim()?'':' disabled')+'>Guardar nota</button><p class="hint" style="margin:6px 2px 0">Se agrega con la fecha y tu nombre en la columna de comentarios de la planilla.'+(puedeComSol(l)?' Si es una corrección para los intakers, usá <b>📝 Dejar un comentario a los intakers</b> (arriba): les llega a Tareas.':'')+'</p></div>';
     }
     if (u.modo==='datos'){
