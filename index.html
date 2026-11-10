@@ -1002,6 +1002,7 @@ a.save.wa-go svg{width:20px;height:20px}
   .wsp-aviso{color:#9a5b00;font-size:13px;margin:10px 0 0}.wsp-err{color:#b00020}.wsp-load,.wsp-hint{color:#555;font-size:13px}
   .wsp-acts{display:flex;gap:10px;margin-top:14px}.wsp-acts button{flex:1;padding:12px;border-radius:12px;border:0;font-weight:700;font-size:15px;cursor:pointer}
   .wsp-no{background:#eee;color:#222}.wsp-si{background:#25d366;color:#fff}.wsp-si:disabled{opacity:.6}
+  .wsp-b.wsp-va{background:#f1f3f2;color:#5b6660;cursor:default}
   .wsp-g{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:#666;margin:12px 0 6px}
   .wsp-op{display:block;width:100%;text-align:left;border:1px solid #e3e3e3;background:#fafafa;border-radius:10px;padding:10px 12px;margin:0 0 6px;cursor:pointer;color:#111;font-size:14px}
   .wsp-op small{display:block;color:#666;font-size:12px;margin-top:2px;font-weight:400}.wsp-op.sug{border-color:#25d366;background:#effcf3}.wsp-op:disabled{opacity:.55;cursor:default}
@@ -1078,6 +1079,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
 <script>
 (function(){
   'use strict';
+  var wspEnv={}, wspFallo={}; // WhatsApp oficial: envíos en camino y los que fallaron, por lead (ver wspMandar)
   var TZ = 'America/Buenos_Aires';
   var DIAS = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
   var DIAS_C = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
@@ -3914,7 +3916,8 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
       var tel=String(l.tel||'').trim(), em=String(l.email||'').trim(), cuando=ingresoCorto(l);
       return '<li class="sc-of"><button class="cn" data-ficha="'+esc(l.id)+'"><b>'+(esNuevoAviso(l)?'🔔 ':'')+esc(l.nombre||'Sin nombre')+'</b><span class="cs">'+faseTag(l.fase)+' '+ramaLabel(l.rama)+(cuando?' · '+esc(cuando):'')+'</span></button>'+
         '<button class="ct num" data-copiar="'+esc(phone(tel)||tel)+'" aria-label="Copiar el teléfono de '+esc(l.nombre||'')+'">'+esc(phone(tel)||tel)+'</button>'+
-        '<button class="wsp-b sc-env" data-wsp="'+esc(l.id)+'" data-wsp-m="primer_contacto" aria-label="Mandar el primer mensaje oficial a '+esc(l.nombre||'')+'">📤 Enviar</button>'+
+        (wspEnv[l.id] ? '<button class="wsp-b sc-env wsp-va" disabled aria-label="Mandando el primer mensaje a '+esc(l.nombre||'')+'">⏳ Enviando…</button>' :
+        '<button class="wsp-b sc-env" data-wsp="'+esc(l.id)+'" data-wsp-m="primer_contacto" aria-label="Mandar el primer mensaje oficial a '+esc(l.nombre||'')+'">📤 '+(wspFallo[l.id]?'Reintentar':'Enviar')+'</button>')+
         (em ? '<button class="ce" data-copiar="'+esc(em)+'" aria-label="Copiar el mail">'+esc(em)+'</button>' : '')+'</li>';
     }
     var h=clRow(l).replace('data-wspmenu="', 'data-wsp-m="primer_contacto" data-wsp="');
@@ -5426,6 +5429,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
   function wspBtn(l, momento, txt){
     if (!momento || !wspPuede(l)) return '';
     wspPrecargar();
+    if (wspEnv[l.id]) return '<button class="wsp-b wsp-va" disabled aria-label="Mandando el mensaje a '+esc(l.nombre||'')+'">⏳'+(txt?' Enviando…':'')+'</button>';
     return '<button class="wsp-b" data-wsp="'+esc(l.id)+'" data-wsp-m="'+momento+'" title="Mandar por el WhatsApp oficial" aria-label="Mandar por WhatsApp oficial a '+esc(l.nombre||'')+'">📤'+(txt?' '+esc(txt):'')+'</button>';
   }
   function wspFicha(l){ if (!wspPuede(l)) return ''; wspPrecargar(); return '<button class="btn3 wsp-menu" data-wspmenu="'+esc(l.id)+'">📤 Mandar mensaje por WhatsApp</button>'; }
@@ -5540,11 +5544,13 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     wspDlg('<h3>'+esc(v.label)+'</h3><p class="wsp-to'+(v.prueba?' prueba':'')+'">Para: '+esc(v.destino)+'</p>'+
       '<div class="wsp-msg">'+esc(v.texto).replace(/\n/g,'<br>')+'</div>'+
       (v.aviso?'<p class="wsp-aviso">⚠️ '+esc(v.aviso)+'</p>':'')+
+      (wspFallo[wspSt.id]==='corte'?'<p class="wsp-aviso">⚠️ La vez anterior se cortó la conexión mientras salía. Fijate en uChat si ya le llegó antes de mandarlo de nuevo.</p>':'')+
       '<p class="wsp-hint" style="margin-top:10px">Así le va a llegar. Revisalo antes de mandarlo.</p>'+
       '<div class="wsp-acts"><button class="wsp-no" data-wspx>Cancelar</button><button class="wsp-si" data-wspok>'+(v.aviso?'Enviar igual':'Enviar')+'</button></div>');
   }
   /** Botones rápidos (primer mensaje, recordatorios, turno): vista previa al instante si ya están los datos. */
   function wspVer(id, q){
+    if (wspOcupado(id)) return;
     wspSt={id:id, q:q};
     var l=findLead(id), porMomento={turno:'confirmacion_consulta', previo:'recordatorio_consulta_manana', hoy:'recordatorio_consulta_hoy'};
     var local=function(D){
@@ -5564,16 +5570,36 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     if (x && x.texto){ wspSt.q={tpl:tpl}; wspMostrar({label:x.label, texto:x.texto, destino:wspSt.destino, prueba:wspSt.prueba, aviso:x.aviso}); }
     else wspVer(wspSt.id, {tpl:tpl});
   }
+  /* Envíos en camino (por lead). El servidor tarda ~7 s por envío (hasta 24 s en el registro de uso): la ventana se cierra
+   * enseguida y se puede seguir con el próximo lead; la fila muestra "Enviando…" y no deja mandarle otro mientras tanto. */
+  function wspOcupado(id){
+    if (!wspEnv[id]) return false;
+    var l=findLead(id); toast('⏳ Ya se está mandando un mensaje'+(l&&l.nombre?' a '+wspNombre(l.nombre):'')+'. Esperá que termine.');
+    return true;
+  }
   function wspMandar(){
-    var s=wspSt; if (!s.v) return;
-    var b=document.querySelector('[data-wspok]'); if (b){ b.disabled=true; b.textContent='Enviando…'; }
-    call('enviarWsp', Object.assign({id:s.id, forzar:!!s.v.aviso}, s.q)).then(function(r){
-      wspCerrar(); toast('✓ Enviado por WhatsApp: '+r.label+(r.prueba?' (prueba: llegó a tu número)':''));
+    var s=wspSt, v=s.v; if (!v || wspEnv[s.id]) return;
+    var l=findLead(s.id), nom=wspNombre(l&&l.nombre)||'';
+    wspEnv[s.id]={t:Date.now()}; wspSt={}; wspCerrar();
+    toast('📤 Mandando'+(nom?' a '+nom:'')+'… Podés seguir con otro.');
+    var pintar=function(){ if (!escribiendo()) render(); };
+    pintar();
+    call('enviarWsp', Object.assign({id:s.id, forzar:!!v.aviso}, s.q)).then(function(r){
+      delete wspEnv[s.id]; delete wspFallo[s.id];
+      toast('✓ Enviado por WhatsApp'+(nom?' a '+nom:'')+': '+r.label+(r.prueba?' (prueba: llegó a tu número)':''));
       if (wspD){ var e=(wspD.envios=wspD.envios||{}); (e[s.id]=e[s.id]||{})[r.tpl]={t:Date.now(), quien:wspD.yo}; }
       if (r.levanto && state.data) state.data.sinContactar=(state.data.sinContactar||[]).filter(function(x){ return x.id!==s.id; });
       if (r.lead && r.lead.id && findLead(r.lead.id)) { try { replaceLead(r.lead); } catch(x){} }
-      render();
-    }).catch(function(e){ if (b){ b.disabled=false; b.textContent='Enviar'; } toast((e&&e.message)||'No se pudo mandar. Usá el botón de WhatsApp de siempre.', true); });
+      pintar();
+    }).catch(function(e){
+      delete wspEnv[s.id];
+      var m=(e&&e.message)||'No se pudo mandar.';
+      wspFallo[s.id]=esCorte(e) ? 'corte' : 'error';
+      // Si se cortó la conexión, el mensaje pudo haber salido igual: mejor mirar uChat que mandarlo dos veces
+      if (esCorte(e)) toastAccion('⚠️ No sé si le llegó'+(nom?' a '+nom:'')+' (se cortó la conexión). Fijate en uChat antes de mandarlo de nuevo.', 'Entendido', function(){}, 12000);
+      else toastAccion('No se pudo mandar'+(nom?' a '+nom:'')+': '+m, 'Reintentar', function(){ wspSt=s; wspMostrar(v); }, 12000);
+      pintar();
+    });
   }
   function wspPintarLista(id, o){
     wspSt={id:id, lista:o.lista, destino:o.destino, prueba:o.prueba};
@@ -5591,6 +5617,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     wspDlg(h+'<div class="wsp-acts"><button class="wsp-no" data-wspx>Cerrar</button></div>');
   }
   function wspMenu(id){
+    if (wspOcupado(id)) return;
     var l=findLead(id);
     if (l && wspD && wspD.activo){ wspPintarLista(id, wspListaLocal(l, wspD)); wspDatos().catch(function(){}); return; }
     wspSt={id:id}; wspDlg('<p class="wsp-load">Buscando los mensajes para esta persona…</p>');
