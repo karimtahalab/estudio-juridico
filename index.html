@@ -861,6 +861,9 @@ textarea:focus,.inp:focus,select:focus{outline:none;box-shadow:0 0 0 2.5px var(-
 .int-ask textarea{margin-top:8px}
 .int-ops{margin-top:10px}
 .int-open{color:#0B8B8B}
+.ctl-zona{background:var(--amber-bg);border-radius:var(--r-lg);padding:12px 12px 10px;margin:14px 0;box-shadow:0 0 0 1px var(--amber) inset}
+.ctl-zona>.blk-t{margin-bottom:8px}.ctl-zona .box{background:var(--paper)}.ctl-zona .int-ask{background:var(--paper);box-shadow:0 0 0 1.5px var(--amber) inset;margin:0 0 8px}.ctl-zona .btn3{margin-top:8px}
+.ctl-zona .int-open{color:inherit;font-weight:800}
 .ok-box{display:flex;flex-direction:column;gap:4px;margin:14px 2px;padding:12px 14px;border-radius:14px;background:var(--paper);box-shadow:0 0 0 1px var(--line) inset}
 .ok-box span{color:var(--ink-3);font-size:14px}
 a.save.wa-go{display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none}
@@ -1947,7 +1950,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     }
     html += estBlk(l);
     if (l.comentarios && l.comentarios.length){
-      html += '<div class="blk"><h3 class="blk-t">Notas de los intakers</h3><div class="notes">'+
+      html += '<div class="blk"><h3 class="blk-t">🗒️ Notas sobre el cliente<small>Lo que dejaron los intakers.</small></h3><div class="notes">'+
         l.comentarios.map(function(c){ return '<div class="kv stack"><span>'+esc(c.label)+'</span><b>'+esc(c.text)+'</b></div>'; }).join('')+'</div></div>';
     }
     var medio=html; html='';
@@ -3023,7 +3026,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     html += '<div class="blk"><h3 class="blk-t">Contacto</h3><div class="box">'+fkv('Teléfono', l.tel||'—', 'num')+fkv('Email', l.email)+'</div></div>';
     if (l.info && l.info.length) html += '<div class="blk"><h3 class="blk-t">Lo que contó en el formulario</h3><div class="box">'+l.info.map(function(c){ return fkv(c.label, c.text, 'pre'); }).join('')+'</div></div>';
     html += estBlk(l);
-    html += '<div class="blk"><h3 class="blk-t">Notas y seguimiento</h3>'+((l.comentarios && l.comentarios.length) ?
+    html += '<div class="blk"><h3 class="blk-t">🗒️ Notas sobre el cliente<small>Lo que los intakers le dejan a la abogada sobre esta persona.</small></h3>'+((l.comentarios && l.comentarios.length) ?
       '<div class="notes">'+l.comentarios.map(function(c){ return fkv(c.label, c.text, 'pre'); }).join('')+'</div>' :
       '<div class="note">Todavía no hay notas. Tocá "＋ Nota" para dejar una.</div>')+'</div>';
     html += '<div class="blk"><h3 class="blk-t">De dónde vino</h3><div class="box">'+origenRows(l)+'</div></div>';
@@ -3036,8 +3039,8 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
         '<p class="hint" style="margin:10px 2px 0">Consulta Agendada y Reagenda se ponen al agendar. NO SHOW y Caso en proceso, cuando la abogada carga el resultado: así cuentan bien en los KPIs y disparan los Zaps que corresponden.</p></div>';
     }
     if (u.modo==='nota'){
-      return '<div class="fi-panel"><textarea id="notaTxt" placeholder="Ej.: no atiende, le escribí por WhatsApp">'+esc(u.nota||'')+'</textarea>'+
-        '<button class="save" data-notasave'+((u.nota||'').trim()?'':' disabled')+'>Guardar nota</button><p class="hint" style="margin:6px 2px 0">Se agrega con la fecha y tu nombre en la columna de comentarios de la planilla.</p></div>';
+      return '<div class="fi-panel"><label for="notaTxt" class="hint" style="display:block;margin:0 2px 6px">Nota sobre el cliente, para la abogada</label><textarea id="notaTxt" placeholder="Ej.: no atiende, le escribí por WhatsApp">'+esc(u.nota||'')+'</textarea>'+
+        '<button class="save" data-notasave'+((u.nota||'').trim()?'':' disabled')+'>Guardar nota</button><p class="hint" style="margin:6px 2px 0">Se agrega con la fecha y tu nombre en la columna de comentarios de la planilla.'+(puedeComSol(l)?' Si es una corrección para los intakers, usá <b>📝 Dejar un comentario a los intakers</b> (arriba): les llega a Tareas.':'')+'</p></div>';
     }
     if (u.modo==='datos'){
       var nm=u.nombre!==undefined?u.nombre:(l.nombre||''), tl=u.tel!==undefined?u.tel:(l.tel||''), em=u.email!==undefined?u.email:(l.email||'');
@@ -4565,13 +4568,25 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
   }
   function internasBlk(l){
     if (!l || l.parcial) return '';
-    var xs=l.internas||[], html='';
-    intAbiertaMia(l).forEach(function(x){ html += respuestaHtml(l, x); });
-    if (xs.length) html += '<div class="blk"><h3 class="blk-t">Consultas internas</h3><div class="box">'+xs.map(function(x){
+    var xs=l.internas||[], html='', mias=intAbiertaMia(l);
+    var esCtl=function(x){ return x.tipo==='control'; };
+    var otras=xs.filter(function(x){ return !esCtl(x); });
+    mias.filter(function(x){ return !esCtl(x); }).forEach(function(x){ html += respuestaHtml(l, x); });
+    if (otras.length) html += '<div class="blk"><h3 class="blk-t">Consultas internas</h3><div class="box">'+otras.map(function(x){
       return '<div class="kv stack"><span>'+esc(x.cuando)+' · '+esc(x.de)+' → '+esc(x.a)+' · '+intTipoTxt(x)+'</span><b class="'+(x.abierta?'int-open':'')+'">'+esc(x.estado)+(x.nota?' · '+esc(x.nota):'')+(x.resp?' · '+esc(x.resp):'')+'</b></div>'; }).join('')+'</div></div>';
     if (puedeInterna(l)) html += '<button class="btn3" data-intnueva="'+esc(l.id)+'">💬 Consultar si es caso o derivar la llamada</button>';
-    if (puedeComSol(l)) html += '<button class="btn3" data-comsol="'+esc(l.id)+'">📝 Dejar un comentario a los intakers</button>';
-    return html;
+    return html + ctlZona(l, xs.filter(esCtl), mias.filter(esCtl));
+  }
+  /* Comentarios de control: los deja Sol para los intakers (no son notas del cliente). Zona propia, en ámbar. */
+  function ctlZona(l, ctl, mias){
+    var puedo=puedeComSol(l); if (!ctl.length && !puedo) return '';
+    var abiertas=mias.map(function(x){ return x.i; }), html='';
+    mias.forEach(function(x){ html += respuestaHtml(l, x); });
+    var resto=ctl.filter(function(x){ return abiertas.indexOf(x.i)===-1; });
+    if (resto.length) html += '<div class="box">'+resto.map(function(x){
+      return '<div class="kv stack"><span>'+esc(x.cuando)+' · '+esc(x.de)+' · '+esc(x.abierta?'Pendiente':(x.estado+(x.resp?' · '+x.resp:'')))+'</span><b class="'+(x.abierta?'int-open':'')+'">'+esc(x.nota||'')+'</b></div>'; }).join('')+'</div>';
+    if (puedo) html += '<button class="btn3" data-comsol="'+esc(l.id)+'">📝 Dejar un comentario a los intakers</button>';
+    return '<section class="ctl-zona" aria-label="Comentarios de control para los intakers"><h3 class="blk-t">📝 Comentarios de control para los intakers<small>Correcciones que deja Sol al revisar los chats. Les aparece a los intakers en Tareas hasta que lo marcan Hecho. Las notas del cliente van más abajo.</small></h3>'+html+'</section>';
   }
   function internasBanner(){
     var noCtl=function(l){ return intAbiertaMia(l).filter(function(x){ return x.tipo!=='control'; }); }; // los comentarios de Sol van a Tareas
