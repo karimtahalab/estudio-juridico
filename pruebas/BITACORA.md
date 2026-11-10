@@ -19,9 +19,11 @@ Cómo correrlo: `python3 pruebas/correr.py <carpeta con index.html> <carpeta de 
 | mejora/2026-11-06-* (cli-rep, disponibilidad, repetidos, reportes-claros, sc-lista, semana-rama, sin-contactar, tareas-reportes, ver-como) | Ramas armadas en chats con Karim | Aplicadas (en main) |
 | mejora/2026-11-07 | En 360px el nombre de la consulta usa hasta 2 renglones (antes se cortaba en todas las tarjetas); Cerrar (X) de las hojas a 44px; "Cambiar" y "Ver como otra persona" del pie con zona táctil de 45px | Aplicada (en main desde el 07/11) |
 | mejora/2026-11-07-reportes-sol | Registro de uso y comentarios de Sol (motor v75/v76) | Aplicada (en main desde el 07/11) |
-| mejora/2026-11-08-flujo-sin-contactar | Flujo semanal: Sin contactar → primer mensaje → fase sin abrir la ficha (auto "Contacté" al volver de WhatsApp con Deshacer, sección "Falta la fase" con botones A/B/Llamada/C, barra para ir directo). Sin motor. | Pendiente de aprobar |
-| mejora/2026-11-08 | Pedidos colgados: las lecturas se cortan a los 35 s y se repiten solas; al volver a la app se repiten las que llevan más de 12 s en camino. Escrituras sin cambios. Sin motor. | Pendiente de aprobar |
-| mejora/2026-11-09 | Cargar resultado: la hoja ya no esconde la hora y el nombre de la consulta (baja solo lo necesario); Confirmó/No respondió y Cargar resultado a 44 px; Bloquear con zona táctil de 44 px. Sin motor. | Pendiente de aprobar |
+| mejora/2026-11-08-flujo-sin-contactar | Flujo semanal: Sin contactar → primer mensaje → fase sin abrir la ficha (auto "Contacté" al volver de WhatsApp con Deshacer, sección "Falta la fase" con botones A/B/Llamada/C, barra para ir directo). Sin motor. | Aplicada (en main desde el 09/11, dentro de b1f5d7e; la rama vieja choca con main y no hace falta) |
+| mejora/2026-11-08 | Pedidos colgados: las lecturas se cortan a los 35 s y se repiten solas; al volver a la app se repiten las que llevan más de 12 s en camino. Escrituras sin cambios. Sin motor. | Pendiente de aprobar (al 10/11 entra limpia sobre main; main sigue sin tiempo máximo) |
+| mejora/2026-11-09 | Cargar resultado: la hoja ya no esconde la hora y el nombre de la consulta (baja solo lo necesario); Confirmó/No respondió y Cargar resultado a 44 px; Bloquear con zona táctil de 44 px. Sin motor. | Pendiente de aprobar (al 10/11 entra limpia sobre main) |
+| mejora/2026-11-09-whatsapp | WhatsApp oficial, flujo Sin contactar, agenda de Juan rayada, actualización | Aplicada (en main desde el 09/11) |
+| mejora/2026-11-10 | 📤 Enviar no traba la pantalla (la ventana se cierra al tocar Enviar, la fila queda "⏳ Enviando…", se puede seguir con el próximo lead) y no deja mandar dos veces al mismo lead; si falla, "📤 Reintentar" y aviso de mirar uChat si se cortó la conexión. Sin motor. | Pendiente de aprobar |
 
 ## 2026-11-05 (primera noche)
 - Armé el banco (rama pruebas-nocturnas, carpeta pruebas/).
@@ -126,6 +128,24 @@ Cómo correrlo: `python3 pruebas/correr.py <carpeta con index.html> <carpeta de 
 - Ideas grandes:
   - Reporte en segundo plano: después de una escritura, volver a pedir getReporte recién al abrir la pestaña o 1 vez cada 2-3 min, en vez de tras cada getData (le saca al motor ~25 pedidos de 4 s por día de Fran). Ojo: la pestaña Reporte tardaría 3-5 s la primera vez después de cambiar algo.
   - Sigue pendiente lo de getData en CacheService (motor) y plegar "Marcar mi disponibilidad" en pantallas bajas.
+
+## 2026-11-09 (noche, corrida del 10/11 01:40 UTC)
+- main al día: b1f5d7e, 6d80fbb, 1953419 y después 2a8119d (cuánto tiempo trabajó), 0c2f104 (recordatorios 1º/2º/3º) y 9af5295 (Viene a firmar: agendar). Copiados al banco (la rama pruebas-nocturnas no comparte historia con main: se copian index.html, sw.js y manifest).
+- Ramas pendientes: mejora/2026-11-08 y mejora/2026-11-09 entran limpias sobre main (probado sin pushear, también juntas con la nueva). mejora/2026-11-08-flujo-sin-contactar choca con main pero ya está adentro (b1f5d7e). mejora/2026-11-05 figura con commits de más pero su contenido está en main.
+- Registro de uso real (USO, 7-9/11, 846 filas; usaron la app Pri, Fran, Karim, Cele y Mica; nada de Estefanía, Juan ni Julián):
+  - Sin filas de error. 8 avisos "Sin conexión" (getData 5, getFin2 2, fin2Calentar 1) después de esperas enormes: getData 201 s (Fran, iPhone) y 100 s (Karim), getFin2 277 s. Es lo que arregla mejora/2026-11-08 (pendiente).
+  - enviarWsp: 38 envíos (Pri 33, Fran 5), 0 errores, promedio 7 s, máximo 24 s. wspDatos 42 (3,4 s). wspVista/wspOpciones no se usaron (todo se arma con wspDatos).
+  - getData 669 pedidos, promedio 3,9 s (139 de más de 4 s). getReporte 128 (4,1 s) en segundo plano. cambiarFase 75 (4,6 s, la pantalla no espera). fin2Calentar 18 (hasta 45 s; también lo disparan Cele y Mica, que tienen finAcceso; la pantalla no lo espera).
+  - Aperturas: con datos guardados <1,2 s; con datos nuevos 3-8 s (Cele iPhone hasta 12,7 s).
+  - Permisos: finanzas y reintegros solo los usó Karim. Nada raro.
+- Banco: datos_falsos.py ahora responde wspDatos (catálogo y textos inventados) y enviarWsp (ok falso, registra en consola a quién y qué plantilla; marca el lead como hace el motor). wspVista/wspOpciones devuelven error (la pantalla no los usa si hay wspDatos). Todo lo externo (graph.facebook.com, uChat, etc.) se aborta. Nuevos: probar_wsp.py (servidor lento: retiene enviarWsp y lo contesta después; también con falla) y probar_wsp_cancelar.py (toques reales).
+- Roles probados: Mica (abogada), Fran (intaker), Karim (admin), Juan (Tránsito) con correr.py en 390 y 360; Pri (intaker) con el flujo de WhatsApp. Sin errores de JavaScript ni pedidos fallidos. Mismas pestañas por rol. Permisos OK con datos falsos.
+- ROTO (riesgo de mandar dos veces): en main, mientras 📤 Enviar dice "Enviando…" (7-24 s), Cancelar sigue activo. Si se toca, la ventana se cierra, el mensaje sale igual y la fila vuelve a "📤 Enviar" hasta que contesta el servidor: con un segundo toque salen 2 enviarWsp al mismo lead (banco: ['P072','P072']). Si el motor no frena el segundo (los dos llegan antes de que se anote el primero), el lead recibe el mensaje dos veces. Además, durante esos segundos no se puede hacer nada más.
+- Mejora propuesta: mejora/2026-11-10 (ver tabla). Banco: main → ventana tapando todo, no se puede seguir, 2 envíos al mismo lead; rama → ventana cerrada al instante, segundo lead mandado sin esperar, fila del primero "⏳ Enviando…" deshabilitada, 1 envío por lead; con falla: "📤 Reintentar" en la fila y aviso. correr.py en la rama: igual que main (0 errores, mismas pestañas, sin elementos chicos nuevos ni scroll horizontal).
+- Sigue chico (ya anotado): chips de persona/rama 32 px, Editar del resumen 52x32, Día/Semana 30 px y flechas 34 px en la agenda de Juan.
+- Ideas grandes:
+  - fin2Calentar se dispara para todos los que tienen finAcceso (también Cele y Mica) y tarda 15-45 s en el motor cada 40 min: limitarlo a quien abre Finanzas o a admins le saca carga al motor (es del motor y de la pantalla; a medir).
+  - getReporte en segundo plano 128 veces en un día (4 s cada uno): pedirlo al abrir Reporte o cada 2-3 min (sigue pendiente de la noche anterior), junto con getData en CacheService.
 
 ## Flujos rediseñados (tarea semanal de los domingos)
 | Fecha | Flujo | Para quién | Toques antes → después | Rama | Motor |

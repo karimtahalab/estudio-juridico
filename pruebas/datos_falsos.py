@@ -105,6 +105,23 @@ OTRAS = {
     "Caso en proceso": [],
 }
 
+# WhatsApp oficial FALSO: catálogo y textos inventados para el banco (no se manda nada)
+WSP_CATALOGO = [
+    {"tpl": "inicio_accidente_art", "label": "Primer mensaje (accidente ART)", "grupo": "Primer contacto", "vars": ["nombre", "firma"], "req": "", "ramas": ["ART"]},
+    {"tpl": "inicio_enfermedad_art", "label": "Primer mensaje (enfermedad ART)", "grupo": "Primer contacto", "vars": ["nombre", "firma"], "req": "", "ramas": ["ART"]},
+    {"tpl": "inicio_laboral", "label": "Primer mensaje (Laboral)", "grupo": "Primer contacto", "vars": ["nombre", "firma"], "req": "", "ramas": ["LABORAL"]},
+    {"tpl": "consulta_tiempo_trabajado", "label": "Cuánto tiempo trabajó", "grupo": "Primer contacto", "vars": ["nombre"], "req": "", "ramas": ["LABORAL"], "alterno": True},
+    {"tpl": "seguimiento_sin_respuesta_1", "label": "Sin respuesta 1", "grupo": "Seguimiento", "vars": ["nombre"], "req": "", "serie": 1},
+    {"tpl": "confirmacion_consulta", "label": "Confirmación de la consulta", "grupo": "Consulta", "vars": ["nombre", "diaYFecha", "hora"], "req": "turno"},
+    {"tpl": "recordatorio_consulta_manana", "label": "Recordatorio: mañana", "grupo": "Consulta", "vars": ["nombre", "hora"], "req": "manana"},
+    {"tpl": "recordatorio_consulta_hoy", "label": "Recordatorio: hoy", "grupo": "Consulta", "vars": ["nombre", "hora"], "req": "hoy"},
+]
+WSP_TEXTOS = {o["tpl"]: "[PRUEBA] Hola {{1}}, " + o["label"].lower() + " ({{2}} {{3}}). Texto inventado del banco." for o in WSP_CATALOGO}
+
+def wsp_datos(who):
+    return {"activo": True, "prueba": False, "yo": who, "firma": who + " (prueba)", "horas": 20, "catalogo": copy.deepcopy(WSP_CATALOGO),
+            "textos": dict(WSP_TEXTOS), "envios": {}, "abogadas": {"Mica": "Dra. Mica", "Cele": "Dra. Cele"}}
+
 class FakeApi:
     def __init__(self):
         self.leads = leads_agendados()
@@ -116,6 +133,7 @@ class FakeApi:
         self.sin_fake = set()
         self.calls = []
         self.seq = 900
+        self.wsp_enviados = []  # WhatsApp que se "habrían" mandado (todo falso)
 
     def _quien(self, arg):
         t = (arg or {}).get("tok", "")
@@ -245,6 +263,21 @@ class FakeApi:
         if fn in ("resetPin", "resetFinPin", "desbloquearPin"):
             if fn == "desbloquearPin": self.pin_bloq.pop(arg.get("nombre"), None)
             return True, {"pines": self.get_data(who).get("pines", [])}
+        if fn == "wspDatos":
+            return True, wsp_datos(who)
+        if fn in ("wspVista", "wspOpciones"):
+            return False, "(prueba) %s no tiene respuesta falsa: la pantalla arma todo con wspDatos." % fn
+        if fn == "enviarWsp":
+            l = self._find(arg.get("id"))
+            if not l: return False, "No encontré esa consulta (prueba)."
+            tpl = arg.get("tpl") or ("inicio_laboral" if l["rama"] == "LABORAL" else "inicio_accidente_art")
+            self.wsp_enviados.append({"id": l["id"], "tel": l.get("tel"), "tpl": tpl, "quien": who})
+            print("[harness] WhatsApp FALSO (no sale nada): a %s (%s) plantilla %s, por %s" % (l.get("nombre"), l.get("tel"), tpl, who), flush=True)
+            levanto = False
+            if l in self.sc and who in ("Fran", "Pri", "Karim", "Julián"):
+                self.sc.remove(l); l["intaker"] = l.get("intaker") or who; levanto = True
+                if l["fase"] in ("", "A", "B", "Llamada pendiente"): self.pa.insert(0, l)
+            return True, {"ok": True, "label": next((o["label"] for o in WSP_CATALOGO if o["tpl"] == tpl), tpl), "tpl": tpl, "prueba": False, "levanto": levanto, "lead": copy.deepcopy(l)}
         if fn == "getReporte":
             return True, {"__prueba": True, "filas": [], "semana": arg.get("semana")}
         if fn == "getEstudios": return True, {"lista": [], "puedeSubir": True, "maxMB": 10}
