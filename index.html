@@ -864,6 +864,7 @@ textarea:focus,.inp:focus,select:focus{outline:none;box-shadow:0 0 0 2.5px var(-
 .ctl-zona{background:var(--amber-bg);border-radius:var(--r-lg);padding:12px 12px 10px;margin:14px 0;box-shadow:0 0 0 1px var(--amber) inset}
 .ctl-zona>.blk-t{margin-bottom:8px}.ctl-zona .box{background:var(--paper)}.ctl-zona .int-ask{background:var(--paper);box-shadow:0 0 0 1.5px var(--amber) inset;margin:0 0 8px}.ctl-zona .btn3{margin-top:8px}
 .ctl-zona .int-open{color:inherit;font-weight:800}
+.ctl-zona .ctl-vacio{margin:2px 2px 4px;font-size:15px;color:var(--ink-2)}.ctl-zona .ctl-btn{font-weight:800;box-shadow:0 0 0 1.5px var(--amber) inset}
 .ok-box{display:flex;flex-direction:column;gap:4px;margin:14px 2px;padding:12px 14px;border-radius:14px;background:var(--paper);box-shadow:0 0 0 1px var(--line) inset}
 .ok-box span{color:var(--ink-3);font-size:14px}
 a.save.wa-go{display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none}
@@ -4579,14 +4580,19 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
   }
   /* Comentarios de control: los deja Sol para los intakers (no son notas del cliente). Zona propia, en ámbar. */
   function ctlZona(l, ctl, mias){
-    var puedo=puedeComSol(l); if (!ctl.length && !puedo) return '';
+    var puedo=puedeComSol(l), esInt=rol()==='intaker', esAdm=rol()==='admin';
+    if (!ctl.length && !puedo && !esInt && !esAdm) return '';   // las abogadas solo lo ven si hay algo
     var abiertas=mias.map(function(x){ return x.i; }), html='';
     mias.forEach(function(x){ html += respuestaHtml(l, x); });
     var resto=ctl.filter(function(x){ return abiertas.indexOf(x.i)===-1; });
     if (resto.length) html += '<div class="box">'+resto.map(function(x){
       return '<div class="kv stack"><span>'+esc(x.cuando)+' · '+esc(x.de)+' · '+esc(x.abierta?'Pendiente':(x.estado+(x.resp?' · '+x.resp:'')))+'</span><b class="'+(x.abierta?'int-open':'')+'">'+esc(x.nota||'')+'</b></div>'; }).join('')+'</div>';
-    if (puedo) html += '<button class="btn3" data-comsol="'+esc(l.id)+'">📝 Dejar un comentario a los intakers</button>';
-    return '<section class="ctl-zona" aria-label="Comentarios de control para los intakers"><h3 class="blk-t">📝 Comentarios de control para los intakers<small>Correcciones que deja Sol al revisar los chats. Les aparece a los intakers en Tareas hasta que lo marcan Hecho. Las notas del cliente van más abajo.</small></h3>'+html+'</section>';
+    else if (!mias.length) html += '<p class="ctl-vacio">'+(puedo?'Todavía no les dejaste nada sobre esta persona.':'Sol todavía no dejó comentarios sobre esta persona.')+'</p>';
+    if (puedo) html += '<button class="btn3 ctl-btn" data-comsol="'+esc(l.id)+'">📝 Dejar un comentario a los intakers</button>';
+    var sub = puedo ? 'Acá les dejás a los intakers lo que tienen que corregir o hacer. Les llega a Tareas hasta que lo marcan Hecho.'
+      : esInt ? 'Acá te aparece lo que Sol te pide corregir cuando revisa los chats. También lo ves en Tareas. Cuando lo resolvés, tocá Hecho.'
+      : 'Lo que Sol les pide corregir a los intakers. Les llega a Tareas hasta que lo marcan Hecho.';
+    return '<section class="ctl-zona" aria-label="Comentarios de Sol para los intakers"><h3 class="blk-t">📝 Comentarios de Sol para los intakers<small>'+sub+' Las notas del cliente para la abogada/o van más abajo.</small></h3>'+html+'</section>';
   }
   function internasBanner(){
     var noCtl=function(l){ return intAbiertaMia(l).filter(function(x){ return x.tipo!=='control'; }); }; // los comentarios de Sol van a Tareas
