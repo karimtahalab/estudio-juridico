@@ -1923,6 +1923,8 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     var confPrimero = puede('confirmar') && isPend(s) && !needsResult(l);
     if (confPrimero) html += confBlock(l, today);
     if (puede('agendar') && (isPend(s) || needsResult(l) || s==='reagenda' || s==='novino')) html += '<button class="btn3" data-agendar="'+esc(l.id)+'">'+I.cal+'Reagendar</button>';
+    // Vino y no firmó, y vuelve a firmar: turno nuevo en Consulta agendada (no cuenta como reagenda)
+    if (puede('agendar') && s==='nofirmo') html += '<button class="btn3" data-agfirmar="'+esc(l.id)+'">'+I.cal+'Viene a firmar: agendar</button>';
     var sec='';
     if (puede('agendar') && puedeCorregir(l)) sec += '<button class="btn3" data-agcorregir="'+esc(l.id)+'" title="Me equivoqué al cargar el horario: lo corrijo y no cuenta como reagenda">✏️ Corregir el horario</button>';
     if (puedeDerivar(l)) sec += '<button class="btn3" data-derivar="'+esc(l.id)+'">'+I.swap+'Derivar a otra abogada</button>';
@@ -4190,7 +4192,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
   function sheetAgendar(){
     var l=findLead(state.sheet.id); if (!l) return null;
     var d=state.draft, reag=agendada(l.id), today=nowBA().date, corr=corrige(l,d);
-    var html='<div class="grab"></div><div class="sh-head"><div class="sh-who"><h2>'+(corr?'Corregir el turno de':(reag?'Reagendar a':'Agendar a'))+' '+esc(l.nombre||'Sin nombre')+'</h2>'+
+    var html='<div class="grab"></div><div class="sh-head"><div class="sh-who"><h2>'+(corr?'Corregir el turno de':(d.firmar?'Viene a firmar:':(reag?'Reagendar a':'Agendar a')))+' '+esc(l.nombre||'Sin nombre')+'</h2>'+
       '<div class="mt"><span class="rama r-'+ramaKey(l.rama)+'">'+ramaLabel(l.rama)+'</span>'+(l.tel?'<span class="cp num">'+esc(l.tel)+'</span>':'')+'</div>'+
       (reag?'<p class="hint" style="margin:6px 0 0">Ahora: '+longDate(l.fecha).toLowerCase()+', '+esc(l.hora||'sin hora')+(l.abogada?', con '+esc(l.abogada):'')+'.</p>':'')+
       '</div><button class="close" data-close aria-label="Cerrar">'+I.x+'</button></div>';
@@ -4220,7 +4222,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     });
     html += '</div>';
     var dvz=!corr && esDerivacion(l,d);
-    var lab = d.hora ? (corr?'Corregir':(dvz?'Derivar':(reag?'Reagendar':'Agendar')))+': '+diaCorto(d.fecha).toLowerCase()+' '+d.hora+' con '+d.abogada : 'Elegí un horario';
+    var lab = d.hora ? (corr?'Corregir':(dvz?'Derivar':(d.firmar?'Agendar para firmar':(reag?'Reagendar':'Agendar'))))+': '+diaCorto(d.fecha).toLowerCase()+' '+d.hora+' con '+d.abogada : 'Elegí un horario';
     html += '<div class="save-wrap"><button class="save" data-saveag '+(d.hora?'':'disabled')+'>'+esc(lab)+'</button>'+
       (reag?'<p class="hint" style="text-align:center;margin-top:8px">'+(corr ? 'Se corrige el turno: no pasa a Reagenda, no cuenta en los KPIs y las confirmaciones quedan como están.' : dvz ? 'Mismo día con otra abogada: queda como derivación y no cuenta como reagenda.'+(d.hora!==l.hora?' Se borran las confirmaciones.':'') : 'Al reagendar se borran las confirmaciones de la fecha anterior.')+'</p>':'')+'</div>';
     return html;
@@ -4323,11 +4325,11 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     if (!d.hora || !d.abogada) return;
     if (id===NUEVO_ID){ saveManual(false); return; }
     var dC=JSON.parse(JSON.stringify(d)), copia=l?JSON.parse(JSON.stringify(l)):null;
-    var msg=(corr?'✏️ Turno corregido':dvz?'↪ Derivada':'📅 '+(reag?'Reagendada':'Agendada'))+': '+(l?l.nombre:'')+', '+diaCorto(d.fecha).toLowerCase()+' '+d.hora+' con '+d.abogada;
+    var msg=(corr?'✏️ Turno corregido':dvz?'↪ Derivada':(d.firmar?'📝 Agendada para firmar':'📅 '+(reag?'Reagendada':'Agendada')))+': '+(l?l.nombre:'')+', '+diaCorto(d.fecha).toLowerCase()+' '+d.hora+' con '+d.abogada;
     // Se ve agendada al instante; si el servidor no puede (por ejemplo, alguien tomó ese horario), vuelve como estaba y se reabre
     if (copia){ var n0=JSON.parse(JSON.stringify(copia)); n0.fecha=d.fecha; n0.hora=d.hora; n0.abogada=d.abogada; if (n0.sinDia){ delete n0.sinDia; } else if (!dvz && !corr){ n0.fase='Consulta agendada'; if (n0.fecha!==copia.fecha || n0.hora!==copia.hora){ n0.confPrev=''; n0.confDia=''; } } replaceLead(n0); markSeen(id); }
     closeSheet(); if (copia) openSheet({type:'lead', id:id}); render(); toast(msg);
-    call('agendar',{id:id, fecha:d.fecha, hora:d.hora, abogada:d.abogada, corregir:corr}).then(function(nl){
+    call('agendar',{id:id, fecha:d.fecha, hora:d.hora, abogada:d.abogada, corregir:corr, firmar:!!d.firmar}).then(function(nl){
       replaceLead(nl); markSeen(id); render(); if (state.sheet && state.sheet.type==='lead' && state.sheet.id===id) renderSheet(); wspTrasAgendar(nl);
     }).catch(function(e){
       if (copia){ state.data.leads=(state.data.leads||[]).filter(function(x){ return x.id!==id; }); if (reag) state.data.leads.push(copia); else (state.data.porAgendar||(state.data.porAgendar=[])).unshift(copia); }
@@ -4355,7 +4357,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
 
   /* ---------- eventos ---------- */
   document.addEventListener('click', function(ev){
-    var t = ev.target.closest('[data-reptile],[data-repctl],[data-repsemq],[data-pindesbloq],[data-fin],[data-equipo],[data-view],[data-undo],[data-agotra],[data-agbuscartodo],[data-ficha],[data-pinok],[data-pinback],[data-pinreset],[data-salir],[data-fimodo],[data-fase],[data-notasave],[data-datosave],[data-mnfase],[data-mnsin],[data-dupfase],[data-derivar],[data-reagsindia],[data-dvsel],[data-dvhora],[data-dvsave],[data-deon],[data-deque],[data-desem],[data-decopia],[data-deamplio],[data-dedia],[data-dequick],[data-decopy],[data-devolver],[data-definde],[data-demodo],[data-desave],[data-decancel],[data-repweek],[data-reprow],[data-repmodo],[data-rtrama],[data-rtfresco],[data-repretry],[data-agmode],[data-wgday],[data-agrama],[data-agfase],[data-agmas],[data-agmes],[data-agvista],[data-agclr],[data-agnuevo],[data-mnrama],[data-mnorigen],[data-mnsig],[data-mncrear],[data-open],[data-result],[data-bloq],[data-nuevo],[data-week],[data-day],[data-sum],[data-chip],[data-abog],[data-close],[data-res],[data-motivo],[data-save],[data-bqwho],[data-bqtodo],[data-savebq],[data-delbq],[data-retry],[data-pastefor],[data-pasteall],[data-rvcheck],[data-rvtoggle],[data-rvsave],[data-rvback],[data-yo],[data-yocambiar],[data-vcabrir],[data-vcsalir],[data-vercomo],[data-visto],[data-conf],[data-escribir],[data-agendar],[data-agcorregir],[data-agdia],[data-slot],[data-agcorr],[data-saveag],[data-savecampos]');
+    var t = ev.target.closest('[data-reptile],[data-repctl],[data-repsemq],[data-pindesbloq],[data-fin],[data-equipo],[data-view],[data-undo],[data-agotra],[data-agbuscartodo],[data-ficha],[data-pinok],[data-pinback],[data-pinreset],[data-salir],[data-fimodo],[data-fase],[data-notasave],[data-datosave],[data-mnfase],[data-mnsin],[data-dupfase],[data-derivar],[data-reagsindia],[data-dvsel],[data-dvhora],[data-dvsave],[data-deon],[data-deque],[data-desem],[data-decopia],[data-deamplio],[data-dedia],[data-dequick],[data-decopy],[data-devolver],[data-definde],[data-demodo],[data-desave],[data-decancel],[data-repweek],[data-reprow],[data-repmodo],[data-rtrama],[data-rtfresco],[data-repretry],[data-agmode],[data-wgday],[data-agrama],[data-agfase],[data-agmas],[data-agmes],[data-agvista],[data-agclr],[data-agnuevo],[data-mnrama],[data-mnorigen],[data-mnsig],[data-mncrear],[data-open],[data-result],[data-bloq],[data-nuevo],[data-week],[data-day],[data-sum],[data-chip],[data-abog],[data-close],[data-res],[data-motivo],[data-save],[data-bqwho],[data-bqtodo],[data-savebq],[data-delbq],[data-retry],[data-pastefor],[data-pasteall],[data-rvcheck],[data-rvtoggle],[data-rvsave],[data-rvback],[data-yo],[data-yocambiar],[data-vcabrir],[data-vcsalir],[data-vercomo],[data-visto],[data-conf],[data-escribir],[data-agendar],[data-agfirmar],[data-agcorregir],[data-agdia],[data-slot],[data-agcorr],[data-saveag],[data-savecampos]');
     if (!t) return;
     if (t.hasAttribute('data-pindesbloq')){ var nd=t.getAttribute('data-pindesbloq'); t.disabled=true; t.textContent='Desbloqueando…'; call('desbloquearPin', {nombre:nd}).then(function(p){ if (state.data) state.data.pines=p; if (state.sheet) renderSheet(); render(); toast('Listo: '+nd+' ya puede entrar de nuevo.'); }).catch(function(e){ t.disabled=false; toast((e&&e.message)||'No se pudo desbloquear.', true); }); return; }
     if (t.hasAttribute('data-fin')){ finClick(t); return; }
@@ -4414,6 +4416,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     if (t.hasAttribute('data-conf')){ var cp=t.getAttribute('data-conf').split('|'), cv=cp.pop(), cc=cp.pop(); saveConf(cp.join('|'), cc, cv); return; } // el ID puede tener '|' (fuente|pestaña|ID)
     if (t.hasAttribute('data-escribir')){ openSheet({type:'escribir', id:t.getAttribute('data-escribir')}); return; }
     if (t.hasAttribute('data-agendar')){ closeSearch(); openSheet({type:'agendar', id:t.getAttribute('data-agendar')}); return; }
+    if (t.hasAttribute('data-agfirmar')){ closeSearch(); openSheet({type:'agendar', id:t.getAttribute('data-agfirmar')}); if (state.draft){ state.draft.firmar=true; renderSheet(); } return; }
     if (t.hasAttribute('data-agcorregir')){ closeSearch(); openSheet({type:'agendar', id:t.getAttribute('data-agcorregir')}); if (state.draft){ state.draft.corregir=true; renderSheet(); } return; }
     if (t.hasAttribute('data-derivar')){ openSheet({type:'derivar', id:t.getAttribute('data-derivar')}); return; }
     if (t.hasAttribute('data-reagsindia')){ reagSinDiaUI(t.getAttribute('data-reagsindia')); return; }
