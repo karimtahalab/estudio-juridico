@@ -4091,7 +4091,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     var hecho=s.estado==='Hecho', tel=String(s.tel||'').trim(), ph=phone(tel);
     var titulo=s.nombre || (ph ? ph : 'Sin nombre');
     var meta=[s.rama?ramaLabel(s.rama):'', (s.nombre && ph)?ph:'', 'la dejó '+(s.quien||'')+' el '+segFecha(s.creado)].filter(Boolean).join(' · ');
-    var ult=(s.historial||[]).filter(function(x){ return !/^.*· Traída de la planilla/.test(x); }).slice(-1)[0];
+    var ult=(s.historial||[]).filter(function(x){ return !/Traída de la planilla/.test(x); }).slice(-1)[0];
     var h='<li class="seg-li'+(hecho?' seg-ok':'')+'"><button class="seg-main" data-segver="'+esc(s.id)+'">'+
       '<span class="seg-top"><b>'+esc(titulo)+'</b>'+segCuando(s)+(s.repetir?'<span class="seg-tag">🔁 cada semana</span>':'')+'</span>'+
       '<span class="seg-nota">'+esc(s.nota||'')+'</span>'+
