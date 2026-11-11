@@ -24,13 +24,13 @@ EQUIPO = [
     {"nombre": "Karim", "rol": "admin", "tiene": True},
     {"nombre": "Julián", "rol": "admin", "tiene": True},
 ]
-RAMAS_POR_PERSONA = {"Mica": ["ART", "LABORAL"], "Cele": ["ART", "LABORAL"], "Estefanía": ["LABORAL"], "Juan": ["TRANSITO"]}
-ABOGADAS = ["Mica", "Cele", "Estefanía", "Juan"]
+RAMAS_POR_PERSONA = {"Mica": ["ART", "LABORAL"], "Cele": ["ART", "LABORAL"], "Sol": ["ART", "LABORAL"], "Estefanía": ["LABORAL"], "Juan": ["TRANSITO"]}
+ABOGADAS = ["Mica", "Cele", "Sol", "Estefanía", "Juan"]  # como CONFIG.ABOGADAS del motor
 
 PERMISOS = {
     "Mica": {"agenda": ["ART", "LABORAL"], "agendar": True, "leads": ["ART", "LABORAL"]},
     "Cele": {"agenda": ["ART", "LABORAL"], "agendar": True, "leads": ["ART", "LABORAL"]},
-    "Sol": {"agenda": ["ART", "LABORAL"], "agendar": True, "leads": ["ART", "LABORAL"]},
+    "Sol": {"agenda": ["ART", "LABORAL"], "agendar": True, "leads": ["ART", "LABORAL"], "comentar": True},
     "Estefanía": {"agenda": ["LABORAL"], "agendar": False, "leads": []},
     "Juan": {"agenda": ["TRANSITO"], "agendar": True, "leads": ["TRANSITO"]},
     "Fran": {"agenda": ["ART", "LABORAL", "TRANSITO"], "agendar": True, "leads": ["ART", "LABORAL", "TRANSITO"]},
@@ -174,7 +174,7 @@ class FakeApi:
             "feriados": [], "internas": {"criterio": {"ART": ["Mica", "Cele"], "LABORAL": ["Mica", "Estefanía"], "TRANSITO": ["Juan"]},
                                          "llamada": {"ART": ["Mica"], "LABORAL": ["Mica"], "TRANSITO": ["Juan"]}, "telefonos": {}},
             "sinContactar": [copy.deepcopy(l) for l in self.sc if l["rama"] in PERMISOS.get(who, {}).get("leads", []) and next((e["rol"] for e in EQUIPO if e["nombre"] == who), "") in ("intaker", "admin")],
-            "paraMi": [], "visto": None, "diasPorAgendar": 90, "duplicados": [],
+            "paraMi": [copy.deepcopy(l) for l in self.leads + self.pa if who in ("Fran", "Pri") and any(x.get("tipo") == "control" and x.get("abierta") for x in l.get("internas", []))], "visto": None, "diasPorAgendar": 90, "duplicados": [],
         }
         if who in ("Karim", "Julián"):
             d["pines"] = [{"nombre": e["nombre"], "tiene": e["tiene"], "bloqueado": self.pin_bloq.get(e["nombre"], False), "fijo": e["nombre"] == "Julián"} for e in eq]
@@ -255,9 +255,19 @@ class FakeApi:
             l = _lead(self.seq, arg.get("nombre", ""), arg.get("tel", ""), arg.get("rama", "ART"), arg.get("fecha", ""), arg.get("hora", ""), arg.get("abogada", ""), fase=arg.get("fase") or "Agendado", ingreso=D(0))
             (self.pa if arg.get("sinAgendar") else self.leads).append(l); return True, {"lead": copy.deepcopy(l)}
         if fn == "pedirInterna":
-            l = self._find(arg.get("id")); return True, {"lead": copy.deepcopy(l), "tel": ""}
+            l = self._find(arg.get("id"))
+            if not l: return False, "No encontré esa consulta (prueba)."
+            if arg.get("tipo") == "control":
+                if not PERMISOS.get(who, {}).get("comentar"): return False, "Esto es solo para Sol (prueba)."
+                l["internas"] = l.get("internas", []) + [{"i": len(l.get("internas", [])), "tipo": "control", "a": "Intakers", "de": who, "nota": arg.get("nota", ""),
+                                                          "abierta": True, "estado": "", "resp": "", "cuando": "05/11/2026 11:20"}]
+            return True, {"lead": copy.deepcopy(l), "tel": ""}
         if fn == "responderInterna":
-            l = self._find(arg.get("id")); return True, {"lead": copy.deepcopy(l)}
+            l = self._find(arg.get("id"))
+            if l:
+                for x in l.get("internas", []):
+                    if x.get("i") == arg.get("i") or str(x.get("i")) == str(arg.get("i")): x["abierta"] = False; x["estado"] = arg.get("respuesta") or arg.get("estado") or "Hecho"; x["resp"] = who
+            return True, copy.deepcopy(l)  # como el motor: devuelve el lead
         if fn == "derivarMarca":
             l = self._find(arg.get("id")); return True, {"lead": copy.deepcopy(l)}
         if fn in ("resetPin", "resetFinPin", "desbloquearPin"):

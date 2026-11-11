@@ -861,6 +861,10 @@ textarea:focus,.inp:focus,select:focus{outline:none;box-shadow:0 0 0 2.5px var(-
 .int-ask textarea{margin-top:8px}
 .int-ops{margin-top:10px}
 .int-open{color:#0B8B8B}
+.ctl-zona{background:var(--amber-bg);border-radius:var(--r-lg);padding:12px 12px 10px;margin:14px 0;box-shadow:0 0 0 1px var(--amber) inset}
+.ctl-zona>.blk-t{margin-bottom:8px}.ctl-zona .box{background:var(--paper)}.ctl-zona .int-ask{background:var(--paper);box-shadow:0 0 0 1.5px var(--amber) inset;margin:0 0 8px}.ctl-zona .btn3{margin-top:8px}
+.ctl-zona .int-open{color:inherit;font-weight:800}
+.ctl-zona .ctl-vacio{margin:2px 2px 4px;font-size:15px;color:var(--ink-2)}.ctl-zona .ctl-btn{font-weight:800;box-shadow:0 0 0 1.5px var(--amber) inset}
 .ok-box{display:flex;flex-direction:column;gap:4px;margin:14px 2px;padding:12px 14px;border-radius:14px;background:var(--paper);box-shadow:0 0 0 1px var(--line) inset}
 .ok-box span{color:var(--ink-3);font-size:14px}
 a.save.wa-go{display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none}
@@ -1002,6 +1006,7 @@ a.save.wa-go svg{width:20px;height:20px}
   .wsp-aviso{color:#9a5b00;font-size:13px;margin:10px 0 0}.wsp-err{color:#b00020}.wsp-load,.wsp-hint{color:#555;font-size:13px}
   .wsp-acts{display:flex;gap:10px;margin-top:14px}.wsp-acts button{flex:1;padding:12px;border-radius:12px;border:0;font-weight:700;font-size:15px;cursor:pointer}
   .wsp-no{background:#eee;color:#222}.wsp-si{background:#25d366;color:#fff}.wsp-si:disabled{opacity:.6}
+  .wsp-b.wsp-va{background:#f1f3f2;color:#5b6660;cursor:default}
   .wsp-g{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:#666;margin:12px 0 6px}
   .wsp-op{display:block;width:100%;text-align:left;border:1px solid #e3e3e3;background:#fafafa;border-radius:10px;padding:10px 12px;margin:0 0 6px;cursor:pointer;color:#111;font-size:14px}
   .wsp-op small{display:block;color:#666;font-size:12px;margin-top:2px;font-weight:400}.wsp-op.sug{border-color:#25d366;background:#effcf3}.wsp-op:disabled{opacity:.55;cursor:default}
@@ -1078,6 +1083,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
 <script>
 (function(){
   'use strict';
+  var wspEnv={}, wspFallo={}; // WhatsApp oficial: envíos en camino y los que fallaron, por lead (ver wspMandar)
   var TZ = 'America/Buenos_Aires';
   var DIAS = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
   var DIAS_C = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
@@ -1384,7 +1390,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
       '<ul class="todo">'+xs.map(function(r){
         return '<li class="pa-li"><button data-ficha="'+esc(r.l.id)+'"><span class="w"><b>'+esc(r.l.nombre||'Sin nombre')+' · '+ramaLabel(r.l.rama)+'</b><span>'+esc(r.x.nota||'')+'</span><span style="display:block;font-size:12px">'+esc(r.x.cuando)+'</span></span></button><button class="pa-ag" data-intresp="'+esc(r.l.id)+'|'+r.x.i+'|Hecho">✔ Hecho</button></li>'; }).join('')+'</ul>');
   }
-  function puedeComSol(l){ return !!(l && !l.parcial && P().comentar && !state.verComo); }
+  function puedeComSol(l){ return !!(l && !l.parcial && P().comentar); } // en "Ver como" se muestra igual; al tocarlo avisa que es solo para mirar
   function sheetComSol(){
     var l=findLead(state.sheet.id); if (!l) return null;
     var d=state.draft||{}, prev=(l.internas||[]).filter(function(x){ return x.tipo==='control'; });
@@ -1405,6 +1411,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
   }
   document.addEventListener('click', function(ev){
     var t=ev.target.closest && ev.target.closest('[data-comsol],[data-comsolenviar]'); if (!t) return;
+    if (t.hasAttribute('data-comsol') && state.verComo){ toast('👁 Así lo ve '+state.verComo+'. Estás viendo la app como '+state.verComo+': para dejar un comentario tiene que entrar ella.'); return; }
     if (t.hasAttribute('data-comsol')){ state.draft={nota:''}; openSheet({type:'comsol', id:t.getAttribute('data-comsol')}); return; }
     if (t.hasAttribute('data-comsolenviar') && state.sheet && state.sheet.type==='comsol'){ comSolEnviar(); return; }
   });
@@ -1945,7 +1952,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     }
     html += estBlk(l);
     if (l.comentarios && l.comentarios.length){
-      html += '<div class="blk"><h3 class="blk-t">Notas de los intakers</h3><div class="notes">'+
+      html += '<div class="blk"><h3 class="blk-t">🗒️ Notas sobre el cliente<small>Lo que dejaron los intakers.</small></h3><div class="notes">'+
         l.comentarios.map(function(c){ return '<div class="kv stack"><span>'+esc(c.label)+'</span><b>'+esc(c.text)+'</b></div>'; }).join('')+'</div></div>';
     }
     var medio=html; html='';
@@ -3021,7 +3028,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     html += '<div class="blk"><h3 class="blk-t">Contacto</h3><div class="box">'+fkv('Teléfono', l.tel||'—', 'num')+fkv('Email', l.email)+'</div></div>';
     if (l.info && l.info.length) html += '<div class="blk"><h3 class="blk-t">Lo que contó en el formulario</h3><div class="box">'+l.info.map(function(c){ return fkv(c.label, c.text, 'pre'); }).join('')+'</div></div>';
     html += estBlk(l);
-    html += '<div class="blk"><h3 class="blk-t">Notas y seguimiento</h3>'+((l.comentarios && l.comentarios.length) ?
+    html += '<div class="blk"><h3 class="blk-t">🗒️ Notas sobre el cliente<small>Lo que los intakers le dejan a la abogada/o sobre esta persona.</small></h3>'+((l.comentarios && l.comentarios.length) ?
       '<div class="notes">'+l.comentarios.map(function(c){ return fkv(c.label, c.text, 'pre'); }).join('')+'</div>' :
       '<div class="note">Todavía no hay notas. Tocá "＋ Nota" para dejar una.</div>')+'</div>';
     html += '<div class="blk"><h3 class="blk-t">De dónde vino</h3><div class="box">'+origenRows(l)+'</div></div>';
@@ -3034,8 +3041,8 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
         '<p class="hint" style="margin:10px 2px 0">Consulta Agendada y Reagenda se ponen al agendar. NO SHOW y Caso en proceso, cuando la abogada carga el resultado: así cuentan bien en los KPIs y disparan los Zaps que corresponden.</p></div>';
     }
     if (u.modo==='nota'){
-      return '<div class="fi-panel"><textarea id="notaTxt" placeholder="Ej.: no atiende, le escribí por WhatsApp">'+esc(u.nota||'')+'</textarea>'+
-        '<button class="save" data-notasave'+((u.nota||'').trim()?'':' disabled')+'>Guardar nota</button><p class="hint" style="margin:6px 2px 0">Se agrega con la fecha y tu nombre en la columna de comentarios de la planilla.</p></div>';
+      return '<div class="fi-panel"><label for="notaTxt" class="hint" style="display:block;margin:0 2px 6px">Nota sobre el cliente, para la abogada/o</label><textarea id="notaTxt" placeholder="Ej.: no atiende, le escribí por WhatsApp">'+esc(u.nota||'')+'</textarea>'+
+        '<button class="save" data-notasave'+((u.nota||'').trim()?'':' disabled')+'>Guardar nota</button><p class="hint" style="margin:6px 2px 0">Se agrega con la fecha y tu nombre en la columna de comentarios de la planilla.'+(puedeComSol(l)?' Si es una corrección para los intakers, usá <b>📝 Dejar un comentario a los intakers</b> (arriba): les llega a Tareas.':'')+'</p></div>';
     }
     if (u.modo==='datos'){
       var nm=u.nombre!==undefined?u.nombre:(l.nombre||''), tl=u.tel!==undefined?u.tel:(l.tel||''), em=u.email!==undefined?u.email:(l.email||'');
@@ -3914,7 +3921,8 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
       var tel=String(l.tel||'').trim(), em=String(l.email||'').trim(), cuando=ingresoCorto(l);
       return '<li class="sc-of"><button class="cn" data-ficha="'+esc(l.id)+'"><b>'+(esNuevoAviso(l)?'🔔 ':'')+esc(l.nombre||'Sin nombre')+'</b><span class="cs">'+faseTag(l.fase)+' '+ramaLabel(l.rama)+(cuando?' · '+esc(cuando):'')+'</span></button>'+
         '<button class="ct num" data-copiar="'+esc(phone(tel)||tel)+'" aria-label="Copiar el teléfono de '+esc(l.nombre||'')+'">'+esc(phone(tel)||tel)+'</button>'+
-        '<button class="wsp-b sc-env" data-wsp="'+esc(l.id)+'" data-wsp-m="primer_contacto" aria-label="Mandar el primer mensaje oficial a '+esc(l.nombre||'')+'">📤 Enviar</button>'+
+        (wspEnv[l.id] ? '<button class="wsp-b sc-env wsp-va" disabled aria-label="Mandando el primer mensaje a '+esc(l.nombre||'')+'">⏳ Enviando…</button>' :
+        '<button class="wsp-b sc-env" data-wsp="'+esc(l.id)+'" data-wsp-m="primer_contacto" aria-label="Mandar el primer mensaje oficial a '+esc(l.nombre||'')+'">📤 '+(wspFallo[l.id]?'Reintentar':'Enviar')+'</button>')+
         (em ? '<button class="ce" data-copiar="'+esc(em)+'" aria-label="Copiar el mail">'+esc(em)+'</button>' : '')+'</li>';
     }
     var h=clRow(l).replace('data-wspmenu="', 'data-wsp-m="primer_contacto" data-wsp="');
@@ -4562,13 +4570,30 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
   }
   function internasBlk(l){
     if (!l || l.parcial) return '';
-    var xs=l.internas||[], html='';
-    intAbiertaMia(l).forEach(function(x){ html += respuestaHtml(l, x); });
-    if (xs.length) html += '<div class="blk"><h3 class="blk-t">Consultas internas</h3><div class="box">'+xs.map(function(x){
+    var xs=l.internas||[], html='', mias=intAbiertaMia(l);
+    var esCtl=function(x){ return x.tipo==='control'; };
+    var otras=xs.filter(function(x){ return !esCtl(x); });
+    mias.filter(function(x){ return !esCtl(x); }).forEach(function(x){ html += respuestaHtml(l, x); });
+    if (otras.length) html += '<div class="blk"><h3 class="blk-t">Consultas internas</h3><div class="box">'+otras.map(function(x){
       return '<div class="kv stack"><span>'+esc(x.cuando)+' · '+esc(x.de)+' → '+esc(x.a)+' · '+intTipoTxt(x)+'</span><b class="'+(x.abierta?'int-open':'')+'">'+esc(x.estado)+(x.nota?' · '+esc(x.nota):'')+(x.resp?' · '+esc(x.resp):'')+'</b></div>'; }).join('')+'</div></div>';
     if (puedeInterna(l)) html += '<button class="btn3" data-intnueva="'+esc(l.id)+'">💬 Consultar si es caso o derivar la llamada</button>';
-    if (puedeComSol(l)) html += '<button class="btn3" data-comsol="'+esc(l.id)+'">📝 Dejar un comentario a los intakers</button>';
-    return html;
+    return html + ctlZona(l, xs.filter(esCtl), mias.filter(esCtl));
+  }
+  /* Comentarios de control: los deja Sol para los intakers (no son notas del cliente). Zona propia, en ámbar. */
+  function ctlZona(l, ctl, mias){
+    var puedo=puedeComSol(l), esInt=rol()==='intaker', esAdm=rol()==='admin';
+    if (!ctl.length && !puedo && !esInt && !esAdm) return '';   // las abogadas solo lo ven si hay algo
+    var abiertas=mias.map(function(x){ return x.i; }), html='';
+    mias.forEach(function(x){ html += respuestaHtml(l, x); });
+    var resto=ctl.filter(function(x){ return abiertas.indexOf(x.i)===-1; });
+    if (resto.length) html += '<div class="box">'+resto.map(function(x){
+      return '<div class="kv stack"><span>'+esc(x.cuando)+' · '+esc(x.de)+' · '+esc(x.abierta?'Pendiente':(x.estado+(x.resp?' · '+x.resp:'')))+'</span><b class="'+(x.abierta?'int-open':'')+'">'+esc(x.nota||'')+'</b></div>'; }).join('')+'</div>';
+    else if (!mias.length) html += '<p class="ctl-vacio">'+(puedo?'Todavía no les dejaste nada sobre esta persona.':'Sol todavía no dejó comentarios sobre esta persona.')+'</p>';
+    if (puedo) html += '<button class="btn3 ctl-btn" data-comsol="'+esc(l.id)+'">📝 Dejar un comentario a los intakers</button>';
+    var sub = puedo ? 'Acá les dejás a los intakers lo que tienen que corregir o hacer. Les llega a Tareas hasta que lo marcan Hecho.'
+      : esInt ? 'Acá te aparece lo que Sol te pide corregir cuando revisa los chats. También lo ves en Tareas. Cuando lo resolvés, tocá Hecho.'
+      : 'Lo que Sol les pide corregir a los intakers. Les llega a Tareas hasta que lo marcan Hecho.';
+    return '<section class="ctl-zona" aria-label="Comentarios de Sol para los intakers"><h3 class="blk-t">📝 Comentarios de Sol para los intakers<small>'+sub+' Las notas del cliente para la abogada/o van más abajo.</small></h3>'+html+'</section>';
   }
   function internasBanner(){
     var noCtl=function(l){ return intAbiertaMia(l).filter(function(x){ return x.tipo!=='control'; }); }; // los comentarios de Sol van a Tareas
@@ -5426,6 +5451,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
   function wspBtn(l, momento, txt){
     if (!momento || !wspPuede(l)) return '';
     wspPrecargar();
+    if (wspEnv[l.id]) return '<button class="wsp-b wsp-va" disabled aria-label="Mandando el mensaje a '+esc(l.nombre||'')+'">⏳'+(txt?' Enviando…':'')+'</button>';
     return '<button class="wsp-b" data-wsp="'+esc(l.id)+'" data-wsp-m="'+momento+'" title="Mandar por el WhatsApp oficial" aria-label="Mandar por WhatsApp oficial a '+esc(l.nombre||'')+'">📤'+(txt?' '+esc(txt):'')+'</button>';
   }
   function wspFicha(l){ if (!wspPuede(l)) return ''; wspPrecargar(); return '<button class="btn3 wsp-menu" data-wspmenu="'+esc(l.id)+'">📤 Mandar mensaje por WhatsApp</button>'; }
@@ -5483,7 +5509,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     if (fase==='seguimiento') return ['seguimiento_post_consulta','reactivacion_post_consulta'].concat(docs);
     if (fase==='no show') return ['no_vino_a_consulta','reagendar_consulta','reactivacion_post_consulta'];
     if (fase==='caso en proceso') return docs;
-    if (fase==='c') return ['rechazo_no_es_caso','rechazo_fuera_jurisdiccion','rechazo_abogado_interviniendo','rechazo_prescripcion_art','rechazo_sin_art','rechazo_empleo_publico','reactivacion_formulario'];
+    if (fase==='c') return ['rechazo_no_es_caso','rechazo_fuera_jurisdiccion','rechazo_abogado_interviniendo','rechazo_prescripcion_art','rechazo_sin_art','rechazo_empleo_publico','rechazo_mas_3_meses','reactivacion_formulario'];
     return [auto,'consulta_tiempo_trabajado','seguimiento_sin_respuesta_1','seguimiento_sin_respuesta_2','seguimiento_sin_respuesta_3','inicio_jurisdiccion','reactivacion_formulario'];
   }
   function wspDestino(l, D){ return D.prueba ? (D.destinoPrueba||'MODO PRUEBA') : '+54 9 '+phone(l.tel); }
@@ -5540,11 +5566,13 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     wspDlg('<h3>'+esc(v.label)+'</h3><p class="wsp-to'+(v.prueba?' prueba':'')+'">Para: '+esc(v.destino)+'</p>'+
       '<div class="wsp-msg">'+esc(v.texto).replace(/\n/g,'<br>')+'</div>'+
       (v.aviso?'<p class="wsp-aviso">⚠️ '+esc(v.aviso)+'</p>':'')+
+      (wspFallo[wspSt.id]==='corte'?'<p class="wsp-aviso">⚠️ La vez anterior se cortó la conexión mientras salía. Fijate en uChat si ya le llegó antes de mandarlo de nuevo.</p>':'')+
       '<p class="wsp-hint" style="margin-top:10px">Así le va a llegar. Revisalo antes de mandarlo.</p>'+
       '<div class="wsp-acts"><button class="wsp-no" data-wspx>Cancelar</button><button class="wsp-si" data-wspok>'+(v.aviso?'Enviar igual':'Enviar')+'</button></div>');
   }
   /** Botones rápidos (primer mensaje, recordatorios, turno): vista previa al instante si ya están los datos. */
   function wspVer(id, q){
+    if (wspOcupado(id)) return;
     wspSt={id:id, q:q};
     var l=findLead(id), porMomento={turno:'confirmacion_consulta', previo:'recordatorio_consulta_manana', hoy:'recordatorio_consulta_hoy'};
     var local=function(D){
@@ -5564,16 +5592,36 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     if (x && x.texto){ wspSt.q={tpl:tpl}; wspMostrar({label:x.label, texto:x.texto, destino:wspSt.destino, prueba:wspSt.prueba, aviso:x.aviso}); }
     else wspVer(wspSt.id, {tpl:tpl});
   }
+  /* Envíos en camino (por lead). El servidor tarda ~7 s por envío (hasta 24 s en el registro de uso): la ventana se cierra
+   * enseguida y se puede seguir con el próximo lead; la fila muestra "Enviando…" y no deja mandarle otro mientras tanto. */
+  function wspOcupado(id){
+    if (!wspEnv[id]) return false;
+    var l=findLead(id); toast('⏳ Ya se está mandando un mensaje'+(l&&l.nombre?' a '+wspNombre(l.nombre):'')+'. Esperá que termine.');
+    return true;
+  }
   function wspMandar(){
-    var s=wspSt; if (!s.v) return;
-    var b=document.querySelector('[data-wspok]'); if (b){ b.disabled=true; b.textContent='Enviando…'; }
-    call('enviarWsp', Object.assign({id:s.id, forzar:!!s.v.aviso}, s.q)).then(function(r){
-      wspCerrar(); toast('✓ Enviado por WhatsApp: '+r.label+(r.prueba?' (prueba: llegó a tu número)':''));
+    var s=wspSt, v=s.v; if (!v || wspEnv[s.id]) return;
+    var l=findLead(s.id), nom=wspNombre(l&&l.nombre)||'';
+    wspEnv[s.id]={t:Date.now()}; wspSt={}; wspCerrar();
+    toast('📤 Mandando'+(nom?' a '+nom:'')+'… Podés seguir con otro.');
+    var pintar=function(){ if (!escribiendo()) render(); };
+    pintar();
+    call('enviarWsp', Object.assign({id:s.id, forzar:!!v.aviso}, s.q)).then(function(r){
+      delete wspEnv[s.id]; delete wspFallo[s.id];
+      toast('✓ Enviado por WhatsApp'+(nom?' a '+nom:'')+': '+r.label+(r.prueba?' (prueba: llegó a tu número)':''));
       if (wspD){ var e=(wspD.envios=wspD.envios||{}); (e[s.id]=e[s.id]||{})[r.tpl]={t:Date.now(), quien:wspD.yo}; }
       if (r.levanto && state.data) state.data.sinContactar=(state.data.sinContactar||[]).filter(function(x){ return x.id!==s.id; });
       if (r.lead && r.lead.id && findLead(r.lead.id)) { try { replaceLead(r.lead); } catch(x){} }
-      render();
-    }).catch(function(e){ if (b){ b.disabled=false; b.textContent='Enviar'; } toast((e&&e.message)||'No se pudo mandar. Usá el botón de WhatsApp de siempre.', true); });
+      pintar();
+    }).catch(function(e){
+      delete wspEnv[s.id];
+      var m=(e&&e.message)||'No se pudo mandar.';
+      wspFallo[s.id]=esCorte(e) ? 'corte' : 'error';
+      // Si se cortó la conexión, el mensaje pudo haber salido igual: mejor mirar uChat que mandarlo dos veces
+      if (esCorte(e)) toastAccion('⚠️ No sé si le llegó'+(nom?' a '+nom:'')+' (se cortó la conexión). Fijate en uChat antes de mandarlo de nuevo.', 'Entendido', function(){}, 12000);
+      else toastAccion('No se pudo mandar'+(nom?' a '+nom:'')+': '+m, 'Reintentar', function(){ wspSt=s; wspMostrar(v); }, 12000);
+      pintar();
+    });
   }
   function wspPintarLista(id, o){
     wspSt={id:id, lista:o.lista, destino:o.destino, prueba:o.prueba};
@@ -5591,6 +5639,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     wspDlg(h+'<div class="wsp-acts"><button class="wsp-no" data-wspx>Cerrar</button></div>');
   }
   function wspMenu(id){
+    if (wspOcupado(id)) return;
     var l=findLead(id);
     if (l && wspD && wspD.activo){ wspPintarLista(id, wspListaLocal(l, wspD)); wspDatos().catch(function(){}); return; }
     wspSt={id:id}; wspDlg('<p class="wsp-load">Buscando los mensajes para esta persona…</p>');

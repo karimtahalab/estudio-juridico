@@ -20,10 +20,12 @@ Cómo correrlo: `python3 pruebas/correr.py <carpeta con index.html> <carpeta de 
 | mejora/2026-11-07 | En 360px el nombre de la consulta usa hasta 2 renglones (antes se cortaba en todas las tarjetas); Cerrar (X) de las hojas a 44px; "Cambiar" y "Ver como otra persona" del pie con zona táctil de 45px | Aplicada (en main desde el 07/11) |
 | mejora/2026-11-07-reportes-sol | Registro de uso y comentarios de Sol (motor v75/v76) | Aplicada (en main desde el 07/11) |
 | mejora/2026-11-08-flujo-sin-contactar | Flujo semanal: Sin contactar → primer mensaje → fase sin abrir la ficha (auto "Contacté" al volver de WhatsApp con Deshacer, sección "Falta la fase" con botones A/B/Llamada/C, barra para ir directo). Sin motor. | Aplicada (en main desde el 09/11, dentro de b1f5d7e; la rama vieja choca con main y no hace falta) |
-| mejora/2026-11-08 | Pedidos colgados: las lecturas se cortan a los 35 s y se repiten solas; al volver a la app se repiten las que llevan más de 12 s en camino. Escrituras sin cambios. Sin motor. | Pendiente de aprobar (al 10/11 entra limpia sobre main; main sigue sin tiempo máximo) |
-| mejora/2026-11-09 | Cargar resultado: la hoja ya no esconde la hora y el nombre de la consulta (baja solo lo necesario); Confirmó/No respondió y Cargar resultado a 44 px; Bloquear con zona táctil de 44 px. Sin motor. | Pendiente de aprobar (al 10/11 entra limpia sobre main) |
+| mejora/2026-11-08 | Pedidos colgados: las lecturas se cortan a los 35 s y se repiten solas; al volver a la app se repiten las que llevan más de 12 s en camino. Escrituras sin cambios. Sin motor. | Pendiente de aprobar (al 11/11 entra limpia sobre main 08566c6; main sigue sin tiempo máximo) |
+| mejora/2026-11-09 | Cargar resultado: la hoja ya no esconde la hora y el nombre de la consulta (baja solo lo necesario); Confirmó/No respondió y Cargar resultado a 44 px; Bloquear con zona táctil de 44 px. Sin motor. | Pendiente de aprobar (al 11/11 entra limpia sobre main) |
 | mejora/2026-11-09-whatsapp | WhatsApp oficial, flujo Sin contactar, agenda de Juan rayada, actualización | Aplicada (en main desde el 09/11) |
-| mejora/2026-11-10 | 📤 Enviar no traba la pantalla (la ventana se cierra al tocar Enviar, la fila queda "⏳ Enviando…", se puede seguir con el próximo lead) y no deja mandar dos veces al mismo lead; si falla, "📤 Reintentar" y aviso de mirar uChat si se cortó la conexión. Sin motor. | Pendiente de aprobar |
+| mejora/2026-11-10 | 📤 Enviar no traba la pantalla (la ventana se cierra al tocar Enviar, la fila queda "⏳ Enviando…", se puede seguir con el próximo lead) y no deja mandar dos veces al mismo lead; si falla, "📤 Reintentar" y aviso de mirar uChat si se cortó la conexión. Sin motor. | Aplicada (en main desde el 10/11, 230bb3e) |
+| mejora/2026-11-10-notas-vs-sol, -zona-sol, -vercomo-sol | Zona propia de comentarios de Sol en la ficha, "Notas sobre el cliente", Ver como Sol | Aplicadas (en main desde el 10/11) |
+| mejora/2026-11-11 | Menos pedidos de fondo al motor: reporte en segundo plano como mucho cada 3 min después de guardar; saveVisto solo si cambió algo; fin2Calentar recordado en el celular entre aperturas. Sin motor. | Pendiente de aprobar |
 
 ## 2026-11-05 (primera noche)
 - Armé el banco (rama pruebas-nocturnas, carpeta pruebas/).
@@ -146,6 +148,24 @@ Cómo correrlo: `python3 pruebas/correr.py <carpeta con index.html> <carpeta de 
 - Ideas grandes:
   - fin2Calentar se dispara para todos los que tienen finAcceso (también Cele y Mica) y tarda 15-45 s en el motor cada 40 min: limitarlo a quien abre Finanzas o a admins le saca carga al motor (es del motor y de la pantalla; a medir).
   - getReporte en segundo plano 128 veces en un día (4 s cada uno): pedirlo al abrir Reporte o cada 2-3 min (sigue pendiente de la noche anterior), junto con getData en CacheService.
+
+## 2026-11-10 (noche, corrida del 11/11)
+- main al día: 08566c6 (incluye mejora/2026-11-10 y las tres ramas de Sol del 10/11). Copiados al banco index.html, sw.js y manifest.
+- Ramas pendientes: mejora/2026-11-08 y mejora/2026-11-09 entran limpias sobre main (cada una y juntas con la nueva, sin pushear). mejora/2026-11-05, mejora/2026-11-06 y mejora/2026-11-08-flujo-sin-contactar figuran con commits de más pero su contenido ya está en main. Con la nueva quedan 3 pendientes: la próxima noche no se arma rama nueva si no se aprueba alguna.
+- Cambios del motor pendientes: ninguno (los 3 archivos dicen APLICADO).
+- Registro de uso real (USO, 9-10/11, 772 filas; usaron la app Pri, Fran, Karim y Mica; nada de Cele, Sol, Estefanía, Juan ni Julián):
+  - Sin filas de error. 2 avisos (9/11): un "Sin conexión" de getData de Fran y un PIN de finanzas incorrecto de Karim. El 10/11 ningún "Sin conexión".
+  - enviarWsp 29 envíos el 10/11, 0 errores, promedio 5,3 s, máximo 10,8 s (Pri).
+  - getData 474 (3,5 s promedio, máximo 20 s de Pri). getReporte 70 (4 s) en segundo plano. saveVisto 87 (2,1 s, máximo 9,7 s). cambiarFase 38 (4,9 s, la pantalla no espera). fin2Calentar 17 (24 s promedio, máximo 64 s; 11 de Karim, que abrió la app muchas veces en Windows y iPhone).
+  - Aperturas: con lo guardado 0,2-1,8 s; con datos nuevos 1,7-13 s (Pri en Windows 13,2 s una vez).
+  - Pri y Fran usan la app instalada en Windows (1280x646), no solo en el celular.
+- Roles probados: Cele, Pri, Karim con correr.py; Sol, Estefanía y Juan para permisos. 390 y 360. Sin errores de JavaScript ni pedidos fallidos en main ni en la rama. Mismas pestañas por rol. Permisos OK con datos falsos.
+- Comentarios de Sol de punta a punta (nuevo pruebas/probar_sol.py): Sol ve la zona y el botón, manda; a Pri le llega en Tareas, ✔ Hecho y desaparece; Mica no ve el botón. 7/7 OK.
+- Banco: datos_falsos.py ahora tiene a Sol en ABOGADAS (como CONFIG.ABOGADAS del motor; sin eso la agenda de Sol salía vacía y sin chip marcado, solo en el banco), permiso comentar para Sol, pedirInterna tipo control que guarda el comentario, responderInterna que lo cierra y devuelve el lead, y paraMi para intakers. Nuevo pruebas/probar_fondo.py (cuenta pedidos de fondo).
+- Mejora propuesta: mejora/2026-11-11 (ver tabla). probar_fondo.py: Pri con 4 cambios de fase + Actualizar + 3 fichas → getReporte 2→0 y saveVisto 3→0; al tocar Reporte se ve y pide uno nuevo (1); ficha con novedad guarda el visto (1 en main y en la rama); Karim 4 aperturas en 10 min → fin2Calentar 4→1. correr.py igual que main (0 errores, mismas pestañas; 124→106 pedidos al banco).
+- Ideas grandes:
+  - getData sigue en 3,5 s de promedio y es lo que más espera la gente: guardarla armada 30-60 s en CacheService por persona e invalidarla al guardar (motor; medir primero en el entorno de prueba). Sigue pendiente.
+  - Pri y Fran trabajan en Windows: una vista de escritorio de Tareas/Agendar a dos columnas (lista + ficha al lado) les ahorraría abrir y cerrar la ficha en cada lead.
 
 ## Flujos rediseñados (tarea semanal de los domingos)
 | Fecha | Flujo | Para quién | Toques antes → después | Rama | Motor |
