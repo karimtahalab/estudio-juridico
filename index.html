@@ -2309,8 +2309,9 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
         '<button class="btn2" data-trcopiar="'+esc(t[ida?'dirIda':'dirVuelta'])+'">Copiar dirección</button></div>' : '');
   }
   function trBlk(l){
-    if (!trAplica(l)) return '';
-    var t=trDe(l);
+    if (!l || l.parcial) return '';
+    var t=trDe(l); // si ya tiene traslado se muestra siempre (aunque después pase a No es caso, No vino, etc.) para cargar recibos y reintegro
+    if (!t && !trAplica(l)) return '';
     if (!t){
       if (!trPuedeCoord(l) || ['Consulta agendada','Reagenda'].indexOf(l.fase)===-1) return '';
       return '<button class="btn3" data-trnuevo="'+esc(l.id)+'">🚗 Coordinar traslado (Uber)</button>';
@@ -3039,7 +3040,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     if (rol()==='intaker' && scLista().some(function(x){ return x.id===l.id; })) html += '<button class="btn3" data-levante="'+esc(l.id)+'">✓ Ya lo contacté por otro lado (llamada, otro WhatsApp)</button>';
     if (ag) html += '<div class="pa-has" style="margin:12px 2px 0">Ya tiene consulta: '+esc(diaCorto(l.fecha))+' '+esc(l.hora||'')+(l.abogada?' con '+esc(l.abogada):'')+'</div><button class="btn3" data-open="'+esc(l.id)+'">Ver la consulta</button>';
     else if (puede('agendar')) html += '<button class="btn3 fi-ag" data-agendar="'+esc(l.id)+'">'+I.cal+'Agendar consulta</button>';
-    if (ag) html += trBlk(l);
+    if (ag || trDe(l)) html += trBlk(l);
     html += internasBlk(l);
     var b=function(md, t){ var on=u.modo===md; return '<button data-fimodo="'+md+'" class="'+(on?'on':'')+'" aria-pressed="'+on+'">'+t+'</button>'; };
     var conFase=!ag && puede('agendar');
