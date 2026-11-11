@@ -108,9 +108,9 @@ a{color:inherit;text-decoration:none}
 .agbar .seg2 button::after{content:'';position:absolute;left:0;right:0;top:-7px;bottom:-7px}
 .seg-nueva{margin-top:6px}
 .seg-q{margin-top:10px;height:44px}
-.todo.seg li.seg-li{display:flex;align-items:flex-start;gap:6px}
-.todo.seg li.seg-ok{opacity:.65}
-.todo.seg .seg-main{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:11px 12px 11px 14px}
+.todo.segl li.seg-li{display:flex;align-items:flex-start;gap:6px}
+.todo.segl li.seg-ok{opacity:.65}
+.todo.segl .seg-main{flex:1;min-width:0;width:auto;height:auto;min-height:0;white-space:normal;display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:11px 8px 11px 14px}
 .seg-top{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
 .seg-top b{font-size:15.5px;font-weight:700}
 .seg-nota{font-size:14.5px;color:var(--ink);white-space:pre-wrap;overflow-wrap:anywhere}
@@ -4095,7 +4095,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     var h='<li class="seg-li'+(hecho?' seg-ok':'')+'"><button class="seg-main" data-segver="'+esc(s.id)+'">'+
       '<span class="seg-top"><b>'+esc(titulo)+'</b>'+segCuando(s)+(s.repetir?'<span class="seg-tag">🔁 cada semana</span>':'')+'</span>'+
       '<span class="seg-nota">'+esc(s.nota||'')+'</span>'+
-      (ult?'<span class="seg-ult">💬 '+esc(ult)+'</span>':'')+
+      (ult?'<span class="seg-ult">💬 '+esc((function(x){ var q=String(x).split(' · '); return q.length>2 ? segFecha(q[0])+' '+q[1]+': '+q.slice(2).join(' · ') : x; })(ult))+'</span>':'')+
       '<span class="seg-meta">'+esc(meta)+(hecho?' · ✔ '+esc(s.hechoPor||'')+' '+esc(segFecha(s.hechoEl)):'')+'</span></button>'+
       '<span class="seg-acts">'+(ph.length>=10?'<a class="ib wa" href="'+waHref(tel)+'" target="_blank" rel="noopener" aria-label="WhatsApp a '+esc(titulo)+'">'+I.chat+'</a>':'')+
       (hecho ? '<button class="seg-b" data-segdeshacer="'+esc(s.id)+'">↩ Pendiente</button>' : '<button class="seg-b seg-hecho" data-seghecho="'+esc(s.id)+'">✔ Hecho</button>')+'</span></li>';
@@ -4104,7 +4104,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
   function segOrden(a,b){ return String(a.para||'9999').localeCompare(String(b.para||'9999')) || String(a.creado).localeCompare(String(b.creado)); }
   function segBloque(t, xs, sub){
     if (!xs.length) return '';
-    return '<h3 class="sc-rama">'+t+' <span class="cnt num">'+xs.length+'</span></h3>'+(sub?'<p class="sec-sub">'+sub+'</p>':'')+'<ul class="todo seg">'+xs.sort(segOrden).map(segRow).join('')+'</ul>';
+    return '<h3 class="sc-rama">'+t+' <span class="cnt num">'+xs.length+'</span></h3>'+(sub?'<p class="sec-sub">'+sub+'</p>':'')+'<ul class="todo segl">'+xs.sort(segOrden).map(segRow).join('')+'</ul>';
   }
   function segHtml(){
     var xs=segPend(), h=nowBA().date, q=normTxt(state.segQ||'');
@@ -4120,7 +4120,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     if (hechas.length && !q){
       var ab=!!state.segHechas;
       body+='<button class="rs-ctl" data-seghechas aria-expanded="'+ab+'" style="margin-top:16px"><span>Hechas en las últimas 2 semanas ('+hechas.length+')</span><small>'+(ab?'Ocultar ▴':'Ver ▾')+'</small></button>'+
-        (ab?'<ul class="todo seg" style="margin-top:8px">'+hechas.map(segRow).join('')+'</ul>':'');
+        (ab?'<ul class="todo segl" style="margin-top:8px">'+hechas.map(segRow).join('')+'</ul>':'');
     }
     return body;
   }
