@@ -30,13 +30,13 @@ ABOGADAS = ["Mica", "Cele", "Sol", "Estefanía", "Juan"]  # como CONFIG.ABOGADAS
 PERMISOS = {
     "Mica": {"agenda": ["ART", "LABORAL"], "agendar": True, "leads": ["ART", "LABORAL"]},
     "Cele": {"agenda": ["ART", "LABORAL"], "agendar": True, "leads": ["ART", "LABORAL"]},
-    "Sol": {"agenda": ["ART", "LABORAL"], "agendar": True, "leads": ["ART", "LABORAL"], "comentar": True},
+    "Sol": {"agenda": ["ART", "LABORAL"], "agendar": True, "leads": ["ART", "LABORAL"], "comentar": True, "seguimiento": True},
     "Estefanía": {"agenda": ["LABORAL"], "agendar": False, "leads": []},
     "Juan": {"agenda": ["TRANSITO"], "agendar": True, "leads": ["TRANSITO"]},
-    "Fran": {"agenda": ["ART", "LABORAL", "TRANSITO"], "agendar": True, "leads": ["ART", "LABORAL", "TRANSITO"]},
-    "Pri": {"agenda": ["ART", "LABORAL", "TRANSITO"], "agendar": True, "leads": ["ART", "LABORAL", "TRANSITO"]},
-    "Karim": {"agenda": ["ART", "LABORAL", "TRANSITO"], "agendar": True, "leads": ["ART", "LABORAL", "TRANSITO"]},
-    "Julián": {"agenda": ["ART", "LABORAL", "TRANSITO"], "agendar": True, "leads": ["ART", "LABORAL", "TRANSITO"]},
+    "Fran": {"agenda": ["ART", "LABORAL", "TRANSITO"], "agendar": True, "leads": ["ART", "LABORAL", "TRANSITO"], "seguimiento": True},
+    "Pri": {"agenda": ["ART", "LABORAL", "TRANSITO"], "agendar": True, "leads": ["ART", "LABORAL", "TRANSITO"], "seguimiento": True},
+    "Karim": {"agenda": ["ART", "LABORAL", "TRANSITO"], "agendar": True, "leads": ["ART", "LABORAL", "TRANSITO"], "seguimiento": True},
+    "Julián": {"agenda": ["ART", "LABORAL", "TRANSITO"], "agendar": True, "leads": ["ART", "LABORAL", "TRANSITO"], "seguimiento": True},
 }
 
 RES_LARGO = ("[PRUEBA] Trabajador de depósito, 34 años. Se lesionó la espalda levantando cajas el 12/09. "
@@ -133,6 +133,13 @@ class FakeApi:
         self.sin_fake = set()
         self.calls = []
         self.seq = 900
+        self.seg = [  # Seguimiento entre intakers (TODO DE PRUEBA)
+            {"id": "SG1", "nombre": "Damián Prueba", "tel": "2615550101", "rama": "ART", "lead": "", "nota": "Escribirle para coordinar la consulta (prueba).", "para": D(0), "repetir": False, "estado": "Pendiente", "quien": "Pri", "creado": D(-1) + " 18:10", "historial": [D(-1) + " 18:10 · Pri · Le escribí, contesta mañana (prueba)"]},
+            {"id": "SG2", "nombre": "", "tel": "2615550102", "rama": "LABORAL", "lead": "", "nota": "Pide que la llamen después de las 17 (prueba).", "para": D(-2), "repetir": False, "estado": "Pendiente", "quien": "Fran", "creado": D(-3) + " 10:00", "historial": []},
+            {"id": "SG3", "nombre": "Rosa Prueba", "tel": "2615550103", "rama": "TRANSITO", "lead": "", "nota": "Mandarle cada semana cómo va el reclamo (prueba).", "para": D(2), "repetir": True, "estado": "Pendiente", "quien": "Karim", "creado": D(-7) + " 09:00", "historial": []},
+            {"id": "SG4", "nombre": "Tomás Prueba", "tel": "", "rama": "", "lead": "", "nota": "Tener presente: vuelve de viaje a fin de mes (prueba).", "para": "", "repetir": False, "estado": "Pendiente", "quien": "Pri", "creado": D(-1) + " 12:00", "historial": []},
+            {"id": "SG5", "nombre": "Hecha Prueba", "tel": "2615550105", "rama": "ART", "lead": "", "nota": "Ya resuelta (prueba).", "para": D(-1), "repetir": False, "estado": "Hecho", "hechoPor": "Fran", "hechoEl": D(-1) + " 16:00", "quien": "Fran", "creado": D(-2) + " 10:00", "historial": []},
+        ]
         self.wsp_enviados = []  # WhatsApp que se "habrían" mandado (todo falso)
 
     def _quien(self, arg):
@@ -176,6 +183,7 @@ class FakeApi:
             "sinContactar": [copy.deepcopy(l) for l in self.sc if l["rama"] in PERMISOS.get(who, {}).get("leads", []) and next((e["rol"] for e in EQUIPO if e["nombre"] == who), "") in ("intaker", "admin")],
             "paraMi": [copy.deepcopy(l) for l in self.leads + self.pa if who in ("Fran", "Pri") and any(x.get("tipo") == "control" and x.get("abierta") for x in l.get("internas", []))], "visto": None, "diasPorAgendar": 90, "duplicados": [],
         }
+        if PERMISOS.get(who, {}).get("seguimiento"): d["seguimiento"] = copy.deepcopy(self.seg)
         if who in ("Karim", "Julián"):
             d["pines"] = [{"nombre": e["nombre"], "tiene": e["tiene"], "bloqueado": self.pin_bloq.get(e["nombre"], False), "fijo": e["nombre"] == "Julián"} for e in eq]
             d["finAcceso"] = True; d["finRamas"] = ["ART", "LABORAL", "TRANSITO"]; d["finModo"] = {"ART": "full", "LABORAL": "full", "TRANSITO": "full"}; d["finPin"] = {"tiene": True, "bloqueado": False}
@@ -290,7 +298,32 @@ class FakeApi:
             return True, {"ok": True, "label": next((o["label"] for o in WSP_CATALOGO if o["tpl"] == tpl), tpl), "tpl": tpl, "prueba": False, "levanto": levanto, "lead": copy.deepcopy(l)}
         if fn == "getReporte":
             return True, {"__prueba": True, "filas": [], "semana": arg.get("semana")}
-        if fn == "getEstudios": return True, {"lista": [], "puedeSubir": True, "maxMB": 10}
+        if fn == "getEstudios": return True, {"lista": [{"fid": "EST1", "nombre": "Resonancia (prueba).pdf", "tipo": "application/pdf", "por": "Pri", "cat": "Estudios"}], "puedeSubir": True, "maxMB": 10}
+        if fn == "verEstudio": return True, {"b64": "JVBERi0xLjQKJSBQUlVFQkEK", "tipo": "application/pdf", "nombre": "Resonancia (prueba).pdf"}
+        if fn in ("segGuardar", "segHecho", "segComentar"):
+            if not PERMISOS.get(who, {}).get("seguimiento"): return False, "Seguimiento es para intakers, Sol y administración (prueba)."
+            import datetime as _dt
+            ahora = D(0) + " 11:20"
+            if fn == "segGuardar":
+                if arg.get("id"):
+                    s = next((x for x in self.seg if x["id"] == arg["id"]), None)
+                    if not s: return False, "No encontré esa nota (prueba)."
+                    s.update({k: arg.get(k, s.get(k)) for k in ("nombre", "tel", "rama", "lead", "nota", "para", "repetir")})
+                else:
+                    self.seq += 1
+                    self.seg.append({"id": "SG%d" % self.seq, "estado": "Pendiente", "quien": who, "creado": ahora, "historial": [], **{k: arg.get(k, "") for k in ("nombre", "tel", "rama", "lead", "nota", "para")}, "repetir": bool(arg.get("repetir"))})
+            else:
+                s = next((x for x in self.seg if x["id"] == arg.get("id")), None)
+                if not s: return False, "No encontré esa nota (prueba)."
+                if fn == "segComentar": s["historial"].append(ahora + " · " + who + " · " + arg.get("texto", ""))
+                elif arg.get("hecho"):
+                    if s.get("repetir") and s.get("para"):
+                        s["para"] = (_dt.date.fromisoformat(s["para"]) + _dt.timedelta(days=7)).isoformat()
+                    else: s.update({"estado": "Hecho", "hechoPor": who, "hechoEl": ahora})
+                else:
+                    s["estado"] = "Pendiente"
+                    if arg.get("para") is not None: s["para"] = arg.get("para")
+            return True, copy.deepcopy(self.seg)
         if fn == "getCreativos": return True, {"ramas": []}
         if fn in ("finPinEntrar",): return True, {"ftok": "fake-fin", "creado": False}
         self.sin_fake.add(fn)

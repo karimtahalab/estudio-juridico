@@ -167,6 +167,30 @@ Cómo correrlo: `python3 pruebas/correr.py <carpeta con index.html> <carpeta de 
   - getData sigue en 3,5 s de promedio y es lo que más espera la gente: guardarla armada 30-60 s en CacheService por persona e invalidarla al guardar (motor; medir primero en el entorno de prueba). Sigue pendiente.
   - Pri y Fran trabajan en Windows: una vista de escritorio de Tareas/Agendar a dos columnas (lista + ficha al lado) les ahorraría abrir y cerrar la ficha en cada lead.
 
+## 2026-11-11 (noche, corrida de las 22:40)
+- main al día: b3914ad (Seguimiento entre intakers 18967c0/e8ad86b/1f1d9e5, Traslados b3914ad, rechazo Laboral 08566c6). Copiados al banco index.html, sw.js y manifest.
+- Ramas pendientes sin mergear: mejora/2026-11-08, mejora/2026-11-09 y mejora/2026-11-11 (3). Las tres entran limpias sobre main (cada una y juntas, sin pushear). mejora/2026-11-08-flujo-sin-contactar choca en index.html pero su contenido ya está en main (b1f5d7e); mejora/2026-11-06-repetidos tampoco mergea limpio (2 commits del 06/11, ya superados). Con 3 pendientes, esta noche NO se armó rama nueva.
+- Cambios del motor pendientes: ninguno (los 3 archivos dicen APLICADO).
+- Registro de uso real (USO, 10/11 noche y 11/11, ~810 filas; usaron la app Pri, Fran, Karim, Cele, Mica y Juan; nada de Sol, Estefanía ni Julián):
+  - Sin filas de error. Pedidos colgados otra vez, peores que antes: getData de Cele esperó 5.662.553 ms (94 min) y 2.990.384 ms (50 min) y terminó en "Sin conexión" (iPhone, agenda); otro de 171 s. fin2Calentar de Karim 1.227.609, 1.078.021 y 1.049.574 ms (17-20 min, 3 veces). Pri getData 47 s y getReporte 41 s. Juan 2 "Sin conexión" de getData tras 20-23 s. Es exactamente lo que arregla mejora/2026-11-08 (tiempo máximo por pedido): probar_colgados.py sobre main + las 3 ramas → A y B se recuperan solos (2 getData); main sigue girando para siempre.
+  - verEstudio (abrir un estudio del lead, nuevo) lento y repetido: Juan 9-13 s cada vez (6 aperturas), Karim hasta 15,7 s, Cele 4-6 s (11 aperturas en 2 tandas, "agenda > lead"). La pantalla no guarda el archivo: cada vez que se abre el mismo estudio lo vuelve a bajar entero en base64.
+  - enviarWsp ~40 envíos (Pri y Fran), 0 errores; 1 aviso "Este lead no tiene nombre cargado." (Pri, Windows): la pantalla deja tocar 📤 Enviar y el motor lo frena.
+  - Seguimiento ya se usa: segGuardar, segComentar (5-7,5 s), segHecho; subirEstudio hasta 16,6 s (Pri).
+  - getData sigue en 2-9 s (promedio ~3,5 s). Aperturas con datos nuevos 2-9,5 s; Juan 18,9 s una vez.
+  - Juan (iPhone) dispara fin2Calentar y getCreativos: el motor le da finAcceso. A confirmar que finRamas sea solo Tránsito (no se bajó el motor; con datos falsos no se puede ver).
+- Banco: datos_falsos.py ahora tiene Seguimiento (permiso seguimiento para Fran, Pri, Sol, Karim y Julián; 5 notas: para hoy, atrasada sin nombre, repetir cada semana, sin fecha, hecha) y responde segGuardar/segHecho/segComentar como el motor (repetir: Hecho corre 7 días), getEstudios con un estudio y verEstudio con un PDF falso. Nuevo pruebas/probar_seguimiento.py.
+  - Nota del banco: "Cannot read properties of undefined (reading 'update')" en probar_colgados.py sale porque el banco bloquea service workers (register devuelve undefined); en el celular no pasa.
+- Roles probados: Juan, Estefanía, Sol y Fran con correr.py (390 y 360): 0 errores de JavaScript, 0 fn sin respuesta falsa, mismas pestañas por rol. Permisos OK con datos falsos (Estefanía solo Agenda y Falta cargar; Juan sin Reportes, Tareas ni Seguimiento).
+- Seguimiento de punta a punta (probar_seguimiento.py, Fran 390 y 360): aviso en Tareas, ✔ Hecho + Deshacer, comentario, nota nueva con teclado de teléfono y fecha nativa, repetir cada semana, buscador sin perder el foco: todo OK. Lo ven Fran, Pri, Sol (pestaña) y Karim (desde el aviso de Tareas); no lo ven Mica, Estefanía ni Juan.
+- Problemas encontrados (sin rama, por el tope de 3 pendientes):
+  - El título "Seguimiento" se corta a mitad de palabra en el celular ("Seguimient/o" en 390, "Seguimie/nto" en 360).
+  - En Seguimiento, una nota sin nombre muestra el teléfono pegado (2615550102) en vez de con formato; "✔ Hecho" mide 84x40.
+  - Abrir el mismo estudio dos veces lo baja dos veces (9-15 s cada vez para Juan y Karim).
+- Para la próxima rama (cuando se apruebe alguna): guardar en memoria el estudio ya abierto (por fid) para que la segunda vez abra al instante; título de Seguimiento que entre en una línea; formato del teléfono en notas sin nombre.
+- Ideas grandes:
+  - verEstudio: que el motor devuelva un link de vista de Drive (o un PDF ya achicado) en vez del archivo entero en base64; en iPhone además el PDF dentro de la app puede mostrar solo la primera página.
+  - Sigue pendiente getData en CacheService (motor) y limitar fin2Calentar a quien abre Finanzas.
+
 ## Flujos rediseñados (tarea semanal de los domingos)
 | Fecha | Flujo | Para quién | Toques antes → después | Rama | Motor |
 |---|---|---|---|---|---|

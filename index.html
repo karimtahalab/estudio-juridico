@@ -106,6 +106,22 @@ a{color:inherit;text-decoration:none}
 .agbar .wnav .arr,.agbar .seg2 button{position:relative}
 .agbar .wnav .arr::after{content:'';position:absolute;inset:-5px}
 .agbar .seg2 button::after{content:'';position:absolute;left:0;right:0;top:-7px;bottom:-7px}
+.seg-nueva{margin-top:6px}
+.seg-q{margin-top:10px;height:44px}
+.todo.segl li.seg-li{display:flex;align-items:flex-start;gap:6px}
+.todo.segl li.seg-ok{opacity:.65}
+.todo.segl .seg-main{flex:1;min-width:0;width:auto;height:auto;min-height:0;white-space:normal;display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:11px 8px 11px 14px}
+.seg-top{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.seg-top b{font-size:15.5px;font-weight:700}
+.seg-nota{font-size:14.5px;color:var(--ink);white-space:pre-wrap;overflow-wrap:anywhere}
+.seg-ult{font-size:13px;color:var(--ink-2);overflow-wrap:anywhere}
+.seg-meta{font-size:12px;color:var(--ink-3)}
+.seg-tag{font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;background:color-mix(in srgb,var(--blue) 10%,transparent);color:var(--blue)}
+.seg-tag.seg-hoy{background:color-mix(in srgb,var(--mint) 22%,transparent);color:var(--ink)}
+.seg-tag.seg-atr{background:color-mix(in srgb,#e5484d 14%,transparent);color:#c62a2f}
+.seg-acts{display:flex;flex-direction:column;align-items:flex-end;gap:6px;padding:10px 10px 10px 0;flex:none}
+.seg-b{padding:7px 11px;border-radius:10px;font-size:13.5px;font-weight:700;color:var(--blue);background:color-mix(in srgb,var(--blue) 10%,transparent);white-space:nowrap}
+.seg-b.seg-hecho{color:#0d6b4f;background:color-mix(in srgb,var(--mint) 22%,transparent)}
 .next-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;margin-top:8px;padding:11px 14px;border-radius:14px;background:var(--paper);box-shadow:0 0 0 1px var(--line) inset;font-weight:700;font-size:14.5px;text-align:left;color:var(--ink)}
 .next-bar.warn2{background:#FDEBDD;box-shadow:none;color:#9A3D0B}
 .next-bar b{white-space:nowrap}
@@ -1061,6 +1077,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
   <button data-view="manana"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>Mañana</button>
   <button data-view="semana"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="3"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></svg>Semana</button>
   <button data-view="tareas" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 6h10M10 12h10M10 18h10"/><path d="m3.5 6 1.6 1.6L8 4.8M3.5 12l1.6 1.6L8 10.8M3.5 18l1.6 1.6L8 16.8"/></svg>Tareas<span class="badge" id="badgeT" hidden></span></button>
+  <button data-view="seguimiento" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3.5h10.5L19 7v13.5H5z"/><path d="M15 3.5V7h4M8.5 11h7M8.5 14.5h7M8.5 18h4"/></svg>Seguimiento<span class="badge" id="badgeS" hidden></span></button>
   <button data-view="agendar" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="3"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4M12 12.5v5M9.5 15h5"/></svg>Agendar</button>
   <button data-view="resumen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V11M10 20V5M16 20v-6M2 20h20"/></svg>Resumen</button>
   <button data-view="guiones" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="6" width="13" height="12" rx="2.5"/><path d="m15.5 10.5 6-3.5v10l-6-3.5"/></svg>Guiones</button>
@@ -1809,11 +1826,12 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
       if (state.view==='manana'){ state.week=0; state.weekDay=nextHabil(nowBA().date); } else if (state.view==='hoy'){ state.week=0; state.weekDay=null; }
       state.view='agenda';
     }
-    var allowed = navList(); if (allowed.indexOf(state.view)===-1) state.view = allowed[0];
+    var allowed = navList(); if (segPuede() && allowed.indexOf('seguimiento')===-1) allowed = allowed.concat(['seguimiento']); // administración entra desde Tareas
+    if (allowed.indexOf(state.view)===-1) state.view = allowed[0];
     // Si están escribiendo en el buscador de Agendar, solo se actualiza la lista (no se pierde lo escrito)
     if (state.view==='agendar' && document.activeElement && document.activeElement.id==='aq' && $('agList')){ renderAg(); renderNav(); return; }
     var v = ({hoy:viewHoy, manana:viewManana, semana:viewSemana, resumen:viewResumen, falta:viewFalta, tareas:viewTareas, agendar:viewAgendar, agenda:viewAgenda,
-      reporte:function(){ return viewReporte(false); }, reportes:function(){ return viewReporte(true); }, finanzas:viewFin2, guiones:viewGuiones})[state.view]();
+      reporte:function(){ return viewReporte(false); }, reportes:function(){ return viewReporte(true); }, finanzas:viewFin2, guiones:viewGuiones, seguimiento:viewSeguimiento})[state.view]();
     $('ttl').innerHTML = '<h1>'+v.h1+'</h1><p>'+v.p+'</p>';
     $('headExtra').innerHTML = v.extra || '';
     $('offline').classList.toggle('on', state.offline);
@@ -1902,7 +1920,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
   function renderSheet(){
     if (!state.sheet) return;
     var y=$('sheet').scrollTop;
-    var ty=state.sheet.type, html = ({lead:sheetLead, bloq:sheetBloq, pegar:sheetPegar, nuevo:sheetNuevo, escribir:sheetEscribir, agendar:sheetAgendar, derivar:sheetDerivar, ficha:sheetFicha, yo:sheetYo, manual:sheetManual, dup:sheetDup, fin:sheetFin, interna:sheetInterna, marca:sheetMarca, guion:sheetGuion, creprint:sheetCrePrint, fin2:sheetFin2, vercomo:sheetVerComo, comsol:sheetComSol, traslado:sheetTraslado, recibo:sheetRecibo, reintegros:sheetReintegros, sinenv:sheetSinEnv})[ty]();
+    var ty=state.sheet.type, html = ({lead:sheetLead, bloq:sheetBloq, pegar:sheetPegar, nuevo:sheetNuevo, escribir:sheetEscribir, agendar:sheetAgendar, derivar:sheetDerivar, ficha:sheetFicha, yo:sheetYo, manual:sheetManual, dup:sheetDup, fin:sheetFin, interna:sheetInterna, marca:sheetMarca, guion:sheetGuion, creprint:sheetCrePrint, fin2:sheetFin2, vercomo:sheetVerComo, comsol:sheetComSol, seg:sheetSeg, segver:sheetSegVer, traslado:sheetTraslado, recibo:sheetRecibo, reintegros:sheetReintegros, sinenv:sheetSinEnv})[ty]();
     if (html===null){ closeSheet(); return; }
     $('sheet').innerHTML = html; $('sheet').scrollTop=y;
   }
@@ -1932,6 +1950,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     if (puede('agendar') && (isPend(s) || needsResult(l) || s==='reagenda' || s==='novino')) html += '<button class="btn3" data-agendar="'+esc(l.id)+'">'+I.cal+'Reagendar</button>';
     // Vino y no firmó, y vuelve a firmar: turno nuevo en Consulta agendada (no cuenta como reagenda)
     if (puede('agendar') && s==='nofirmo') html += '<button class="btn3" data-agfirmar="'+esc(l.id)+'">'+I.cal+'Viene a firmar: agendar</button>';
+    if (segPuede() && !l.parcial) html += '<button class="btn3" data-segnueva="'+esc(l.id)+'">📝 Nota de seguimiento</button>';
     var sec='';
     if (puede('agendar') && puedeCorregir(l)) sec += '<button class="btn3" data-agcorregir="'+esc(l.id)+'" title="Me equivoqué al cargar el horario: lo corrijo y no cuenta como reagenda">✏️ Corregir el horario</button>';
     if (puedeDerivar(l)) sec += '<button class="btn3" data-derivar="'+esc(l.id)+'">'+I.swap+'Derivar a otra abogada</button>';
@@ -2290,8 +2309,9 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
         '<button class="btn2" data-trcopiar="'+esc(t[ida?'dirIda':'dirVuelta'])+'">Copiar dirección</button></div>' : '');
   }
   function trBlk(l){
-    if (!trAplica(l)) return '';
-    var t=trDe(l);
+    if (!l || l.parcial) return '';
+    var t=trDe(l); // si ya tiene traslado se muestra siempre (aunque después pase a No es caso, No vino, etc.) para cargar recibos y reintegro
+    if (!t && !trAplica(l)) return '';
     if (!t){
       if (!trPuedeCoord(l) || ['Consulta agendada','Reagenda'].indexOf(l.fase)===-1) return '';
       return '<button class="btn3" data-trnuevo="'+esc(l.id)+'">🚗 Coordinar traslado (Uber)</button>';
@@ -2638,7 +2658,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
 
   /* ---------- quién usa la app ---------- */
   // Cada rol ve su parte. El Resumen (con números por persona) queda solo para administración.
-  var NAV_ROL = { abogada:['agenda','falta','agendar'], intaker:['tareas','agendar','agenda','reporte'], admin:['agenda','tareas','agendar','reportes','falta'], produccion:['guiones'] };
+  var NAV_ROL = { abogada:['agenda','falta','agendar'], intaker:['tareas','seguimiento','agendar','agenda','reporte'], admin:['agenda','tareas','agendar','reportes','falta'], produccion:['guiones'] };
   function equipoBy(n){ var eq=(state.data&&state.data.equipo)||state.equipo||[]; for (var i=0;i<eq.length;i++) if (eq[i].nombre===n) return eq[i]; return null; }
   function resolveMe(d){
     var u=d.user||{};
@@ -2650,7 +2670,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
   function P(){ return (state.data && state.data.permisos) || {}; }
   function conPermisos(){ return !!(state.data && state.data.permisos); }
   function puede(acc){ var r=rol(); if (acc==='confirmar') return r==='intaker' || r==='admin'; if (acc==='agendar') return conPermisos() ? !!P().agendar : true; return true; }
-  function navList(){ var l=(NAV_ROL[rol()] || NAV_ROL.admin).slice(); if (conPermisos() && !P().agendar) l=l.filter(function(v){ return v!=='agendar'; }); if (rol()!=='admin' && state.data && state.data.finAcceso && l.indexOf('finanzas')===-1) l=l.concat(['finanzas']); if ((P().creativos||[]).length && l.indexOf('guiones')===-1) l=l.concat(['guiones']); return l; }
+  function navList(){ var l=(NAV_ROL[rol()] || NAV_ROL.admin).slice(); if (conPermisos() && !P().agendar) l=l.filter(function(v){ return v!=='agendar'; }); if (rol()!=='admin' && state.data && state.data.finAcceso && l.indexOf('finanzas')===-1) l=l.concat(['finanzas']); if ((P().creativos||[]).length && l.indexOf('guiones')===-1) l=l.concat(['guiones']); l=l.filter(function(v){ return v!=='seguimiento' || segPuede(); }); if (segPuede() && rol()!=='admin' && l.indexOf('seguimiento')===-1) l=l.concat(['seguimiento']); return l; }
   function renderNav(){
     var list=navList(), nav=$('nav'), btns=nav.querySelectorAll('button[data-view]');
     nav.style.gridTemplateColumns='repeat('+list.length+',1fr)'; nav.classList.toggle('six', list.length>5);
@@ -2662,6 +2682,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     if (fb && fb.lastChild && fb.lastChild.nodeType===3) fb.lastChild.nodeValue=(fks.length && fks.every(function(x){ return fm[x]==='carga'; })) ? 'Reporte' : 'Finanzas';
     var n=faltaItems().length, b=$('badge'); b.hidden=!n; b.textContent=n;
     var t=tareasUrgentes(), bt=$('badgeT'); bt.hidden=!t; bt.textContent=t>99?'99+':t;
+    var sn=state.data?segParaHoy().length:0, bs=$('badgeS'); if (bs){ bs.hidden=!sn; bs.textContent=sn>99?'99+':sn; }
     badgeApp(rol()==='abogada' ? n : (rol()==='intaker' ? t : 0));
   }
   function sheetYo(){
@@ -3019,7 +3040,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     if (rol()==='intaker' && scLista().some(function(x){ return x.id===l.id; })) html += '<button class="btn3" data-levante="'+esc(l.id)+'">✓ Ya lo contacté por otro lado (llamada, otro WhatsApp)</button>';
     if (ag) html += '<div class="pa-has" style="margin:12px 2px 0">Ya tiene consulta: '+esc(diaCorto(l.fecha))+' '+esc(l.hora||'')+(l.abogada?' con '+esc(l.abogada):'')+'</div><button class="btn3" data-open="'+esc(l.id)+'">Ver la consulta</button>';
     else if (puede('agendar')) html += '<button class="btn3 fi-ag" data-agendar="'+esc(l.id)+'">'+I.cal+'Agendar consulta</button>';
-    if (ag) html += trBlk(l);
+    if (ag || trDe(l)) html += trBlk(l);
     html += internasBlk(l);
     var b=function(md, t){ var on=u.modo===md; return '<button data-fimodo="'+md+'" class="'+(on?'on':'')+'" aria-pressed="'+on+'">'+t+'</button>'; };
     var conFase=!ag && puede('agendar');
@@ -4053,13 +4074,179 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     (state.scClasif||(state.scClasif={}))[id]=f;
     cambiarFaseUI(id, f);
   });
+  /* ---------- Seguimiento entre intakers (pase de turno): lo que no hay que olvidar de un turno al otro ----------
+     Reemplaza la pestaña "Seguimiento diario" de la planilla de guardias. Lo ven los intakers, administración y Sol.
+     Cada nota puede tener "para cuándo" y repetirse cada semana (casos viejos a los que se les escribe todas las semanas). */
+  function segPuede(){ return !!P().seguimiento; }
+  function segTodas(){ return (state.data && state.data.seguimiento) || []; }
+  function segPend(){ return segTodas().filter(function(s){ return s.estado!=='Hecho'; }); }
+  function segParaHoy(){ var h=nowBA().date; return segPend().filter(function(s){ return s.para && s.para<=h; }); }
+  function segFecha(x){ var m=String(x||'').match(/^(\d{4})-(\d{2})-(\d{2})(?: (\d{2}:\d{2}))?/); return m ? m[3]+'/'+m[2]+(m[4] && m[4]!=='00:00'?' '+m[4]:'') : String(x||''); }
+  function segCuando(s){
+    if (!s.para) return '';
+    var h=nowBA().date;
+    if (s.para<h) return '<span class="seg-tag seg-atr">Atrasada · era '+esc(diaCorto(s.para))+'</span>';
+    return '<span class="seg-tag'+(s.para===h?' seg-hoy':'')+'">'+esc(diaCorto(s.para))+'</span>';
+  }
+  function segRow(s){
+    var hecho=s.estado==='Hecho', tel=String(s.tel||'').trim(), ph=phone(tel);
+    var titulo=s.nombre || (ph ? ph : 'Sin nombre');
+    var meta=[s.rama?ramaLabel(s.rama):'', (s.nombre && ph)?ph:'', 'la dejó '+(s.quien||'')+' el '+segFecha(s.creado)].filter(Boolean).join(' · ');
+    var ult=(s.historial||[]).filter(function(x){ return !/Traída de la planilla/.test(x); }).slice(-1)[0];
+    var h='<li class="seg-li'+(hecho?' seg-ok':'')+'"><button class="seg-main" data-segver="'+esc(s.id)+'">'+
+      '<span class="seg-top"><b>'+esc(titulo)+'</b>'+segCuando(s)+(s.repetir?'<span class="seg-tag">🔁 cada semana</span>':'')+'</span>'+
+      '<span class="seg-nota">'+esc(s.nota||'')+'</span>'+
+      (ult?'<span class="seg-ult">💬 '+esc((function(x){ var q=String(x).split(' · '); return q.length>2 ? segFecha(q[0])+' '+q[1]+': '+q.slice(2).join(' · ') : x; })(ult))+'</span>':'')+
+      '<span class="seg-meta">'+esc(meta)+(hecho?' · ✔ '+esc(s.hechoPor||'')+' '+esc(segFecha(s.hechoEl)):'')+'</span></button>'+
+      '<span class="seg-acts">'+(ph.length>=10?'<a class="ib wa" href="'+waHref(tel)+'" target="_blank" rel="noopener" aria-label="WhatsApp a '+esc(titulo)+'">'+I.chat+'</a>':'')+
+      (hecho ? '<button class="seg-b" data-segdeshacer="'+esc(s.id)+'">↩ Pendiente</button>' : '<button class="seg-b seg-hecho" data-seghecho="'+esc(s.id)+'">✔ Hecho</button>')+'</span></li>';
+    return h;
+  }
+  function segOrden(a,b){ return String(a.para||'9999').localeCompare(String(b.para||'9999')) || String(a.creado).localeCompare(String(b.creado)); }
+  function segBloque(t, xs, sub){
+    if (!xs.length) return '';
+    return '<h3 class="sc-rama">'+t+' <span class="cnt num">'+xs.length+'</span></h3>'+(sub?'<p class="sec-sub">'+sub+'</p>':'')+'<ul class="todo segl">'+xs.sort(segOrden).map(segRow).join('')+'</ul>';
+  }
+  function segHtml(){
+    var xs=segPend(), h=nowBA().date, q=normTxt(state.segQ||'');
+    if (q) xs=xs.filter(function(s){ return normTxt([s.nombre,s.tel,s.nota,s.quien,(s.historial||[]).join(' ')].join(' ')).indexOf(q)!==-1; });
+    var hoy=xs.filter(function(s){ return s.para && s.para<=h; }), prox=xs.filter(function(s){ return s.para && s.para>h; }), sin=xs.filter(function(s){ return !s.para; });
+    var hechas=segTodas().filter(function(s){ return s.estado==='Hecho'; }).sort(function(a,b){ return String(b.hechoEl).localeCompare(String(a.hechoEl)); });
+    var body='<button class="btn3 seg-nueva" data-segnueva>📝 Dejar una nota de seguimiento</button>'+
+      '<input class="inp seg-q" id="segQ" type="search" placeholder="Buscar por nombre, teléfono o nota" value="'+esc(state.segQ||'')+'" autocomplete="off">';
+    if (!xs.length) body+='<p class="done">'+(q?'No hay notas que coincidan.':'✓ No hay nada pendiente')+'</p>';
+    body+=segBloque('Para hoy', hoy, 'Lo que hay que hacer hoy o quedó atrasado. Cuando lo hagas, tocá <b>✔ Hecho</b>.');
+    body+=segBloque('Próximos días', prox, '');
+    body+=segBloque('Sin fecha', sin, 'Para tener presente. Tocá la nota para ponerle fecha o dejar un comentario.');
+    if (hechas.length && !q){
+      var ab=!!state.segHechas;
+      body+='<button class="rs-ctl" data-seghechas aria-expanded="'+ab+'" style="margin-top:16px"><span>Hechas en las últimas 2 semanas ('+hechas.length+')</span><small>'+(ab?'Ocultar ▴':'Ver ▾')+'</small></button>'+
+        (ab?'<ul class="todo segl" style="margin-top:8px">'+hechas.map(segRow).join('')+'</ul>':'');
+    }
+    return body;
+  }
+  function viewSeguimiento(){
+    var n=segParaHoy().length, t=segPend().length;
+    return { h1:'Seguimiento', p: t ? plural(t,'nota pendiente','notas pendientes')+(n?', '+n+' para hoy':'') : 'Todo al día', body: segHtml() };
+  }
+  /** En Tareas: aviso arriba con lo de hoy (los intakers además lo tienen en su pestaña). */
+  function segBarTareas(){
+    if (!segPuede()) return '';
+    var n=segParaHoy().length, t=segPend().length; if (!t) return '';
+    return '<button class="next-bar" data-view="seguimiento"><span>📝 Seguimiento: '+(n?n+' para hoy':plural(t,'nota pendiente','notas pendientes'))+'</span><b>Ver ›</b></button>';
+  }
+  function segBuscar(id){ return segTodas().filter(function(s){ return s.id===id; })[0] || null; }
+  function segAbrir(base){
+    state.draft=Object.assign({ id:'', nombre:'', tel:'', rama:'', lead:'', nota:'', para:'', repetir:false }, base||{});
+    openSheet({type:'seg'});
+  }
+  function sheetSeg(){
+    var d=state.draft||{}, h=nowBA().date, man=addDays(h,1);
+    var html='<div class="grab"></div><div class="sh-head"><div class="sh-who"><h2>'+(d.id?'Editar la nota':'Nota de seguimiento')+'</h2><div class="mt"><span class="cp">La ven Fran, Pri, Sol y administración</span></div></div><button class="close" data-close aria-label="Cerrar">'+I.x+'</button></div>';
+    if (d.lead) html+='<p class="hint" style="margin:4px 2px 0">Queda unida a la ficha de <b>'+esc(d.nombre||'este lead')+'</b>.</p>';
+    html+='<div class="two"><div class="field"><label for="sgNom">Nombre</label><input class="inp" id="sgNom" autocomplete="off" value="'+esc(d.nombre||'')+'" placeholder="Ej.: Damián"></div>'+
+      '<div class="field"><label for="sgTel">Teléfono</label><input class="inp" id="sgTel" inputmode="tel" autocomplete="off" value="'+esc(d.tel||'')+'" placeholder="261 555-1234"></div></div>';
+    html+='<div class="field"><span class="lbl">Rama</span><div class="pick">'+[['ART','ART'],['LABORAL','Laboral'],['TRANSITO','Tránsito']].map(function(x){ return '<button class="'+(d.rama===x[0]?'on':'')+'" data-segrama="'+x[0]+'">'+x[1]+'</button>'; }).join('')+'</div></div>';
+    html+='<div class="field"><label for="sgNota">¿Qué no hay que olvidar?</label><textarea id="sgNota" rows="4" placeholder="Ej.: Llamada de Karim mañana a las 10. Escribirle el viernes para coordinar la consulta.">'+esc(d.nota||'')+'</textarea></div>';
+    var esOtro=d.para && d.para!==h && d.para!==man;
+    html+='<div class="field"><span class="lbl">¿Para cuándo?</span><div class="pick">'+
+      '<button class="'+(!d.para?'on':'')+'" data-segpara="">Sin fecha</button><button class="'+(d.para===h?'on':'')+'" data-segpara="'+h+'">Hoy</button><button class="'+(d.para===man?'on':'')+'" data-segpara="'+man+'">Mañana</button></div>'+
+      '<input class="inp" id="sgPara" type="date" style="margin-top:8px" value="'+esc(esOtro?d.para:'')+'" aria-label="Otro día"></div>';
+    html+='<div class="field"><button class="tgl'+(d.repetir?' on':'')+'" data-segrep aria-pressed="'+!!d.repetir+'"><span>Repetir cada semana<small style="display:block;font-weight:500;color:var(--ink-3)">Para los casos a los que hay que escribirles todas las semanas</small></span><span class="sw2"></span></button></div>';
+    html+='<div class="save-wrap"><button class="save" data-segsave>'+(d.id?'Guardar cambios':'Guardar nota')+'</button></div>';
+    return html;
+  }
+  function segLeerForm(){
+    var d=state.draft||(state.draft={}), g=function(id){ var e=$(id); return e ? e.value : null; };
+    var n=g('sgNom'), t=g('sgTel'), no=g('sgNota'), pa=g('sgPara');
+    if (n!==null) d.nombre=n; if (t!==null) d.tel=t; if (no!==null) d.nota=no;
+    if (pa) d.para=pa;
+    return d;
+  }
+  function sheetSegVer(){
+    var s=segBuscar(state.sheet.id); if (!s) return null;
+    var d=state.draft||{}, tel=String(s.tel||'').trim(), ph=phone(tel);
+    var html='<div class="grab"></div><div class="sh-head"><div class="sh-who"><h2>'+esc(s.nombre||ph||'Nota')+'</h2><div class="mt">'+(s.rama?'<span class="rama r-'+ramaKey(s.rama)+'">'+ramaLabel(s.rama)+'</span>':'')+(ph?'<span class="cp num">'+esc(ph)+'</span>':'')+'</div></div><button class="close" data-close aria-label="Cerrar">'+I.x+'</button></div>';
+    html+='<div class="blk"><div class="box"><div class="kv stack"><span>La dejó '+esc(s.quien||'')+' el '+esc(segFecha(s.creado))+(s.para?' · para '+esc(diaCorto(s.para)):'')+(s.repetir?' · se repite cada semana':'')+'</span><b>'+esc(s.nota||'')+'</b></div></div></div>';
+    var hist=(s.historial||[]);
+    if (hist.length) html+='<div class="blk"><h3 class="blk-t">Comentarios</h3><div class="box">'+hist.map(function(x){ var p=String(x).split(' · '); return '<div class="kv stack"><span>'+esc(segFecha(p[0])+' · '+(p[1]||''))+'</span><b>'+esc(p.slice(2).join(' · ')||x)+'</b></div>'; }).join('')+'</div></div>';
+    html+='<div class="field"><label for="sgCom">Agregar un comentario</label><textarea id="sgCom" rows="3" placeholder="Ej.: Le escribí, quedó en contestar mañana">'+esc(d.texto||'')+'</textarea></div>';
+    html+='<div class="save-wrap"><button class="save" data-segcomsave>Guardar comentario</button></div>';
+    html+='<div class="de-acts" style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">'+
+      (ph.length>=10?'<a class="btn3" style="flex:1" href="'+waHref(tel)+'" target="_blank" rel="noopener">'+I.chat+' WhatsApp</a>':'')+
+      (s.lead && findLead(s.lead)?'<button class="btn3" style="flex:1" data-segficha="'+esc(s.lead)+'">Abrir la ficha</button>':'')+
+      '<button class="btn3" style="flex:1" data-segeditar="'+esc(s.id)+'">✏️ Editar</button>'+
+      (s.estado==='Hecho'?'<button class="btn3" style="flex:1" data-segdeshacer="'+esc(s.id)+'">↩ Volver a pendiente</button>':'<button class="btn3" style="flex:1" data-seghecho="'+esc(s.id)+'">✔ Hecho</button>')+'</div>';
+    return html;
+  }
+  function segAplicar(lista){ if (state.data && Array.isArray(lista)) state.data.seguimiento=lista; }
+  function segGuardar(){
+    var d=segLeerForm();
+    if (!String(d.nota||'').trim()){ toast('Escribí qué no hay que olvidar.', true); var ta=$('sgNota'); if (ta) ta.focus(); return; }
+    if (d.repetir && !d.para){ toast('Para repetirla cada semana, elegí desde qué día.', true); return; }
+    busySheet(true, 'Guardando…');
+    call('segGuardar', { id:d.id||'', nombre:d.nombre||'', tel:d.tel||'', rama:d.rama||'', lead:d.lead||'', nota:d.nota||'', para:d.para||'', repetir:!!d.repetir }).then(function(lista){
+      segAplicar(lista); var era=!!d.id; closeSheet(); toast(era?'✔ Nota actualizada':'📝 Nota guardada en Seguimiento');
+    }).catch(function(e){ renderSheet(); toast((e&&e.message)||'No se pudo guardar.', true); });
+  }
+  function segMarcar(id, hecho){
+    var s=segBuscar(id); if (!s) return;
+    var antes={ estado:s.estado, para:s.para, hechoPor:s.hechoPor, hechoEl:s.hechoEl };
+    if (hecho && !(s.repetir && s.para)){ s.estado='Hecho'; s.hechoPor=state.me?state.me.nombre:''; s.hechoEl=nowBA().date+' '+nowBA().hm; }
+    if (!hecho){ s.estado='Pendiente'; }
+    if (state.sheet && (state.sheet.type==='segver')) closeSheet();
+    render();
+    call('segHecho', { id:id, hecho:hecho, para: hecho ? undefined : antes.para }).then(function(lista){
+      segAplicar(lista); render();
+      if (hecho) toastUndo((s.repetir&&antes.para)?'🔁 Hecho por esta semana: vuelve en 7 días':'✔ '+(s.nombre||'Nota')+': hecho', function(){ segDeshacer(id, antes.para); });
+    }).catch(function(e){ Object.assign(s, antes); render(); toast((e&&e.message)||'No se pudo guardar.', true); });
+  }
+  function segDeshacer(id, para){
+    call('segHecho', { id:id, hecho:false, para:para }).then(function(lista){ segAplicar(lista); render(); toast('↩ Volvió a pendiente'); })
+      .catch(function(e){ toast((e&&e.message)||'No se pudo deshacer.', true); });
+  }
+  function segComentar(){
+    var id=state.sheet && state.sheet.id, ta=$('sgCom'), tx=ta?ta.value.trim():''; if (!id) return;
+    if (!tx){ toast('Escribí el comentario.', true); if (ta) ta.focus(); return; }
+    (state.draft||(state.draft={})).texto=tx; busySheet(true, 'Guardando…');
+    call('segComentar', { id:id, texto:tx }).then(function(lista){ segAplicar(lista); state.draft={}; renderSheet(); render(); toast('💬 Comentario guardado'); })
+      .catch(function(e){ renderSheet(); toast((e&&e.message)||'No se pudo guardar.', true); });
+  }
+  document.addEventListener('input', function(ev){
+    if (ev.target && ev.target.id==='segQ'){ state.segQ=ev.target.value; var pos=ev.target.selectionStart; render(); var q=$('segQ'); if (q){ q.focus(); try { q.setSelectionRange(pos,pos); } catch(x){} } }
+  });
+  document.addEventListener('change', function(ev){
+    if (ev.target && ev.target.id==='sgPara' && state.sheet && state.sheet.type==='seg'){ segLeerForm(); state.draft.para=ev.target.value||''; renderSheet(); }
+  });
+  document.addEventListener('click', function(ev){
+    var t=ev.target.closest && ev.target.closest('[data-segnueva],[data-segver],[data-seghecho],[data-segdeshacer],[data-seghechas],[data-segrama],[data-segpara],[data-segrep],[data-segsave],[data-segcomsave],[data-segeditar],[data-segficha]'); if (!t) return;
+    if (state.verComo && (t.hasAttribute('data-segnueva') || t.hasAttribute('data-seghecho') || t.hasAttribute('data-segdeshacer') || t.hasAttribute('data-segsave') || t.hasAttribute('data-segcomsave'))){ toast('👁 Estás viendo la app como '+state.verComo+': es solo para mirar.'); return; }
+    if (t.hasAttribute('data-segnueva')){
+      var lid=t.getAttribute('data-segnueva'), l=lid && findLead(lid);
+      segAbrir(l ? { nombre:l.nombre||'', tel:l.tel||'', rama:String(l.rama||'').toUpperCase().indexOf('TRANS')===0?'TRANSITO':String(l.rama||'').toUpperCase(), lead:l.id } : {});
+      return;
+    }
+    if (t.hasAttribute('data-segver')){ state.draft={}; openSheet({type:'segver', id:t.getAttribute('data-segver')}); return; }
+    if (t.hasAttribute('data-seghecho')){ segMarcar(t.getAttribute('data-seghecho'), true); return; }
+    if (t.hasAttribute('data-segdeshacer')){ var sx=segBuscar(t.getAttribute('data-segdeshacer')); if (state.sheet && state.sheet.type==='segver') closeSheet(); segDeshacer(t.getAttribute('data-segdeshacer'), sx?sx.para:undefined); return; }
+    if (t.hasAttribute('data-seghechas')){ state.segHechas=!state.segHechas; render(); return; }
+    if (t.hasAttribute('data-segficha')){ var fid=t.getAttribute('data-segficha'); closeSheet(); setTimeout(function(){ openSheet({type:'ficha', id:fid}); }, 0); return; }
+    if (t.hasAttribute('data-segeditar')){ var s=segBuscar(t.getAttribute('data-segeditar')); if (!s) return; segAbrir({ id:s.id, nombre:s.nombre, tel:s.tel, rama:s.rama, lead:s.lead, nota:s.nota, para:s.para, repetir:!!s.repetir }); return; }
+    if (t.hasAttribute('data-segcomsave')){ segComentar(); return; }
+    if (!state.sheet || state.sheet.type!=='seg') return;
+    segLeerForm();
+    if (t.hasAttribute('data-segrama')){ var r=t.getAttribute('data-segrama'); state.draft.rama = state.draft.rama===r ? '' : r; renderSheet(); return; }
+    if (t.hasAttribute('data-segpara')){ state.draft.para=t.getAttribute('data-segpara'); if (!state.draft.para) state.draft.repetir=false; renderSheet(); return; }
+    if (t.hasAttribute('data-segrep')){ state.draft.repetir=!state.draft.repetir; if (state.draft.repetir && !state.draft.para) state.draft.para=nowBA().date; renderSheet(); return; }
+    if (t.hasAttribute('data-segsave')){ segGuardar(); return; }
+  });
   function viewTareas(){
     var t=tareasDe(), pa=t.porAgendar;
     var total=t.hoy.length+t.previa.length+t.sinRes.length;
     var body='';
     var scN=scLista().filter(function(l){ return !(!!l.fase || /^falta enviar/i.test(String(l.levanto||''))); }).length, ffL=ffLista(), ffN=ffL.filter(function(l){ return !l.fase; }).length;
     if (rol()==='intaker' && (scN || ffN)) body += '<button class="next-bar sc-ir" data-scir="'+(ffL.length?'ffSec':'scSec')+'"><span>📨 '+[scN?plural(scN,'lead sin contactar','leads sin contactar'):'', ffN?ffN+' sin fase':''].filter(Boolean).join(' · ')+'</span><b>Ver ›</b></button>';
-    body += trSecTareas() + repSecTareas();
+    body += segBarTareas() + trSecTareas() + repSecTareas();
     var dw=dow(nowBA().date); if (dw===6 || dw===0 || dw===1) body+='<button class="btn3" data-view="reporte" style="margin-top:12px">📊 Armar el reporte de la semana para CARGA SEMANAL</button>';
     body += secTarea('Mensaje del día', t.hoy.length, 'Último recordatorio (el 3º), para las consultas de hoy. Tocá lo que respondió.', '<ol class="dk">'+t.hoy.map(function(l){ return tkRow(l,'confDia'); }).join('')+'</ol>');
     body += secTarea('Recordatorios', t.previa.length, '<b>1º recordatorio:</b> consultas de pasado mañana. <b>2º recordatorio:</b> las de mañana que todavía no confirmaron. El 3º es el mensaje del día. Tocá lo que respondió.', '<ol class="dk">'+t.previa.map(function(l){ return tkRow(l,'confPrev'); }).join('')+'</ol>');
