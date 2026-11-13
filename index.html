@@ -2825,14 +2825,19 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     var v=vistoActual();
     try{ store('visto', JSON.stringify(v)); }catch(e){}
     clearTimeout(saveSeen._t);
-    saveSeen._t=setTimeout(function(){ call('saveVisto', {visto: vistoActual()}).catch(function(){}); }, 1500);
+    saveSeen._t=setTimeout(function(){
+      // Solo se manda si cambió algo desde lo último que se guardó (abrir una ficha ya vista no manda nada)
+      var v2=vistoActual(), j=JSON.stringify(v2); if (j===state.vistoEnv) return;
+      var antes=state.vistoEnv; state.vistoEnv=j;
+      call('saveVisto', {visto: v2}).catch(function(){ if (state.vistoEnv===j) state.vistoEnv=antes; });
+    }, 1500);
   }
   function initSeen(){
     var srv=state.data.visto, raw=(srv && typeof srv==='object') ? srv : null;
     if (!raw){ try{ raw=JSON.parse(store('visto')||'null'); }catch(e){ raw=null; } }
     if (raw && typeof raw==='object'){
       state.seen={}; Object.keys(raw).forEach(function(k){ state.seen[k]=sigCorta(raw[k]); });
-      if (raw!==srv) saveSeen();
+      if (raw!==srv) saveSeen(); else state.vistoEnv=JSON.stringify(vistoActual()); // lo del servidor ya está guardado
       return;
     }
     state.seen={}; state.data.leads.forEach(function(l){ state.seen[l.id]=sigOf(l); }); saveSeen();
@@ -3282,8 +3287,12 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
   }
   function precargarRep(){
     // Los reportes se piden en segundo plano apenas abre la app: al tocar la pestaña ya están listos.
+    // Después de guardar algo, como mucho uno cada 3 minutos (antes salía uno tras cada cambio de fase, ~4 s del motor cada uno).
+    // Si se abre la pestaña antes, se ve el último guardado y se pide uno nuevo en ese momento.
     var nl=navList(), ctrl=nl.indexOf('reportes')!==-1;
     if (!ctrl && nl.indexOf('reporte')===-1) return;
+    if (state.view!=='reporte' && state.view!=='reportes' && Date.now()-(state.repPreT||0) < 3*60000) return;
+    state.repPreT=Date.now();
     if (!state.repSem) state.repSem=repDefault();
     loadRep(ctrl, null, true);
   }
@@ -3319,8 +3328,12 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
   }
   // Quien tiene finanzas: al abrir la app el servidor deja listos los números del mes (no llegan al celular hasta poner el PIN)
   function calentarFin(){
+    // Se recuerda en el celular: abrir la app varias veces seguidas no lo repite (el motor guarda lo armado 1 hora)
+    var kc='finCalT:'+((state.me && state.me.nombre)||'');
+    if (!state.finCalT) state.finCalT=+(store(kc)||0)||0;
     if (!(state.data && state.data.finAcceso) || state.ftok || Date.now()-(state.finCalT||0) < 40*60000) return;
-    state.finCalT=Date.now(); call('fin2Calentar', {}).catch(function(){ state.finCalT=0; });
+    state.finCalT=Date.now(); store(kc, String(state.finCalT));
+    call('fin2Calentar', {}).catch(function(){ state.finCalT=0; store(kc, '0'); });
   }
   function precargarFin(){ if (!(state.data && state.data.finAcceso) || !state.ftok) return; f2Load(false); return; if (!state.finSem) state.finSem=mondayOf(nowBA().date); loadFin(null, true); }
   function equipoBtn(){ return (state.me && state.me.rol==='admin') ? '<button class="fin-eq" data-equipo><span>Equipo y PINs<small>Quién tiene PIN y resetear el de alguien</small></span>'+I.chev+'</button>' : ''; }
