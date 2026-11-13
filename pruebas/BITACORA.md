@@ -26,7 +26,7 @@ Cómo correrlo: `python3 pruebas/correr.py <carpeta con index.html> <carpeta de 
 | mejora/2026-11-10 | 📤 Enviar no traba la pantalla (la ventana se cierra al tocar Enviar, la fila queda "⏳ Enviando…", se puede seguir con el próximo lead) y no deja mandar dos veces al mismo lead; si falla, "📤 Reintentar" y aviso de mirar uChat si se cortó la conexión. Sin motor. | Aplicada (en main desde el 10/11, 230bb3e) |
 | mejora/2026-11-10-notas-vs-sol, -zona-sol, -vercomo-sol | Zona propia de comentarios de Sol en la ficha, "Notas sobre el cliente", Ver como Sol | Aplicadas (en main desde el 10/11) |
 | mejora/2026-11-11 | Menos pedidos de fondo al motor: reporte en segundo plano como mucho cada 3 min después de guardar; saveVisto solo si cambió algo; fin2Calentar recordado en el celular entre aperturas. Sin motor. | Aplicada (en main desde el 13/11) |
-| mejora/2026-11-13-archivos-laboral | Laboral: subir actas notariales y cartas documento en cada consulta (intakers, Sol, Mica, Estefanía). Necesita motor (getEstudios/subirEstudio con rama LABORAL y cat actanot/carta). | En el entorno de prueba desde el 13/11 (motor: CONFIG.ESTUDIOS con LABORAL y cats actanot/carta; Index.html con los mismos cambios de pantalla). Falta probar y pasar a la real |
+| mejora/2026-11-13-archivos-laboral | Laboral: un solo apartado "Documentación" con "＋ Agregar documentación" en cada consulta (actas notariales, cartas documento, etc.; intakers, Sol y la abogada de la consulta). Necesita motor (rama LABORAL con cat docs). | En el entorno de prueba desde el 13/11 (motor: CONFIG.ESTUDIOS con LABORAL: [docs]; Index.html con los mismos cambios de pantalla). Falta probar y pasar a la real |
 
 ## 2026-11-05 (primera noche)
 - Armé el banco (rama pruebas-nocturnas, carpeta pruebas/).
