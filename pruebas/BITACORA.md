@@ -20,12 +20,12 @@ Cómo correrlo: `python3 pruebas/correr.py <carpeta con index.html> <carpeta de 
 | mejora/2026-11-07 | En 360px el nombre de la consulta usa hasta 2 renglones (antes se cortaba en todas las tarjetas); Cerrar (X) de las hojas a 44px; "Cambiar" y "Ver como otra persona" del pie con zona táctil de 45px | Aplicada (en main desde el 07/11) |
 | mejora/2026-11-07-reportes-sol | Registro de uso y comentarios de Sol (motor v75/v76) | Aplicada (en main desde el 07/11) |
 | mejora/2026-11-08-flujo-sin-contactar | Flujo semanal: Sin contactar → primer mensaje → fase sin abrir la ficha (auto "Contacté" al volver de WhatsApp con Deshacer, sección "Falta la fase" con botones A/B/Llamada/C, barra para ir directo). Sin motor. | Aplicada (en main desde el 09/11, dentro de b1f5d7e; la rama vieja choca con main y no hace falta) |
-| mejora/2026-11-08 | Pedidos colgados: las lecturas se cortan a los 35 s y se repiten solas; al volver a la app se repiten las que llevan más de 12 s en camino. Escrituras sin cambios. Sin motor. | Pendiente de aprobar (al 11/11 entra limpia sobre main 08566c6; main sigue sin tiempo máximo) |
-| mejora/2026-11-09 | Cargar resultado: la hoja ya no esconde la hora y el nombre de la consulta (baja solo lo necesario); Confirmó/No respondió y Cargar resultado a 44 px; Bloquear con zona táctil de 44 px. Sin motor. | Pendiente de aprobar (al 11/11 entra limpia sobre main) |
+| mejora/2026-11-08 | Pedidos colgados: las lecturas se cortan a los 35 s y se repiten solas; al volver a la app se repiten las que llevan más de 12 s en camino. Escrituras sin cambios. Sin motor. | Pendiente de aprobar (al 13/11 entra limpia sobre main b3914ad; main sigue sin tiempo máximo) |
+| mejora/2026-11-09 | Cargar resultado: la hoja ya no esconde la hora y el nombre de la consulta (baja solo lo necesario); Confirmó/No respondió y Cargar resultado a 44 px; Bloquear con zona táctil de 44 px. Sin motor. | Pendiente de aprobar (al 13/11 entra limpia sobre main b3914ad) |
 | mejora/2026-11-09-whatsapp | WhatsApp oficial, flujo Sin contactar, agenda de Juan rayada, actualización | Aplicada (en main desde el 09/11) |
 | mejora/2026-11-10 | 📤 Enviar no traba la pantalla (la ventana se cierra al tocar Enviar, la fila queda "⏳ Enviando…", se puede seguir con el próximo lead) y no deja mandar dos veces al mismo lead; si falla, "📤 Reintentar" y aviso de mirar uChat si se cortó la conexión. Sin motor. | Aplicada (en main desde el 10/11, 230bb3e) |
 | mejora/2026-11-10-notas-vs-sol, -zona-sol, -vercomo-sol | Zona propia de comentarios de Sol en la ficha, "Notas sobre el cliente", Ver como Sol | Aplicadas (en main desde el 10/11) |
-| mejora/2026-11-11 | Menos pedidos de fondo al motor: reporte en segundo plano como mucho cada 3 min después de guardar; saveVisto solo si cambió algo; fin2Calentar recordado en el celular entre aperturas. Sin motor. | Pendiente de aprobar |
+| mejora/2026-11-11 | Menos pedidos de fondo al motor: reporte en segundo plano como mucho cada 3 min después de guardar; saveVisto solo si cambió algo; fin2Calentar recordado en el celular entre aperturas. Sin motor. | Pendiente de aprobar (al 13/11 entra limpia sobre main b3914ad) |
 
 ## 2026-11-05 (primera noche)
 - Armé el banco (rama pruebas-nocturnas, carpeta pruebas/).
@@ -190,6 +190,23 @@ Cómo correrlo: `python3 pruebas/correr.py <carpeta con index.html> <carpeta de 
 - Ideas grandes:
   - verEstudio: que el motor devuelva un link de vista de Drive (o un PDF ya achicado) en vez del archivo entero en base64; en iPhone además el PDF dentro de la app puede mostrar solo la primera página.
   - Sigue pendiente getData en CacheService (motor) y limitar fin2Calentar a quien abre Finanzas.
+
+## 2026-11-12 (noche, corrida del 13/11)
+- main sin cambios desde b3914ad (11/11 23:02 UTC). El banco ya tenía index.html, sw.js y manifest iguales a main.
+- Ramas pendientes: mejora/2026-11-08, mejora/2026-11-09 y mejora/2026-11-11 siguen sin mergear; las tres entran limpias sobre main (cada una y juntas, sin pushear). Con 3 pendientes, esta noche NO se armó rama nueva.
+- Cambios del motor pendientes: ninguno (los 3 archivos dicen APLICADO).
+- Registro de uso real (USO, 12/11, filas ~2444-2880; usaron la app Pri, Fran, Karim, Cele y Juan; nada de Mica, Sol, Estefanía ni Julián):
+  - Sin filas de error y, por primera vez en varios días, ningún "Sin conexión" ni pedido colgado de minutos. 1 aviso: PIN de finanzas incorrecto (Karim).
+  - getData sigue lento: la mayoría 2-5 s, picos de 18,8 y 18,1 s (Pri), 15,5 s (Pri), 13,2 s (Fran y Karim), 9,9 s (Cele). Es del motor (idea de CacheService, pendiente).
+  - enviarWsp ~35 envíos (Pri y Fran), 0 errores, 4-11,7 s. wspDatos hasta 12 s (Pri).
+  - Karim: fin2Calentar 37 s, 24 s y 19 s; getFin2Panel 16 s; getFin2 4,5-11 s. Lo de fin2Calentar lo baja mejora/2026-11-11 (pendiente).
+  - Aperturas con datos nuevos: Cele 11,4 s y 5,8 s (iPhone), Karim 2,5-4,6 s, Pri 4 s. Con lo guardado 0,3-1,5 s.
+  - Juan dispara fin2Calentar: revisado en el Código.gs del motor real (solo lectura): Juan tiene fin ['TRANSITO'], así que solo abre Finanzas de Tránsito. Permisos OK; queda cerrada la duda del 11/11.
+- Banco: PERMISOS de datos_falsos.py ahora copia CONFIG.EQUIPO del motor real v77: Mica, Cele y Juan sin leads (no ven Agendar; antes el banco se lo mostraba), Sol con leads de las 3 ramas y Finanzas solo para cargar clientes de ART, Mica/Cele/Juan con Finanzas y Guiones de sus ramas. Así el banco muestra las mismas pestañas que ve cada uno de verdad.
+- Roles probados con correr.py (390 y 360): Mica, Cele, Juan, Sol, Estefanía, Pri (crea PIN) y Karim. 0 errores de JavaScript, 0 pedidos fallidos, sin scroll horizontal. Pestañas: abogadas de Reclamá → Agenda, Falta cargar, Finanzas, Guiones; Juan → lo mismo con su agenda de Tránsito; Estefanía → Agenda y Falta cargar; Sol → Agenda, Seguimiento, Agendar, Falta cargar y Finanzas; Pri → Reporte, Agenda, Tareas, Seguimiento, Agendar; Karim → todo.
+- Sin problemas nuevos. Siguen chicos (ya anotados): Bloquear 34 de alto, chips de persona 32, Día/Semana 30, flechas 34, Editar 52x32, Confirmó/No respondió 42 (los arregla en parte mejora/2026-11-09).
+- Para la próxima rama (cuando se apruebe alguna): sigue lo del 11/11 (estudio ya abierto en memoria, título de Seguimiento, teléfono con formato en notas sin nombre).
+- Pendiente del banco: respuestas falsas para Traslados (saveTraslado, trasladoAccion, trasladoRecibo, verRecibo) para probar el bloque nuevo de b3914ad.
 
 ## Flujos rediseñados (tarea semanal de los domingos)
 | Fecha | Flujo | Para quién | Toques antes → después | Rama | Motor |

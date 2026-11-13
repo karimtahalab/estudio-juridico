@@ -28,11 +28,12 @@ RAMAS_POR_PERSONA = {"Mica": ["ART", "LABORAL"], "Cele": ["ART", "LABORAL"], "So
 ABOGADAS = ["Mica", "Cele", "Sol", "Estefanía", "Juan"]  # como CONFIG.ABOGADAS del motor
 
 PERMISOS = {
-    "Mica": {"agenda": ["ART", "LABORAL"], "agendar": True, "leads": ["ART", "LABORAL"]},
-    "Cele": {"agenda": ["ART", "LABORAL"], "agendar": True, "leads": ["ART", "LABORAL"]},
-    "Sol": {"agenda": ["ART", "LABORAL"], "agendar": True, "leads": ["ART", "LABORAL"], "comentar": True, "seguimiento": True},
-    "Estefanía": {"agenda": ["LABORAL"], "agendar": False, "leads": []},
-    "Juan": {"agenda": ["TRANSITO"], "agendar": True, "leads": ["TRANSITO"]},
+    # Como CONFIG.EQUIPO del motor real v77 (revisado el 13/11): las abogadas no tienen leads (no ven Agendar)
+    "Mica": {"agenda": ["ART", "LABORAL"], "agendar": False, "leads": [], "fin": ["ART", "LABORAL"], "creativos": ["ART", "LABORAL"]},
+    "Cele": {"agenda": ["ART", "LABORAL"], "agendar": False, "leads": [], "fin": ["ART"], "creativos": ["ART"]},
+    "Sol": {"agenda": ["ART", "LABORAL"], "agendar": True, "leads": ["ART", "LABORAL", "TRANSITO"], "fin": [], "comentar": True, "seguimiento": True},
+    "Estefanía": {"agenda": ["LABORAL"], "agendaPropia": True, "agendar": False, "leads": [], "fin": []},
+    "Juan": {"agenda": ["TRANSITO"], "agendaPropia": True, "agendar": False, "leads": [], "fin": ["TRANSITO"], "creativos": ["TRANSITO"]},
     "Fran": {"agenda": ["ART", "LABORAL", "TRANSITO"], "agendar": True, "leads": ["ART", "LABORAL", "TRANSITO"], "seguimiento": True},
     "Pri": {"agenda": ["ART", "LABORAL", "TRANSITO"], "agendar": True, "leads": ["ART", "LABORAL", "TRANSITO"], "seguimiento": True},
     "Karim": {"agenda": ["ART", "LABORAL", "TRANSITO"], "agendar": True, "leads": ["ART", "LABORAL", "TRANSITO"], "seguimiento": True},
@@ -187,6 +188,11 @@ class FakeApi:
         if who in ("Karim", "Julián"):
             d["pines"] = [{"nombre": e["nombre"], "tiene": e["tiene"], "bloqueado": self.pin_bloq.get(e["nombre"], False), "fijo": e["nombre"] == "Julián"} for e in eq]
             d["finAcceso"] = True; d["finRamas"] = ["ART", "LABORAL", "TRANSITO"]; d["finModo"] = {"ART": "full", "LABORAL": "full", "TRANSITO": "full"}; d["finPin"] = {"tiene": True, "bloqueado": False}
+        else:
+            fr = list(PERMISOS.get(who, {}).get("fin", []))
+            if who == "Sol": fr = ["ART"]  # finCarga: solo carga clientes de ART, sin montos
+            if fr:
+                d["finAcceso"] = True; d["finRamas"] = fr; d["finModo"] = {r: ("carga" if who == "Sol" else "full") for r in fr}; d["finPin"] = {"tiene": True, "bloqueado": False}
         return d
 
     def handle(self, fn, arg):
