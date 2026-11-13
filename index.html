@@ -2135,12 +2135,11 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
 
   /* ---------- Estudios médicos (ART y Tránsito) y acta vial (Tránsito): se suben desde la app y quedan en una carpeta privada del Drive del estudio ---------- */
   var EST_RAMAS=['ART','TRANSITO','LABORAL'];
-  var EST_CATS={ART:[['estudios','Estudios médicos']], TRANSITO:[['estudios','Estudios médicos'],['acta','Acta vial']], LABORAL:[['actanot','Actas notariales'],['carta','Cartas documento']]};
-  // Textos de cada tipo de documento (Laboral: actas notariales y cartas documento)
+  var EST_CATS={ART:[['estudios','Estudios médicos']], TRANSITO:[['estudios','Estudios médicos'],['acta','Acta vial']], LABORAL:[['docs','Documentación']]};
+  // Textos de cada tipo de documento (Laboral: documentación, un solo apartado para actas notariales, cartas documento, etc.)
   var EST_TXT={estudios:{ic:'🩺', subir:'estudios', vacio:'Todavía no hay estudios cargados.', qu:['estudio subido','estudios subidos']},
     acta:{ic:'🚗', subir:'acta vial', vacio:'Todavía no hay acta vial cargada.', qu:['archivo del acta subido','archivos del acta subidos']},
-    actanot:{ic:'📜', subir:'actas notariales', vacio:'Todavía no hay actas notariales cargadas.', qu:['acta notarial subida','actas notariales subidas']},
-    carta:{ic:'✉️', subir:'cartas documento', vacio:'Todavía no hay cartas documento cargadas.', qu:['carta documento subida','cartas documento subidas']}};
+    docs:{ic:'📄', subir:'documentación', btn:'Agregar documentación', vacio:'Todavía no hay documentación cargada.', qu:['archivo subido','archivos subidos']}};
   function estTxt(cat){ return EST_TXT[cat]||EST_TXT.estudios; }
   function estEsLab(id){ var l=findLead(id); return !!l && ramaKey(l.rama)==='laboral'; }
   function estCats(l){ return EST_CATS[String(l.rama||'').toUpperCase()]||EST_CATS.ART; }
@@ -2187,7 +2186,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     }).join('')+'</ul>';
     if (c.puede || (!c.lista && estPuedeLocal(l))){
       h+= up ? '<div class="est-up"><span class="spin-dot"></span><span>Subiendo '+up.i+' de '+up.n+': '+esc(up.nombre||'')+'</span></div>' :
-        '<button class="est-drop" data-estpick="'+esc(l.id)+'"><b>＋ Subir '+estTxt(cat).subir+'</b><span>Arrastrá acá los PDF o las fotos, o tocá para elegirlos. Hasta '+(c.max||10)+' MB cada uno.</span></button>';
+        '<button class="est-drop" data-estpick="'+esc(l.id)+'"><b>＋ '+(estTxt(cat).btn||'Subir '+estTxt(cat).subir)+'</b><span>Arrastrá acá los PDF o las fotos, o tocá para elegirlos. Hasta '+(c.max||10)+' MB cada uno.</span></button>';
     }
     return h+'</div>';
   }
@@ -2261,7 +2260,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     if (l) return '<button class="link" data-estotra style="margin-top:10px">‹ Elegir otra consulta</button><div class="pa-has" style="margin:8px 2px 0"><b>'+esc(l.nombre)+'</b> · '+esc(diaCorto(l.fecha))+' '+esc(l.hora||'')+(l.abogada?' con '+esc(l.abogada):'')+'</div>'+estBlk(l);
     var xs=estConsultas(), cnt=(state.data.estudios||{});
     var hayTra=xs.some(function(x){ return ramaKey(x.rama)==='transito'; }), hayArt=xs.some(function(x){ return ramaKey(x.rama)==='art'; }), hayLab=xs.some(function(x){ return ramaKey(x.rama)==='laboral'; });
-    var rams=[hayArt&&'ART', hayLab&&'Laboral', hayTra&&'Tránsito'].filter(Boolean), docs=[(hayArt||hayTra)&&'los estudios', hayTra&&'el acta vial', hayLab&&'las actas notariales o cartas documento'].filter(Boolean);
+    var rams=[hayArt&&'ART', hayLab&&'Laboral', hayTra&&'Tránsito'].filter(Boolean), docs=[(hayArt||hayTra)&&'los estudios', hayTra&&'el acta vial', hayLab&&'la documentación'].filter(Boolean);
     if (!rams.length){ rams=['ART']; docs=['los estudios']; }
     return '<div class="blk"><h3 class="blk-t">Consultas de '+(rams.length>1?rams.slice(0,-1).join(', ')+' y '+rams[rams.length-1]:rams[0])+'<small>Elegí a quién le cargás '+(docs.length>1?docs.slice(0,-1).join(', ')+' o '+docs[docs.length-1]:docs[0])+'. Quien atiende los ve en la consulta.</small></h3><ul class="todo">'+xs.map(function(x){
       return '<li><button data-estpara="'+esc(x.id)+'"><span class="h num">'+esc(x.hora||'--:--')+'</span><span class="w"><b>'+esc(x.nombre)+'</b><span>'+shortDate(x.fecha)+', '+ramaLabel(x.rama)+(x.abogada?', con '+esc(x.abogada):'')+(cnt[x.id]?' · 📎 '+cnt[x.id]:'')+'</span></span>'+I.chev+'</button></li>';
