@@ -700,6 +700,13 @@ textarea:focus,.inp:focus,select:focus{outline:none;box-shadow:0 0 0 2.5px var(-
 /* ===== Editor de disponibilidad ===== */
 .de-mia{display:flex;align-items:center;gap:12px;width:100%;margin:10px 0 4px;padding:12px 14px;border:0;border-radius:14px;background:color-mix(in srgb,var(--green) 12%,var(--paper));box-shadow:0 0 0 1.5px color-mix(in srgb,var(--green) 55%,transparent) inset;color:var(--ink);font:inherit;text-align:left;cursor:pointer}
 .de-mia>span:first-child{font-size:24px}
+.de-adm{margin:10px 0 4px;padding:12px 14px;border-radius:14px;background:color-mix(in srgb,var(--green) 12%,var(--paper));box-shadow:0 0 0 1.5px color-mix(in srgb,var(--green) 55%,transparent) inset}
+.de-adm-t{display:flex;align-items:center;gap:12px}
+.de-adm-t>span:first-child{font-size:24px}
+.de-adm-t b{display:block;font-size:16px;font-weight:800}
+.de-adm-t small{display:block;font-size:13px;color:var(--ink-2);font-weight:600}
+.de-adm-ps{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.de-adm-ps button{min-height:44px;padding:0 16px;border:0;border-radius:999px;background:var(--paper);box-shadow:0 0 0 1.5px color-mix(in srgb,var(--green) 55%,transparent) inset;color:var(--ink);font:inherit;font-weight:800;font-size:15px}
 .de-mia b{display:block;font-size:16px;font-weight:800}
 .de-mia small{display:block;font-size:13px;color:var(--ink-2);font-weight:600}
 .de-mia .de-mia-go{margin-left:auto;font-size:24px;color:var(--green);font-weight:800}
@@ -3782,6 +3789,13 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
   function deBoton(){
     var me=state.me && state.me.nombre, abs=state.data.abogadas||[];
     var a = me && abs.indexOf(me)!==-1 ? me : (dispQuien() && puedeDisp(dispQuien()) ? dispQuien() : '');
+    // Administración con "Todas": un botón por persona para cargarle la disponibilidad directo
+    if (!a && rol()==='admin'){
+      var ps=personas().filter(function(x){ return x!=='Todas' && abs.indexOf(x)!==-1; });
+      if (!ps.length) return '';
+      return '<div class="de-adm"><div class="de-adm-t"><span>🗓</span><span><b>Cargar disponibilidad de…</b><small>Elegí a quién. Se guarda como si la cargara esa persona.</small></span></div>'+
+        '<div class="de-adm-ps">'+ps.map(function(x){ return '<button data-deon="'+esc(x)+'">'+esc(x)+'</button>'; }).join('')+'</div></div>';
+    }
     if (!a) return '';
     var m=modoDe(a);
     return '<button class="de-mia" data-deon="'+esc(a)+'"><span>🗓</span><span><b>'+(a===me?'Marcar mi disponibilidad':'Disponibilidad de '+esc(a))+'</b><small>'+(m==='disponibilidad'?'Se dan turnos solo en lo que marca':'Se dan turnos siempre, salvo lo que saca')+'</small></span><span class="de-mia-go">›</span></button>';
