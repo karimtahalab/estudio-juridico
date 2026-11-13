@@ -27,6 +27,7 @@ Cómo correrlo: `python3 pruebas/correr.py <carpeta con index.html> <carpeta de 
 | mejora/2026-11-10-notas-vs-sol, -zona-sol, -vercomo-sol | Zona propia de comentarios de Sol en la ficha, "Notas sobre el cliente", Ver como Sol | Aplicadas (en main desde el 10/11) |
 | mejora/2026-11-11 | Menos pedidos de fondo al motor: reporte en segundo plano como mucho cada 3 min después de guardar; saveVisto solo si cambió algo; fin2Calentar recordado en el celular entre aperturas. Sin motor. | Aplicada (en main desde el 13/11) |
 | mejora/2026-11-13-archivos-laboral | Laboral: un solo apartado "Documentación" con "＋ Agregar documentación" en cada consulta (actas notariales, cartas documento, etc.; intakers, Sol y la abogada de la consulta). Necesita motor (rama LABORAL con cat docs). | Aplicada (en main desde el 13/11, ee0463e; motor real v85 con CONFIG.ESTUDIOS LABORAL: [docs], también en el Index.html del motor real) |
+| mejora/2026-11-13-disp-admin | Administración (Karim, Julián): con "Todas" en la Agenda, "Cargar disponibilidad de…" con un botón por persona que abre su editor. Sin motor (saveDisponibilidad ya acepta admin). | Aplicada (en main desde el 13/11, 166e684) |
 
 ## 2026-11-05 (primera noche)
 - Armé el banco (rama pruebas-nocturnas, carpeta pruebas/).
