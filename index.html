@@ -2134,8 +2134,15 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
   }
 
   /* ---------- Estudios médicos (ART y Tránsito) y acta vial (Tránsito): se suben desde la app y quedan en una carpeta privada del Drive del estudio ---------- */
-  var EST_RAMAS=['ART','TRANSITO'];
-  var EST_CATS={ART:[['estudios','Estudios médicos']], TRANSITO:[['estudios','Estudios médicos'],['acta','Acta vial']]};
+  var EST_RAMAS=['ART','TRANSITO','LABORAL'];
+  var EST_CATS={ART:[['estudios','Estudios médicos']], TRANSITO:[['estudios','Estudios médicos'],['acta','Acta vial']], LABORAL:[['actanot','Actas notariales'],['carta','Cartas documento']]};
+  // Textos de cada tipo de documento (Laboral: actas notariales y cartas documento)
+  var EST_TXT={estudios:{ic:'🩺', subir:'estudios', vacio:'Todavía no hay estudios cargados.', qu:['estudio subido','estudios subidos']},
+    acta:{ic:'🚗', subir:'acta vial', vacio:'Todavía no hay acta vial cargada.', qu:['archivo del acta subido','archivos del acta subidos']},
+    actanot:{ic:'📜', subir:'actas notariales', vacio:'Todavía no hay actas notariales cargadas.', qu:['acta notarial subida','actas notariales subidas']},
+    carta:{ic:'✉️', subir:'cartas documento', vacio:'Todavía no hay cartas documento cargadas.', qu:['carta documento subida','cartas documento subidas']}};
+  function estTxt(cat){ return EST_TXT[cat]||EST_TXT.estudios; }
+  function estEsLab(id){ var l=findLead(id); return !!l && ramaKey(l.rama)==='laboral'; }
   function estCats(l){ return EST_CATS[String(l.rama||'').toUpperCase()]||EST_CATS.ART; }
   function estCatDe(l){ var cs=estCats(l), c=(state.estCat||{})[l.id]; return cs.some(function(x){ return x[0]===c; }) ? c : cs[0][0]; }
   function estAplica(l){ return !!l && !l.parcial && EST_RAMAS.indexOf(String(l.rama||'').toUpperCase())!==-1; }
@@ -2167,10 +2174,10 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     if (c && c.local && nSrv){ delete state.est[l.id]; c=null; }
     if (!c){ if (state.data && state.data.estLeidos && !nSrv && estEnListas(l.id)) state.est[l.id]={lista:[], puede:estPuedeLocal(l), max:10, local:true}; else estLoad(l.id); c=state.est[l.id]; }
     var cs=estCats(l), cat=estCatDe(l), todos=c.lista||[], xs=todos.filter(function(f){ return (f.cat||'estudios')===cat; }), n=xs.length, up=c.subiendo;
-    var catL=cs.filter(function(x){ return x[0]===cat; })[0][1], vacio=cat==='acta'?'Todavía no hay acta vial cargada.':'Todavía no hay estudios cargados.';
+    var catL=cs.filter(function(x){ return x[0]===cat; })[0][1], vacio=estTxt(cat).vacio;
     var h='<div class="blk est" data-estdrop="'+esc(l.id)+'"><h3 class="blk-t">📎 '+(cs.length>1?'Documentos del caso':catL)+(cs.length===1&&n?' ('+n+')':'')+'<small>'+(n?'Tocá uno para verlo.':(c.cargando?'Buscando…':(cs.length>1?'':vacio)))+'</small></h3>';
     if (cs.length>1) h+='<div class="seg2 est-tabs" role="tablist">'+cs.map(function(x){ var k=todos.filter(function(f){ return (f.cat||'estudios')===x[0]; }).length;
-      return '<button data-estcat="'+esc(l.id)+'|'+x[0]+'" class="'+(cat===x[0]?'on':'')+'" role="tab" aria-selected="'+(cat===x[0])+'">'+(x[0]==='acta'?'🚗 ':'🩺 ')+x[1]+(k?' ('+k+')':'')+'</button>'; }).join('')+'</div>'+
+      return '<button data-estcat="'+esc(l.id)+'|'+x[0]+'" class="'+(cat===x[0]?'on':'')+'" role="tab" aria-selected="'+(cat===x[0])+'">'+estTxt(x[0]).ic+' '+x[1]+(k?' ('+k+')':'')+'</button>'; }).join('')+'</div>'+
       (!n && !c.cargando ? '<p class="hint" style="margin:8px 2px 0">'+vacio+'</p>' : '');
     if (c.error) h+='<div class="err-box">'+esc(c.error)+'<br><button data-estretry="'+esc(l.id)+'">Reintentar</button></div>';
     if (n) h+='<ul class="todo est-l">'+xs.map(function(f){
@@ -2180,7 +2187,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     }).join('')+'</ul>';
     if (c.puede || (!c.lista && estPuedeLocal(l))){
       h+= up ? '<div class="est-up"><span class="spin-dot"></span><span>Subiendo '+up.i+' de '+up.n+': '+esc(up.nombre||'')+'</span></div>' :
-        '<button class="est-drop" data-estpick="'+esc(l.id)+'"><b>＋ Subir '+(cat==='acta'?'acta vial':'estudios')+'</b><span>Arrastrá acá los PDF o las fotos, o tocá para elegirlos. Hasta '+(c.max||10)+' MB cada uno.</span></button>';
+        '<button class="est-drop" data-estpick="'+esc(l.id)+'"><b>＋ Subir '+estTxt(cat).subir+'</b><span>Arrastrá acá los PDF o las fotos, o tocá para elegirlos. Hasta '+(c.max||10)+' MB cada uno.</span></button>';
     }
     return h+'</div>';
   }
@@ -2208,7 +2215,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     var malos=[], ok=0, i=0, C=function(){ return state.est[id]; };
     var sig=function(){
       if (i>=files.length){ C().subiendo=null; estRender(); render();
-        var qu=cat==='acta'?['archivo del acta subido','archivos del acta subidos']:['estudio subido','estudios subidos'];
+        var qu=estTxt(cat).qu;
         if (malos.length) toast((ok?plural(ok,qu[0],qu[1])+'. ':'')+'No se subió: '+malos.join(' · '), true); else toast('✔ '+plural(ok,qu[0],qu[1]));
         return; }
       var f=files[i++], tipo=estTipo(f), max=(C().max||10)*1024*1024;
@@ -2223,12 +2230,12 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     sig();
   }
   function estVer(id, fid){
-    toast('Abriendo el estudio…');
+    var lab=estEsLab(id); toast(lab?'Abriendo el archivo…':'Abriendo el estudio…');
     call('verEstudio',{id:id, fid:fid}).then(function(r){
       var bin=atob(r.b64||''), arr=new Uint8Array(bin.length); for (var k=0;k<bin.length;k++) arr[k]=bin.charCodeAt(k);
       var tipo=r.tipo||'application/pdf', url=URL.createObjectURL(new Blob([arr],{type:tipo}));
-      estVisor(url, r.nombre||'Estudio', tipo);
-    }).catch(function(e){ toast((e&&e.message)||'No se pudo abrir el estudio.', true); });
+      estVisor(url, r.nombre||(lab?'Archivo':'Estudio'), tipo);
+    }).catch(function(e){ toast((e&&e.message)||(lab?'No se pudo abrir el archivo.':'No se pudo abrir el estudio.'), true); });
   }
   function estVisor(url, nombre, tipo){
     estCerrar();
@@ -2240,8 +2247,8 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
   function estCerrar(){ var v=document.getElementById('estVisor'); if (!v) return; try{ URL.revokeObjectURL(v.dataset.url); }catch(e){} v.remove(); }
   function estBorrar(id, fid){
     if (state.estBorrar!==fid){ state.estBorrar=fid; estRender(); return; }
-    state.estBorrar=null; toast('Sacando el estudio…');
-    call('borrarEstudio',{id:id, fid:fid}).then(function(r){ estSet(id, r); toast('Estudio sacado (queda en la papelera del Drive 30 días).'); })
+    var lab=estEsLab(id); state.estBorrar=null; toast(lab?'Sacando el archivo…':'Sacando el estudio…');
+    call('borrarEstudio',{id:id, fid:fid}).then(function(r){ estSet(id, r); toast((lab?'Archivo sacado':'Estudio sacado')+' (queda en la papelera del Drive 30 días).'); })
       .catch(function(e){ toast((e&&e.message)||'No se pudo sacar.', true); });
   }
   // Pestaña "Estudios médicos" en Cargar resúmenes: las consultas de ART que vienen (y las de los últimos días)
@@ -2253,8 +2260,10 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     var l=d.estFor?findLead(d.estFor):null;
     if (l) return '<button class="link" data-estotra style="margin-top:10px">‹ Elegir otra consulta</button><div class="pa-has" style="margin:8px 2px 0"><b>'+esc(l.nombre)+'</b> · '+esc(diaCorto(l.fecha))+' '+esc(l.hora||'')+(l.abogada?' con '+esc(l.abogada):'')+'</div>'+estBlk(l);
     var xs=estConsultas(), cnt=(state.data.estudios||{});
-    var hayTra=xs.some(function(x){ return ramaKey(x.rama)==='transito'; }), hayArt=xs.some(function(x){ return ramaKey(x.rama)==='art'; });
-    return '<div class="blk"><h3 class="blk-t">Consultas de '+(hayArt&&hayTra?'ART y Tránsito':(hayTra?'Tránsito':'ART'))+'<small>Elegí a quién le cargás '+(hayTra?'los estudios o el acta vial':'los estudios')+'. Quien atiende los ve en la consulta.</small></h3><ul class="todo">'+xs.map(function(x){
+    var hayTra=xs.some(function(x){ return ramaKey(x.rama)==='transito'; }), hayArt=xs.some(function(x){ return ramaKey(x.rama)==='art'; }), hayLab=xs.some(function(x){ return ramaKey(x.rama)==='laboral'; });
+    var rams=[hayArt&&'ART', hayLab&&'Laboral', hayTra&&'Tránsito'].filter(Boolean), docs=[(hayArt||hayTra)&&'los estudios', hayTra&&'el acta vial', hayLab&&'las actas notariales o cartas documento'].filter(Boolean);
+    if (!rams.length){ rams=['ART']; docs=['los estudios']; }
+    return '<div class="blk"><h3 class="blk-t">Consultas de '+(rams.length>1?rams.slice(0,-1).join(', ')+' y '+rams[rams.length-1]:rams[0])+'<small>Elegí a quién le cargás '+(docs.length>1?docs.slice(0,-1).join(', ')+' o '+docs[docs.length-1]:docs[0])+'. Quien atiende los ve en la consulta.</small></h3><ul class="todo">'+xs.map(function(x){
       return '<li><button data-estpara="'+esc(x.id)+'"><span class="h num">'+esc(x.hora||'--:--')+'</span><span class="w"><b>'+esc(x.nombre)+'</b><span>'+shortDate(x.fecha)+', '+ramaLabel(x.rama)+(x.abogada?', con '+esc(x.abogada):'')+(cnt[x.id]?' · 📎 '+cnt[x.id]:'')+'</span></span>'+I.chev+'</button></li>';
     }).join('')+'</ul></div>';
   }
@@ -2607,7 +2616,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
       '<button class="close" data-close aria-label="Cerrar">'+I.x+'</button></div>';
     if (d.step==='review') return html + reviewHtml(!!tgt);
     if (!tgt && estConsultas().length){
-      html += '<div class="seg2" role="tablist" style="margin-top:12px"><button data-pgmodo="res" class="'+(d.modo!=='est'?'on':'')+'" role="tab" aria-selected="'+(d.modo!=='est')+'">Resúmenes</button><button data-pgmodo="est" class="'+(d.modo==='est'?'on':'')+'" role="tab" aria-selected="'+(d.modo==='est')+'">📎 '+(estConsultas().some(function(x){ return ramaKey(x.rama)==='transito'; })?'Estudios y actas':'Estudios médicos')+'</button></div>';
+      html += '<div class="seg2" role="tablist" style="margin-top:12px"><button data-pgmodo="res" class="'+(d.modo!=='est'?'on':'')+'" role="tab" aria-selected="'+(d.modo!=='est')+'">Resúmenes</button><button data-pgmodo="est" class="'+(d.modo==='est'?'on':'')+'" role="tab" aria-selected="'+(d.modo==='est')+'">📎 '+(estConsultas().some(function(x){ var k=ramaKey(x.rama); return k==='transito'||k==='laboral'; })?'Estudios y actas':'Estudios médicos')+'</button></div>';
       if (d.modo==='est') return html + estPegar(d);
     }
     html += '<div class="field"><textarea id="pasteTxt" class="paste" placeholder="'+(tgt?'ART: …\nResumen: …':'Nombre: …\nTel: …\nConsulta: …\nResumen: …')+'">'+esc(d.text)+'</textarea></div>';
