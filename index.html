@@ -881,7 +881,10 @@ textarea:focus,.inp:focus,select:focus{outline:none;box-shadow:0 0 0 2.5px var(-
   @keyframes pulseDot{from{opacity:.25}to{opacity:1}}
   .seg2 button{white-space:nowrap;padding:0 4px;font-size:13px}
 .int-ban{background:var(--paper);border-radius:14px;padding:12px 14px;margin:0 0 12px;box-shadow:0 0 0 1.5px #0B8B8B inset}
-.int-ban>b{display:block;font-size:14.5px;margin-bottom:6px}
+.int-ban{position:relative}
+.int-ban>b{display:block;font-size:14.5px;margin-bottom:6px;padding-right:40px}
+.int-x{position:absolute;top:2px;right:2px;width:44px;height:44px;display:flex;align-items:center;justify-content:center;border:0;background:none;border-radius:12px;font-size:17px;font-weight:700;color:var(--ink-3);cursor:pointer}
+.int-x:active{background:var(--line)}
 .int-it{display:flex;flex-direction:column;align-items:flex-start;width:100%;text-align:left;padding:9px 0;border-top:1px solid var(--line);gap:2px}
 .int-it small{color:var(--ink-3);font-size:13px}
 .int-ask{box-shadow:0 0 0 1.5px #0B8B8B inset;border-radius:14px;padding:10px 12px}
@@ -4635,8 +4638,9 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
 
   /* ---------- eventos ---------- */
   document.addEventListener('click', function(ev){
-    var t = ev.target.closest('[data-reptile],[data-repctl],[data-repsemq],[data-pindesbloq],[data-fin],[data-equipo],[data-view],[data-undo],[data-agotra],[data-agbuscartodo],[data-ficha],[data-pinok],[data-pinback],[data-pinreset],[data-salir],[data-fimodo],[data-fase],[data-notasave],[data-datosave],[data-mnfase],[data-mnsin],[data-dupfase],[data-derivar],[data-reagsindia],[data-dvsel],[data-dvhora],[data-dvsave],[data-deon],[data-deque],[data-desem],[data-decopia],[data-deamplio],[data-dedia],[data-dequick],[data-decopy],[data-devolver],[data-definde],[data-demodo],[data-desave],[data-decancel],[data-repweek],[data-deadm],[data-reprow],[data-repmodo],[data-rtrama],[data-rtfresco],[data-repretry],[data-agmode],[data-wgday],[data-agrama],[data-agfase],[data-agmas],[data-agmes],[data-agvista],[data-agclr],[data-agnuevo],[data-mnrama],[data-mnorigen],[data-mnsig],[data-mncrear],[data-open],[data-result],[data-bloq],[data-nuevo],[data-week],[data-day],[data-sum],[data-chip],[data-abog],[data-close],[data-res],[data-motivo],[data-save],[data-bqwho],[data-bqtodo],[data-savebq],[data-delbq],[data-retry],[data-pastefor],[data-pasteall],[data-rvcheck],[data-rvtoggle],[data-rvsave],[data-rvback],[data-yo],[data-yocambiar],[data-vcabrir],[data-vcsalir],[data-vercomo],[data-visto],[data-conf],[data-escribir],[data-agendar],[data-agfirmar],[data-agcorregir],[data-agdia],[data-slot],[data-agcorr],[data-saveag],[data-savecampos]');
+    var t = ev.target.closest('[data-intocultar],[data-reptile],[data-repctl],[data-repsemq],[data-pindesbloq],[data-fin],[data-equipo],[data-view],[data-undo],[data-agotra],[data-agbuscartodo],[data-ficha],[data-pinok],[data-pinback],[data-pinreset],[data-salir],[data-fimodo],[data-fase],[data-notasave],[data-datosave],[data-mnfase],[data-mnsin],[data-dupfase],[data-derivar],[data-reagsindia],[data-dvsel],[data-dvhora],[data-dvsave],[data-deon],[data-deque],[data-desem],[data-decopia],[data-deamplio],[data-dedia],[data-dequick],[data-decopy],[data-devolver],[data-definde],[data-demodo],[data-desave],[data-decancel],[data-repweek],[data-deadm],[data-reprow],[data-repmodo],[data-rtrama],[data-rtfresco],[data-repretry],[data-agmode],[data-wgday],[data-agrama],[data-agfase],[data-agmas],[data-agmes],[data-agvista],[data-agclr],[data-agnuevo],[data-mnrama],[data-mnorigen],[data-mnsig],[data-mncrear],[data-open],[data-result],[data-bloq],[data-nuevo],[data-week],[data-day],[data-sum],[data-chip],[data-abog],[data-close],[data-res],[data-motivo],[data-save],[data-bqwho],[data-bqtodo],[data-savebq],[data-delbq],[data-retry],[data-pastefor],[data-pasteall],[data-rvcheck],[data-rvtoggle],[data-rvsave],[data-rvback],[data-yo],[data-yocambiar],[data-vcabrir],[data-vcsalir],[data-vercomo],[data-visto],[data-conf],[data-escribir],[data-agendar],[data-agfirmar],[data-agcorregir],[data-agdia],[data-slot],[data-agcorr],[data-saveag],[data-savecampos]');
     if (!t) return;
+    if (t.hasAttribute('data-intocultar')){ var oc=intOcultas(); ((state.data && state.data.paraMi)||[]).forEach(function(l){ intAbiertaMia(l).forEach(function(x){ var k=intOcId(l, x); if (x.tipo!=='control' && oc.indexOf(k)===-1) oc.push(k); }); }); var antes=store(intOcKey())||'[]'; store(intOcKey(), JSON.stringify(oc.slice(-300))); render(); toastUndo('Listo, lo saqué. Si te llega una consulta nueva, vuelve a aparecer.', function(){ store(intOcKey(), antes); render(); }); return; }
     if (t.hasAttribute('data-pindesbloq')){ var nd=t.getAttribute('data-pindesbloq'); t.disabled=true; t.textContent='Desbloqueando…'; call('desbloquearPin', {nombre:nd}).then(function(p){ if (state.data) state.data.pines=p; if (state.sheet) renderSheet(); render(); toast('Listo: '+nd+' ya puede entrar de nuevo.'); }).catch(function(e){ t.disabled=false; toast((e&&e.message)||'No se pudo desbloquear.', true); }); return; }
     if (t.hasAttribute('data-fin')){ finClick(t); return; }
     if (t.hasAttribute('data-equipo')){ state.login={}; openSheet({type:'yo', pines:true}); return; }
@@ -4866,10 +4870,15 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
       : 'Lo que Sol les pide corregir a los intakers. Les llega a Tareas hasta que lo marcan Hecho.';
     return '<section class="ctl-zona" aria-label="Comentarios de Sol para los intakers"><h3 class="blk-t">📝 Comentarios de Sol para los intakers<small>'+sub+' Las notas del cliente para la abogada/o van más abajo.</small></h3>'+html+'</section>';
   }
+  /* La ✕ del cuadro "consultas para vos" lo saca de la pantalla (solo en este celular). Las consultas siguen abiertas en la ficha; si llega una nueva, el cuadro vuelve. */
+  function intOcKey(){ return 'intOcultas:'+yoNombre(); }
+  function intOcultas(){ try{ return JSON.parse(store(intOcKey())||'[]'); }catch(e){ return []; } }
+  function intOcId(l, x){ return l.id+'|'+x.i+'|'+(x.cuando||''); }
   function internasBanner(){
-    var noCtl=function(l){ return intAbiertaMia(l).filter(function(x){ return x.tipo!=='control'; }); }; // los comentarios de Sol van a Tareas
+    var oc=intOcultas();
+    var noCtl=function(l){ return intAbiertaMia(l).filter(function(x){ return x.tipo!=='control' && oc.indexOf(intOcId(l, x))===-1; }); }; // los comentarios de Sol van a Tareas
     var xs=((state.data && state.data.paraMi)||[]).filter(function(l){ return noCtl(l).length; }); if (!xs.length || state.view==='finanzas') return '';
-    return '<div class="int-ban" role="region" aria-label="Consultas para vos"><b>💬 '+plural(xs.length,'consulta para vos','consultas para vos')+'</b>'+xs.slice(0,8).map(function(l){
+    return '<div class="int-ban" role="region" aria-label="Consultas para vos"><button class="int-x" data-intocultar aria-label="Sacar este aviso" title="Sacar este aviso">✕</button><b>💬 '+plural(xs.length,'consulta para vos','consultas para vos')+'</b>'+xs.slice(0,8).map(function(l){
       var x=noCtl(l)[0]||{};
       return '<button class="int-it" data-ficha="'+esc(l.id)+'"><span><b>'+esc(l.nombre||'Sin nombre')+'</b> · '+ramaLabel(l.rama)+'</span><small>'+esc(x.de||'')+(x.tipo==='llamada'?' te derivó la llamada':' pregunta si es caso')+(x.estado==='Lo llamo yo'?' · la tomaste vos':'')+'</small></button>'; }).join('')+'</div>';
   }
