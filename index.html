@@ -470,7 +470,7 @@ textarea:focus,.inp:focus,select:focus{outline:none;box-shadow:0 0 0 2.5px var(-
 .est-l li > button[data-estver]{flex:1;min-width:0}
 .est-l .w b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .est-ic{font-size:20px;flex:none}
-.est-l .est-x{width:auto;flex:none;margin-right:8px;padding:6px 10px;border-radius:9px;font-size:13px;font-weight:700;color:var(--ink-3)}
+.est-l .est-x{width:auto;flex:none;margin-right:8px;padding:6px 10px;min-width:44px;min-height:44px;border-radius:9px;font-size:13px;font-weight:700;color:var(--ink-3)}
 .est-l .est-x.on{color:#fff;background:var(--red)}
 .est-drop{position:relative;display:flex;flex-direction:column;gap:3px;align-items:center;text-align:center;margin-top:8px;padding:16px 14px;border:2px dashed var(--line);border-radius:14px;background:var(--paper);cursor:pointer}
 .est-drop b{font-size:15.5px;color:var(--blue)} .est-drop span{font-size:13px;color:var(--ink-3)}
@@ -701,7 +701,9 @@ textarea:focus,.inp:focus,select:focus{outline:none;box-shadow:0 0 0 2.5px var(-
 .de-mia{display:flex;align-items:center;gap:12px;width:100%;margin:10px 0 4px;padding:12px 14px;border:0;border-radius:14px;background:color-mix(in srgb,var(--green) 12%,var(--paper));box-shadow:0 0 0 1.5px color-mix(in srgb,var(--green) 55%,transparent) inset;color:var(--ink);font:inherit;text-align:left;cursor:pointer}
 .de-mia>span:first-child{font-size:24px}
 .de-adm{margin:10px 0 4px;padding:12px 14px;border-radius:14px;background:color-mix(in srgb,var(--green) 12%,var(--paper));box-shadow:0 0 0 1.5px color-mix(in srgb,var(--green) 55%,transparent) inset}
-.de-adm-t{display:flex;align-items:center;gap:12px}
+.de-adm-t{display:flex;align-items:center;gap:12px;width:100%;min-height:44px;padding:0;border:0;background:none;color:var(--ink);font:inherit;text-align:left}
+.de-adm-t>span:nth-child(2){flex:1;min-width:0}
+.de-adm:not(.on){padding:6px 14px}
 .de-adm-t>span:first-child{font-size:24px}
 .de-adm-t b{display:block;font-size:16px;font-weight:800}
 .de-adm-t small{display:block;font-size:13px;color:var(--ink-2);font-weight:600}
@@ -710,6 +712,7 @@ textarea:focus,.inp:focus,select:focus{outline:none;box-shadow:0 0 0 2.5px var(-
 .de-mia b{display:block;font-size:16px;font-weight:800}
 .de-mia small{display:block;font-size:13px;color:var(--ink-2);font-weight:600}
 .de-mia .de-mia-go{margin-left:auto;font-size:24px;color:var(--green);font-weight:800}
+.de-adm .de-mia-go{margin-left:auto;font-size:22px;color:var(--green);font-weight:800}
 .de-modos{display:grid;gap:8px;margin-top:8px}
 @media (min-width:700px){.de-modos{grid-template-columns:1fr 1fr}}
 .de-modos .dv-op{margin:0}
@@ -1851,7 +1854,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     if (state.view==='agendar' && document.activeElement && document.activeElement.id==='aq' && $('agList')){ renderAg(); renderNav(); return; }
     var v = ({hoy:viewHoy, manana:viewManana, semana:viewSemana, resumen:viewResumen, falta:viewFalta, tareas:viewTareas, agendar:viewAgendar, agenda:viewAgenda,
       reporte:function(){ return viewReporte(false); }, reportes:function(){ return viewReporte(true); }, finanzas:viewFin2, guiones:viewGuiones, seguimiento:viewSeguimiento})[state.view]();
-    $('ttl').innerHTML = '<h1>'+v.h1+'</h1><p>'+v.p+'</p>';
+    $('ttl').innerHTML = '<h1>'+v.h1+'</h1><p>'+v.p+'</p>'; ajustarTitulo();
     $('headExtra').innerHTML = v.extra || '';
     $('offline').classList.toggle('on', state.offline);
     $('main').innerHTML = vcBanner() + trAvisoBanner() + pinBanner() + dupBanner() + internasBanner() + v.body + '<div class="foot">'+(state.snapT?'Mostrando lo guardado a las '+state.snapT+'. Actualizando…':'Actualizado a las '+nowBA().hm)+(state.verComo?'':(state.me?'. Usás la app como '+esc(state.me.nombre)+' ('+({abogada:'parte de abogadas', intaker:'parte de intakers', admin:'administración', produccion:'filmación y edición'}[state.me.rol]||state.me.rol)+')'+' <button data-yocambiar>Cambiar</button>':'')+(state.me && state.me.rol==='admin'?' · <button data-vcabrir>👁 Ver como otra persona</button>':''))+'</div>';
@@ -2235,13 +2238,27 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     };
     sig();
   }
+  // Lo ya abierto queda en la memoria de la app (los últimos 6, hasta 25 MB): la segunda vez abre al instante, sin volver a bajarlo del servidor
+  // (registro de uso: abrir el mismo estudio tardaba 9-15 s cada vez). Se borra al cerrar la app o la sesión.
+  var EST_MEM=[];
+  function estMemGet(fid){ return EST_MEM.filter(function(x){ return x.fid===fid; })[0] || null; }
+  function estMemPut(x){
+    EST_MEM=EST_MEM.filter(function(y){ return y.fid!==x.fid; }); EST_MEM.push(x);
+    var tot=function(){ return EST_MEM.reduce(function(a,y){ return a+y.blob.size; }, 0); };
+    while (EST_MEM.length>1 && (EST_MEM.length>6 || tot()>25*1024*1024)) EST_MEM.shift();
+  }
   function estVer(id, fid){
-    var lab=estEsLab(id); toast(lab?'Abriendo el archivo…':'Abriendo el estudio…');
+    var lab=estEsLab(id), m=estMemGet(fid);
+    if (m){ estVisor(URL.createObjectURL(m.blob), m.nombre, m.tipo); return; }
+    state.estAbre=state.estAbre||{}; if (state.estAbre[fid]) return; // ya se está bajando: un segundo toque no lo pide de nuevo
+    state.estAbre[fid]=1; toast(lab?'Abriendo el archivo…':'Abriendo el estudio…');
     call('verEstudio',{id:id, fid:fid}).then(function(r){
       var bin=atob(r.b64||''), arr=new Uint8Array(bin.length); for (var k=0;k<bin.length;k++) arr[k]=bin.charCodeAt(k);
-      var tipo=r.tipo||'application/pdf', url=URL.createObjectURL(new Blob([arr],{type:tipo}));
-      estVisor(url, r.nombre||(lab?'Archivo':'Estudio'), tipo);
-    }).catch(function(e){ toast((e&&e.message)||(lab?'No se pudo abrir el archivo.':'No se pudo abrir el estudio.'), true); });
+      var tipo=r.tipo||'application/pdf', blob=new Blob([arr],{type:tipo}), nombre=r.nombre||(lab?'Archivo':'Estudio');
+      if (!state.verComo) estMemPut({fid:fid, blob:blob, nombre:nombre, tipo:tipo});
+      estVisor(URL.createObjectURL(blob), nombre, tipo);
+    }).catch(function(e){ toast((e&&e.message)||(lab?'No se pudo abrir el archivo.':'No se pudo abrir el estudio.'), true); })
+      .then(function(){ delete state.estAbre[fid]; });
   }
   function estVisor(url, nombre, tipo){
     estCerrar();
@@ -2254,7 +2271,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
   function estBorrar(id, fid){
     if (state.estBorrar!==fid){ state.estBorrar=fid; estRender(); return; }
     var lab=estEsLab(id); state.estBorrar=null; toast(lab?'Sacando el archivo…':'Sacando el estudio…');
-    call('borrarEstudio',{id:id, fid:fid}).then(function(r){ estSet(id, r); toast((lab?'Archivo sacado':'Estudio sacado')+' (queda en la papelera del Drive 30 días).'); })
+    call('borrarEstudio',{id:id, fid:fid}).then(function(r){ EST_MEM=EST_MEM.filter(function(y){ return y.fid!==fid; }); estSet(id, r); toast((lab?'Archivo sacado':'Estudio sacado')+' (queda en la papelera del Drive 30 días).'); })
       .catch(function(e){ toast((e&&e.message)||'No se pudo sacar.', true); });
   }
   // Pestaña "Estudios médicos" en Cargar resúmenes: las consultas de ART que vienen (y las de los últimos días)
@@ -2787,10 +2804,20 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
       if (!abierto) go(); else if (state.sheet && state.sheet.type==='yo' && !(state.login&&state.login.n)) renderSheet();
     }).catch(function(e){ if (!abierto) toast((e&&e.message)||'No se pudo abrir la app.', true); });
   }
+  // Título de arriba: si una palabra no entra ("Seguimiento" al lado de los botones en el celular), se achica la letra en vez de cortarla a la mitad
+  function ajustarTitulo(){
+    var h=$('ttl') && $('ttl').querySelector('h1'); if (!h) return;
+    h.style.fontSize=''; h.style.overflowWrap='normal';
+    var fs=parseFloat(getComputedStyle(h).fontSize)||31, min=20;
+    while (h.scrollWidth>h.clientWidth+1 && fs>min){ fs-=1; h.style.fontSize=fs+'px'; }
+    h.style.overflowWrap='';
+  }
+  window.addEventListener('resize', function(){ clearTimeout(ajustarTitulo._t); ajustarTitulo._t=setTimeout(ajustarTitulo, 150); });
+  try{ if (document.fonts && document.fonts.ready) document.fonts.ready.then(ajustarTitulo); }catch(e){}
   function sinSesion(){
     if (state.sinSes) return; state.sinSes=true;
     if (state.data && state.data.equipo) state.equipo=state.data.equipo;
-    store('tok',''); state.me=null; state.ftok=null;
+    store('tok',''); state.me=null; state.ftok=null; EST_MEM=[];
     setTimeout(function(){ state.sinSes=false; abrirIngreso(); }, 0);
   }
   function salir(){
@@ -3793,8 +3820,10 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     if (!a && rol()==='admin'){
       var ps=personas().filter(function(x){ return x!=='Todas' && abs.indexOf(x)!==-1; });
       if (!ps.length) return '';
-      return '<div class="de-adm"><div class="de-adm-t"><span>🗓</span><span><b>Cargar disponibilidad de…</b><small>Elegí a quién. Se guarda como si la cargara esa persona.</small></span></div>'+
-        '<div class="de-adm-ps">'+ps.map(function(x){ return '<button data-deon="'+esc(x)+'">'+esc(x)+'</button>'; }).join('')+'</div></div>';
+      // Plegado a una línea: es para de vez en cuando y abierto empujaba las consultas del día fuera de la pantalla (en 360x640 casi no se veía ninguna)
+      var ab=!!state.deAdmAb;
+      return '<div class="de-adm'+(ab?' on':'')+'"><button class="de-adm-t" data-deadm aria-expanded="'+ab+'"><span>🗓</span><span><b>Cargar disponibilidad de…</b>'+(ab?'<small>Elegí a quién. Se guarda como si la cargara esa persona.</small>':'')+'</span><span class="de-mia-go">'+(ab?'▴':'›')+'</span></button>'+
+        (ab?'<div class="de-adm-ps">'+ps.map(function(x){ return '<button data-deon="'+esc(x)+'">'+esc(x)+'</button>'; }).join('')+'</div>':'')+'</div>';
     }
     if (!a) return '';
     var m=modoDe(a);
@@ -4606,7 +4635,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
 
   /* ---------- eventos ---------- */
   document.addEventListener('click', function(ev){
-    var t = ev.target.closest('[data-reptile],[data-repctl],[data-repsemq],[data-pindesbloq],[data-fin],[data-equipo],[data-view],[data-undo],[data-agotra],[data-agbuscartodo],[data-ficha],[data-pinok],[data-pinback],[data-pinreset],[data-salir],[data-fimodo],[data-fase],[data-notasave],[data-datosave],[data-mnfase],[data-mnsin],[data-dupfase],[data-derivar],[data-reagsindia],[data-dvsel],[data-dvhora],[data-dvsave],[data-deon],[data-deque],[data-desem],[data-decopia],[data-deamplio],[data-dedia],[data-dequick],[data-decopy],[data-devolver],[data-definde],[data-demodo],[data-desave],[data-decancel],[data-repweek],[data-reprow],[data-repmodo],[data-rtrama],[data-rtfresco],[data-repretry],[data-agmode],[data-wgday],[data-agrama],[data-agfase],[data-agmas],[data-agmes],[data-agvista],[data-agclr],[data-agnuevo],[data-mnrama],[data-mnorigen],[data-mnsig],[data-mncrear],[data-open],[data-result],[data-bloq],[data-nuevo],[data-week],[data-day],[data-sum],[data-chip],[data-abog],[data-close],[data-res],[data-motivo],[data-save],[data-bqwho],[data-bqtodo],[data-savebq],[data-delbq],[data-retry],[data-pastefor],[data-pasteall],[data-rvcheck],[data-rvtoggle],[data-rvsave],[data-rvback],[data-yo],[data-yocambiar],[data-vcabrir],[data-vcsalir],[data-vercomo],[data-visto],[data-conf],[data-escribir],[data-agendar],[data-agfirmar],[data-agcorregir],[data-agdia],[data-slot],[data-agcorr],[data-saveag],[data-savecampos]');
+    var t = ev.target.closest('[data-reptile],[data-repctl],[data-repsemq],[data-pindesbloq],[data-fin],[data-equipo],[data-view],[data-undo],[data-agotra],[data-agbuscartodo],[data-ficha],[data-pinok],[data-pinback],[data-pinreset],[data-salir],[data-fimodo],[data-fase],[data-notasave],[data-datosave],[data-mnfase],[data-mnsin],[data-dupfase],[data-derivar],[data-reagsindia],[data-dvsel],[data-dvhora],[data-dvsave],[data-deon],[data-deque],[data-desem],[data-decopia],[data-deamplio],[data-dedia],[data-dequick],[data-decopy],[data-devolver],[data-definde],[data-demodo],[data-desave],[data-decancel],[data-repweek],[data-deadm],[data-reprow],[data-repmodo],[data-rtrama],[data-rtfresco],[data-repretry],[data-agmode],[data-wgday],[data-agrama],[data-agfase],[data-agmas],[data-agmes],[data-agvista],[data-agclr],[data-agnuevo],[data-mnrama],[data-mnorigen],[data-mnsig],[data-mncrear],[data-open],[data-result],[data-bloq],[data-nuevo],[data-week],[data-day],[data-sum],[data-chip],[data-abog],[data-close],[data-res],[data-motivo],[data-save],[data-bqwho],[data-bqtodo],[data-savebq],[data-delbq],[data-retry],[data-pastefor],[data-pasteall],[data-rvcheck],[data-rvtoggle],[data-rvsave],[data-rvback],[data-yo],[data-yocambiar],[data-vcabrir],[data-vcsalir],[data-vercomo],[data-visto],[data-conf],[data-escribir],[data-agendar],[data-agfirmar],[data-agcorregir],[data-agdia],[data-slot],[data-agcorr],[data-saveag],[data-savecampos]');
     if (!t) return;
     if (t.hasAttribute('data-pindesbloq')){ var nd=t.getAttribute('data-pindesbloq'); t.disabled=true; t.textContent='Desbloqueando…'; call('desbloquearPin', {nombre:nd}).then(function(p){ if (state.data) state.data.pines=p; if (state.sheet) renderSheet(); render(); toast('Listo: '+nd+' ya puede entrar de nuevo.'); }).catch(function(e){ t.disabled=false; toast((e&&e.message)||'No se pudo desbloquear.', true); }); return; }
     if (t.hasAttribute('data-fin')){ finClick(t); return; }
@@ -4622,6 +4651,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     if (t.hasAttribute('data-agvista')){ var sv=agState(); sv.vista=t.getAttribute('data-agvista'); store('agvista', sv.vista); sv.n=40; renderAg(); return; }
     if (t.hasAttribute('data-agnuevo')){ abrirManual(); return; }
     if (t.hasAttribute('data-deon')){ deStart(t.getAttribute('data-deon')||''); return; }
+    if (t.hasAttribute('data-deadm')){ state.deAdmAb=!state.deAdmAb; render(); return; }
     if (state.dispEdit){
       var de=state.dispEdit;
       if (t.hasAttribute('data-dedia')){ de.dia[de.que]=t.getAttribute('data-dedia'); render(); return; }
