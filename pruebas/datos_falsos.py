@@ -304,8 +304,8 @@ class FakeApi:
             return True, {"ok": True, "label": next((o["label"] for o in WSP_CATALOGO if o["tpl"] == tpl), tpl), "tpl": tpl, "prueba": False, "levanto": levanto, "lead": copy.deepcopy(l)}
         if fn == "getReporte":
             return True, {"__prueba": True, "filas": [], "semana": arg.get("semana")}
-        if fn == "getEstudios": return True, {"lista": [{"fid": "EST1", "nombre": "Resonancia (prueba).pdf", "tipo": "application/pdf", "por": "Pri", "cat": "Estudios"}], "puedeSubir": True, "maxMB": 10}
-        if fn == "verEstudio": return True, {"b64": "JVBERi0xLjQKJSBQUlVFQkEK", "tipo": "application/pdf", "nombre": "Resonancia (prueba).pdf"}
+        if fn == "getEstudios": return True, {"lista": [{"fid": "EST1", "nombre": "Resonancia (prueba).pdf", "tipo": "application/pdf", "por": "Pri", "cat": "estudios", "kb": 850}, {"fid": "DOC1", "nombre": "Carta documento (prueba).pdf", "tipo": "application/pdf", "por": "Fran", "cat": "docs", "kb": 420}], "puedeSubir": True, "maxMB": 10}
+        if fn == "verEstudio": return True, {"b64": "JVBERi0xLjQKJSBQUlVFQkEK", "tipo": "application/pdf", "nombre": "Carta documento (prueba).pdf" if arg.get("fid") == "DOC1" else "Resonancia (prueba).pdf"}
         if fn in ("segGuardar", "segHecho", "segComentar"):
             if not PERMISOS.get(who, {}).get("seguimiento"): return False, "Seguimiento es para intakers, Sol y administración (prueba)."
             import datetime as _dt

@@ -28,6 +28,7 @@ Cómo correrlo: `python3 pruebas/correr.py <carpeta con index.html> <carpeta de 
 | mejora/2026-11-11 | Menos pedidos de fondo al motor: reporte en segundo plano como mucho cada 3 min después de guardar; saveVisto solo si cambió algo; fin2Calentar recordado en el celular entre aperturas. Sin motor. | Aplicada (en main desde el 13/11) |
 | mejora/2026-11-13-archivos-laboral | Laboral: un solo apartado "Documentación" con "＋ Agregar documentación" en cada consulta (actas notariales, cartas documento, etc.; intakers, Sol y la abogada de la consulta). Necesita motor (rama LABORAL con cat docs). | Aplicada (en main desde el 13/11, ee0463e; motor real v85 con CONFIG.ESTUDIOS LABORAL: [docs], también en el Index.html del motor real) |
 | mejora/2026-11-13-disp-admin | Administración (Karim, Julián): con "Todas" en la Agenda, "Cargar disponibilidad de…" con un botón por persona que abre su editor. Sin motor (saveDisponibilidad ya acepta admin). | Aplicada (en main desde el 13/11, 166e684) |
+| mejora/2026-11-14 | Título de arriba que se achica en vez de cortarse ("Seguimient/o"); estudio/documento ya abierto queda en memoria (la 2ª vez abre al instante, sin otro verEstudio); "Cargar disponibilidad de…" de administración plegado a una línea; ✕ de sacar estudio a 44 px. Sin motor. | Pendiente |
 
 ## 2026-11-05 (primera noche)
 - Armé el banco (rama pruebas-nocturnas, carpeta pruebas/).
@@ -209,6 +210,30 @@ Cómo correrlo: `python3 pruebas/correr.py <carpeta con index.html> <carpeta de 
 - Sin problemas nuevos. Siguen chicos (ya anotados): Bloquear 34 de alto, chips de persona 32, Día/Semana 30, flechas 34, Editar 52x32, Confirmó/No respondió 42 (los arregla en parte mejora/2026-11-09).
 - Para la próxima rama (cuando se apruebe alguna): sigue lo del 11/11 (estudio ya abierto en memoria, título de Seguimiento, teléfono con formato en notas sin nombre).
 - Pendiente del banco: respuestas falsas para Traslados (saveTraslado, trasladoAccion, trasladoRecibo, verRecibo) para probar el bloque nuevo de b3914ad.
+
+## 2026-11-13 (noche, corrida del 14/11)
+- main al día: 166e684 (entraron mejora/2026-11-08, -09, -11, -13-archivos-laboral y -13-disp-admin; motor v85). Copiados al banco index.html, sw.js y manifest. Tabla actualizada: todas aplicadas.
+- Ramas pendientes: ninguna sin mergear (mejora/2026-11-05 y -08-flujo-sin-contactar figuran con commits de más pero su contenido ya está en main). Hubo lugar para una nueva.
+- Cambios del motor pendientes: ninguno (los 3 archivos dicen APLICADO).
+- Registro de uso real (USO, 12/11 noche y 13/11, filas ~2870-3416; usaron la app Fran, Pri, Karim, Mica, Cele y Juan; nada de Sol, Estefanía ni Julián):
+  - Sin filas de error. 1 aviso "Sin conexión" de getData (Mica, Android, versión del 11/11, antes del arreglo de colgados).
+  - getData sigue siendo lo más lento: casi todo 2-6 s, picos de 24,8 s, 19,1 s, 15,6 s y 14,9 s (Fran, Windows) y 11,7 s (Pri). getReporte 24 s una vez (Fran). Es del motor (idea de CacheService, pendiente).
+  - enviarWsp ~45 envíos (Fran y Pri), 0 errores, 4-10,6 s.
+  - fin2Calentar de Karim marcó 11.637.299 ms (3,2 h) en la versión del 13/11: no pasa por el corte de 35 s porque es un aviso de fondo que la pantalla no espera; el número es el tiempo con el iPhone dormido. No traba nada; queda solo como ruido en el registro. Mica 35 s (tiene finAcceso).
+  - Aperturas con datos nuevos: Fran 15,9 s una vez, Pri 12,5 s, Mica 8,4 s, Juan 7,7 s. Con lo guardado 0,1-2,3 s.
+  - Ya se usa Documentación de Laboral: subirEstudio 5-10 s (Fran, Pri).
+- Banco: getEstudios falso ahora devuelve un estudio (cat estudios) y un documento (cat docs) para que se vea en ART/Tránsito y en Laboral (antes cat "Estudios" no coincidía y la ficha salía vacía); verEstudio devuelve el nombre según fid. Nuevo pruebas/probar_2026_11_14.py (títulos cortados, altura de la primera consulta en Agenda, verEstudio al abrir el mismo archivo 2 veces).
+- Roles probados con correr.py (390 y 360): Cele, Pri (crea PIN), Karim, Estefanía. probar_2026_11_14.py: Pri, Karim, Mica, Juan. 0 errores de JavaScript, 0 pedidos fallidos, sin scroll horizontal. Pestañas iguales a la noche anterior. Permisos OK con datos falsos. "Cargar disponibilidad de…" (admin) abre el editor de la persona elegida: OK.
+- Problemas encontrados:
+  - Título "Seguimiento" cortado a mitad de palabra (sigue desde el 11/11).
+  - Abrir el mismo estudio/documento dos veces lo baja dos veces (2 verEstudio; en el uso real 9-15 s cada vez).
+  - Karim con "Todas" en 360x640: la caja nueva "Cargar disponibilidad de…" (~190 px) deja la primera consulta en 599 px de 640.
+  - ✕ de sacar estudio 31x30 (tiene confirmación "¿Sacar?", no es grave).
+- Descartado: formato del teléfono en notas sin nombre de Seguimiento (la app muestra los teléfonos tal cual en todos lados; cambiarlo solo ahí sería inconsistente).
+- Mejora propuesta: mejora/2026-11-14 (ver tabla). Resultado en el banco: Seguimiento en 1 renglón (30 px en 390, 24 px en 360); verEstudio 2 → 1 en todos los roles; primera consulta de Karim 599 → 468 px; ✕ 44x44. correr.py en la rama igual que main (0 errores, mismas pestañas, sin elementos chicos nuevos).
+- Ideas grandes:
+  - getData en CacheService del motor (sigue pendiente; es lo único que el uso real muestra lento todos los días, picos de 15-25 s en Windows de Fran).
+  - Pri y Fran en Windows: vista de escritorio a dos columnas en Tareas/Agendar (lista + ficha al lado).
 
 ## Flujos rediseñados (tarea semanal de los domingos)
 | Fecha | Flujo | Para quién | Toques antes → después | Rama | Motor |
