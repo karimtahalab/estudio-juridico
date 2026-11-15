@@ -28,7 +28,8 @@ Cómo correrlo: `python3 pruebas/correr.py <carpeta con index.html> <carpeta de 
 | mejora/2026-11-11 | Menos pedidos de fondo al motor: reporte en segundo plano como mucho cada 3 min después de guardar; saveVisto solo si cambió algo; fin2Calentar recordado en el celular entre aperturas. Sin motor. | Aplicada (en main desde el 13/11) |
 | mejora/2026-11-13-archivos-laboral | Laboral: un solo apartado "Documentación" con "＋ Agregar documentación" en cada consulta (actas notariales, cartas documento, etc.; intakers, Sol y la abogada de la consulta). Necesita motor (rama LABORAL con cat docs). | Aplicada (en main desde el 13/11, ee0463e; motor real v85 con CONFIG.ESTUDIOS LABORAL: [docs], también en el Index.html del motor real) |
 | mejora/2026-11-13-disp-admin | Administración (Karim, Julián): con "Todas" en la Agenda, "Cargar disponibilidad de…" con un botón por persona que abre su editor. Sin motor (saveDisponibilidad ya acepta admin). | Aplicada (en main desde el 13/11, 166e684) |
-| mejora/2026-11-14 | Título de arriba que se achica en vez de cortarse ("Seguimient/o"); estudio/documento ya abierto queda en memoria (la 2ª vez abre al instante, sin otro verEstudio); "Cargar disponibilidad de…" de administración plegado a una línea; ✕ de sacar estudio a 44 px. Sin motor. | Pendiente |
+| mejora/2026-11-14 | Título de arriba que se achica en vez de cortarse ("Seguimient/o"); estudio/documento ya abierto queda en memoria (la 2ª vez abre al instante, sin otro verEstudio); "Cargar disponibilidad de…" de administración plegado a una línea; ✕ de sacar estudio a 44 px. Sin motor. | Aplicada (en main desde el 14/11, 346dc74) |
+| mejora/2026-11-15 | 📤 Enviar revisa en el celular lo mismo que Wsp.gs (teléfono de 10 números y nombre cargado): si falta, avisa al instante con "✏️ Corregir teléfono/nombre" (abre Corregir datos con el cursor en el campo); en Sin contactar el teléfono mal se ve en rojo con ⚠; si igual lo frena el motor, el aviso dice "Corregir" en vez de "Reintentar". Sin motor. | Pendiente |
 
 ## 2026-11-05 (primera noche)
 - Armé el banco (rama pruebas-nocturnas, carpeta pruebas/).
@@ -234,6 +235,27 @@ Cómo correrlo: `python3 pruebas/correr.py <carpeta con index.html> <carpeta de 
 - Ideas grandes:
   - getData en CacheService del motor (sigue pendiente; es lo único que el uso real muestra lento todos los días, picos de 15-25 s en Windows de Fran).
   - Pri y Fran en Windows: vista de escritorio a dos columnas en Tareas/Agendar (lista + ficha al lado).
+
+## 2026-11-14 (noche, corrida de las 22:40)
+- main al día: 2308dbc (entró mejora/2026-11-14 y 48c7afe: ✕ para sacar el cuadro "consultas para vos"). Copiados al banco index.html, sw.js y manifest.
+- Ramas pendientes: ninguna sin mergear antes de esta noche (mejora/2026-11-05 y -08-flujo-sin-contactar figuran con commits de más pero su contenido ya está en main). Hubo lugar para una nueva.
+- Cambios del motor pendientes: ninguno nuevo (no se armó archivo esta noche).
+- Registro de uso real (USO, 14/11, filas 3417-3687; usaron la app Pri (Windows instalada) y Karim (iPhone y Windows); sábado, nadie más):
+  - 1 aviso de enviarWsp: "El teléfono de Adrian no tiene 10 números. Revisalo antes de mandar." (Pri). Junto con "Este lead no tiene nombre cargado." del 11/11: la pantalla deja tocar 📤 y muestra la vista previa; el motor lo frena 3-5 s después y el aviso ofrece "Reintentar", que vuelve a fallar. → mejora/2026-11-15.
+  - 1 "Sin conexión" de getData (Pri, Windows); se recuperó solo.
+  - getData sigue siendo lo lento: 271 pedidos, promedio 3,0 s, picos 13,8 s, 12,3 s, 11,8 s, 10,8 s (Pri). Del motor (idea de CacheService, pendiente).
+  - enviarWsp 15 envíos, promedio 5,6 s, máximo 9,7 s; 1 rechazado (el del teléfono). cambiarFase 4,5 s promedio, máximo 8,9 s.
+  - fin2Calentar de Karim 50 s y 43 s (de fondo, no traba nada).
+  - Aperturas con datos nuevos: Pri 14,2 s una vez (Windows), Karim 3-6,9 s. Con lo guardado 0,06-1,5 s.
+  - Registro duplicado: el lote de Karim (iPhone, filas 3590-3596) llegó dos veces igual (3597-3603). Parece que el envío de logUso le llegó al motor pero el celular lo dio por fallado (se fue a segundo plano) y lo volvió a juntar. Solo ensucia los números del registro; anotado como idea.
+- Banco: datos_falsos.py ahora tiene un lead de ART en Sin contactar con teléfono de 8 números (P077, Adriana) y enviarWsp falso frena teléfono y nombre igual que wspCtx_ de Wsp.gs. Nuevo pruebas/probar_tel_wsp.py (tiempo hasta enterarse, toques hasta mandarlo corregido, pedidos al motor).
+  - probar_sin_contactar.py quedó viejo (busca el botón 💬 en ART, que desde el 09/11 es 📤 Enviar): falla igual en main y en la rama. Para rehacer.
+- Roles probados con correr.py (390 y 360): Fran, Sol, Juan, Karim. 0 errores de JavaScript, 0 pedidos fallidos, sin scroll horizontal. Pestañas: Fran → Reporte, Agenda, Tareas, Seguimiento, Agendar; Sol → Finanzas, Agenda, Seguimiento, Agendar, Falta cargar; Juan → Finanzas, Agenda, Guiones, Falta cargar; Karim → Reportes, Agenda, Tareas, Agendar, Falta cargar. Permisos OK con datos falsos. probar_wsp.py igual en main y en la rama.
+- Los "chicos" que marca la auditoría (Bloquear 34, chips de persona 32, flechas 34, Día/Semana 30) ya tienen zona táctil agrandada con ::after (la auditoría mide la caja visible). No es problema.
+- Mejora propuesta: mejora/2026-11-15 (ver tabla). probar_tel_wsp.py (Pri, 390x844 y 360x640): enterarse 4,0 s → 0,3 s; toques hasta mandarlo con el teléfono corregido 9 → 6; enviarWsp 2 → 1 (0 rechazados); foco directo en Teléfono. correr.py en la rama igual que main (solo cambia el texto del botón del teléfono mal: "⚠ 26155501").
+- Ideas grandes:
+  - getData en CacheService del motor (sigue pendiente; Pri en Windows 10-14 s varias veces el sábado).
+  - Registro de uso sin duplicados: que cada lote lleve un id y el motor ignore uno repetido (motor + pantalla).
 
 ## Flujos rediseñados (tarea semanal de los domingos)
 | Fecha | Flujo | Para quién | Toques antes → después | Rama | Motor |
