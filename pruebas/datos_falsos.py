@@ -4,7 +4,7 @@ Nombres, teléfonos y casos son ficticios. Nada de acá sale de las planillas re
 El "servidor falso" (FakeApi) responde cada fn del motor con la forma que espera index.html
 y guarda los cambios en memoria para que la pantalla los refleje.
 """
-import copy, datetime as dt
+import copy, re, datetime as dt
 
 ES_PRUEBA = True  # marca: datos de prueba
 
@@ -63,6 +63,7 @@ def sin_contactar():
         _lead(74, "Hernán Lead Inventado", "2615550174", "LABORAL", "", "", "", fase="", ingreso=D(0)),
         _lead(75, "Valeria ART Demo", "2615550175", "ART", "", "", "", fase="", ingreso=D(0)),
         _lead(76, "Carlos Viejo C Test", "2615550176", "LABORAL", "", "", "", fase="C", ingreso=D(-4)),
+        _lead(77, "Adriana Tel Corto Prueba", "26155501", "ART", "", "", "", fase="", ingreso=D(0)),  # teléfono con 8 números (como el de "Adrian" del 14/11)
     ]
     for l in xs: l["intaker"] = ""; l["levanto"] = ""
     return xs
@@ -142,6 +143,7 @@ class FakeApi:
             {"id": "SG5", "nombre": "Hecha Prueba", "tel": "2615550105", "rama": "ART", "lead": "", "nota": "Ya resuelta (prueba).", "para": D(-1), "repetir": False, "estado": "Hecho", "hechoPor": "Fran", "hechoEl": D(-1) + " 16:00", "quien": "Fran", "creado": D(-2) + " 10:00", "historial": []},
         ]
         self.wsp_enviados = []  # WhatsApp que se "habrían" mandado (todo falso)
+        self.wsp_rechazados = []  # los que el motor falso frenó (teléfono o nombre)
 
     def _quien(self, arg):
         t = (arg or {}).get("tok", "")
@@ -294,6 +296,16 @@ class FakeApi:
         if fn == "enviarWsp":
             l = self._find(arg.get("id"))
             if not l: return False, "No encontré esa consulta (prueba)."
+            # Igual que wspCtx_ del motor (Wsp.gs): teléfono de 10 números y nombre cargado
+            _t = re.sub(r"\D", "", str(l.get("tel") or ""))
+            if _t.startswith("54") and len(_t) >= 12: _t = _t[2:]
+            if _t[:1] == "9" and len(_t) in (11, 13): _t = _t[1:]
+            if _t[:1] == "0": _t = _t[1:]
+            if len(_t) != 10:
+                self.wsp_rechazados.append(l["id"])
+                return False, "El teléfono de %s no tiene 10 números. Revisalo antes de mandar." % (l.get("nombre") or "este lead")
+            if not str(l.get("nombre") or "").strip():
+                self.wsp_rechazados.append(l["id"]); return False, "Este lead no tiene nombre cargado."
             tpl = arg.get("tpl") or ("inicio_laboral" if l["rama"] == "LABORAL" else "inicio_accidente_art")
             self.wsp_enviados.append({"id": l["id"], "tel": l.get("tel"), "tpl": tpl, "quien": who})
             print("[harness] WhatsApp FALSO (no sale nada): a %s (%s) plantilla %s, por %s" % (l.get("nombre"), l.get("tel"), tpl, who), flush=True)
