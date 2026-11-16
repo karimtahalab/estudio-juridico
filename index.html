@@ -1985,6 +1985,8 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     // Vino y no firmó, y vuelve a firmar: turno nuevo en Consulta agendada (no cuenta como reagenda)
     if (puede('agendar') && s==='nofirmo') html += '<button class="btn3" data-agfirmar="'+esc(l.id)+'">'+I.cal+'Viene a firmar: agendar</button>';
     if (segPuede() && !l.parcial) html += '<button class="btn3" data-segnueva="'+esc(l.id)+'">📝 Nota de seguimiento</button>';
+    // Vino y no firmó / no vino / pidió reagendar, y después de 3 mensajes no responde más: pasa a BC desde acá (pide confirmar con un segundo toque)
+    if (puedeBC(l)){ var bq=state.bcConf===l.id; html += '<button class="btn3'+(bq?' on':'')+'" data-pasarbc="'+esc(l.id)+'">'+(bq?'Tocá de nuevo para confirmar: pasa a BC y sale de la agenda':'🚫 No responde más: pasar a BC')+'</button>'; }
     var sec='';
     if (puede('agendar') && puedeCorregir(l)) sec += '<button class="btn3" data-agcorregir="'+esc(l.id)+'" title="Me equivoqué al cargar el horario: lo corrijo y no cuenta como reagenda">✏️ Corregir el horario</button>';
     if (puedeDerivar(l)) sec += '<button class="btn3" data-derivar="'+esc(l.id)+'">'+I.swap+'Derivar a otra abogada</button>';
@@ -4542,6 +4544,34 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     call('reagendaSinDia', {id:id}).then(function(nl){ sacar(); nl.sinDia=true; state.data.porAgendar.unshift(nl); render(); })
       .catch(function(e){ sacar(); state.data.leads.push(copia); render(); toast((e&&e.message)||'No se pudo guardar.', true); });
   }
+  // Seguimiento, No show o Reagenda que dejó de responder (3 mensajes sin respuesta) → BC. Consulta agendada no: primero va No show.
+  var FASES_A_BC=['Seguimiento','No show','Reagenda'];
+  function puedeBC(l){ return !!(l && !l.parcial && puede('agendar') && FASES_A_BC.indexOf(l.fase)!==-1); }
+  function otrasMover(nl){ // listas de "Otras fases" ya cargadas: sale de la fase vieja y entra en la nueva
+    var O=state.otras||{};
+    Object.keys(O).forEach(function(k){ var o=O[k]; if (!o || !o.leads) return; for (var j=0;j<o.leads.length;j++) if (o.leads[j].id===nl.id){ o.leads.splice(j,1); o.total=Math.max(0,(o.total||1)-1); break; } });
+    if (O[nl.fase] && O[nl.fase].leads){ O[nl.fase].leads.unshift(nl); O[nl.fase].total=(O[nl.fase].total||0)+1; }
+    if (state.busq && state.busq.leads) for (var i=0;i<state.busq.leads.length;i++) if (state.busq.leads[i].id===nl.id) state.busq.leads[i]=nl;
+  }
+  function pasarBCUI(id){
+    var l=findLead(id); if (!puedeBC(l)) return;
+    if (state.bcConf!==id){ state.bcConf=id; renderSheet(); setTimeout(function(){ if (state.bcConf===id){ state.bcConf=null; if (state.sheet && state.sheet.id===id) renderSheet(); } }, 5000); return; }
+    state.bcConf=null;
+    var copia=JSON.parse(JSON.stringify(l)), antes=l.fase, nom=l.nombre||'', deshecho=false;
+    var sacar=function(){ state.data.leads=(state.data.leads||[]).filter(function(x){ return x.id!==id; }); };
+    var volver=function(){ sacar(); state.data.leads.push(copia); otrasMover(copia); };
+    sacar(); closeSheet(); render();
+    var p=call('cambiarFase', {id:id, fase:'BC'});
+    toastUndo('🚫 '+nom+': pasó a BC y salió de la agenda.', function(){
+      deshecho=true; volver(); render();
+      p.then(function(){
+        call('cambiarFase', {id:id, fase:antes}).then(function(n2){ if (n2) otrasMover(n2); render(); toast('Volvió a '+faseLbl(antes)+'.'); })
+          .catch(function(e){ sacar(); render(); toast((e&&e.message)||'No se pudo deshacer.', true); });
+      }, function(){});
+    });
+    p.then(function(nl){ if (nl && !deshecho) otrasMover(nl); render(); })
+     .catch(function(e){ volver(); render(); toast((e&&e.message)||'No se pudo pasar a BC.', true); });
+  }
   function puedeDerivar(l){
     return !l.parcial && (puede('agendar') || (state.me && l.abogada===state.me.nombre)) && !!l.abogada && (l.fase==='Consulta agendada' || l.fase==='Reagenda') &&
       candDeriv(l).some(function(c){ return c.rama; });
@@ -4640,7 +4670,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
 
   /* ---------- eventos ---------- */
   document.addEventListener('click', function(ev){
-    var t = ev.target.closest('[data-intocultar],[data-reptile],[data-repctl],[data-repsemq],[data-pindesbloq],[data-fin],[data-equipo],[data-view],[data-undo],[data-agotra],[data-agbuscartodo],[data-ficha],[data-pinok],[data-pinback],[data-pinreset],[data-salir],[data-fimodo],[data-fase],[data-notasave],[data-datosave],[data-mnfase],[data-mnsin],[data-dupfase],[data-derivar],[data-reagsindia],[data-dvsel],[data-dvhora],[data-dvsave],[data-deon],[data-deque],[data-desem],[data-decopia],[data-deamplio],[data-dedia],[data-dequick],[data-decopy],[data-devolver],[data-definde],[data-demodo],[data-desave],[data-decancel],[data-repweek],[data-deadm],[data-reprow],[data-repmodo],[data-rtrama],[data-rtfresco],[data-repretry],[data-agmode],[data-wgday],[data-agrama],[data-agfase],[data-agmas],[data-agmes],[data-agvista],[data-agclr],[data-agnuevo],[data-mnrama],[data-mnorigen],[data-mnsig],[data-mncrear],[data-open],[data-result],[data-bloq],[data-nuevo],[data-week],[data-day],[data-sum],[data-chip],[data-abog],[data-close],[data-res],[data-motivo],[data-save],[data-bqwho],[data-bqtodo],[data-savebq],[data-delbq],[data-retry],[data-pastefor],[data-pasteall],[data-rvcheck],[data-rvtoggle],[data-rvsave],[data-rvback],[data-yo],[data-yocambiar],[data-vcabrir],[data-vcsalir],[data-vercomo],[data-visto],[data-conf],[data-escribir],[data-agendar],[data-agfirmar],[data-agcorregir],[data-agdia],[data-slot],[data-agcorr],[data-saveag],[data-savecampos]');
+    var t = ev.target.closest('[data-intocultar],[data-reptile],[data-repctl],[data-repsemq],[data-pindesbloq],[data-fin],[data-equipo],[data-view],[data-undo],[data-agotra],[data-agbuscartodo],[data-ficha],[data-pinok],[data-pinback],[data-pinreset],[data-salir],[data-fimodo],[data-fase],[data-notasave],[data-datosave],[data-mnfase],[data-mnsin],[data-dupfase],[data-derivar],[data-reagsindia],[data-pasarbc],[data-dvsel],[data-dvhora],[data-dvsave],[data-deon],[data-deque],[data-desem],[data-decopia],[data-deamplio],[data-dedia],[data-dequick],[data-decopy],[data-devolver],[data-definde],[data-demodo],[data-desave],[data-decancel],[data-repweek],[data-deadm],[data-reprow],[data-repmodo],[data-rtrama],[data-rtfresco],[data-repretry],[data-agmode],[data-wgday],[data-agrama],[data-agfase],[data-agmas],[data-agmes],[data-agvista],[data-agclr],[data-agnuevo],[data-mnrama],[data-mnorigen],[data-mnsig],[data-mncrear],[data-open],[data-result],[data-bloq],[data-nuevo],[data-week],[data-day],[data-sum],[data-chip],[data-abog],[data-close],[data-res],[data-motivo],[data-save],[data-bqwho],[data-bqtodo],[data-savebq],[data-delbq],[data-retry],[data-pastefor],[data-pasteall],[data-rvcheck],[data-rvtoggle],[data-rvsave],[data-rvback],[data-yo],[data-yocambiar],[data-vcabrir],[data-vcsalir],[data-vercomo],[data-visto],[data-conf],[data-escribir],[data-agendar],[data-agfirmar],[data-agcorregir],[data-agdia],[data-slot],[data-agcorr],[data-saveag],[data-savecampos]');
     if (!t) return;
     if (t.hasAttribute('data-intocultar')){ var oc=intOcultas(); ((state.data && state.data.paraMi)||[]).forEach(function(l){ intAbiertaMia(l).forEach(function(x){ var k=intOcId(l, x); if (x.tipo!=='control' && oc.indexOf(k)===-1) oc.push(k); }); }); var antes=store(intOcKey())||'[]'; store(intOcKey(), JSON.stringify(oc.slice(-300))); render(); toastUndo('Listo, lo saqué. Si te llega una consulta nueva, vuelve a aparecer.', function(){ store(intOcKey(), antes); render(); }); return; }
     if (t.hasAttribute('data-pindesbloq')){ var nd=t.getAttribute('data-pindesbloq'); t.disabled=true; t.textContent='Desbloqueando…'; call('desbloquearPin', {nombre:nd}).then(function(p){ if (state.data) state.data.pines=p; if (state.sheet) renderSheet(); render(); toast('Listo: '+nd+' ya puede entrar de nuevo.'); }).catch(function(e){ t.disabled=false; toast((e&&e.message)||'No se pudo desbloquear.', true); }); return; }
@@ -4705,6 +4735,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     if (t.hasAttribute('data-agcorregir')){ closeSearch(); openSheet({type:'agendar', id:t.getAttribute('data-agcorregir')}); if (state.draft){ state.draft.corregir=true; renderSheet(); } return; }
     if (t.hasAttribute('data-derivar')){ openSheet({type:'derivar', id:t.getAttribute('data-derivar')}); return; }
     if (t.hasAttribute('data-reagsindia')){ reagSinDiaUI(t.getAttribute('data-reagsindia')); return; }
+    if (t.hasAttribute('data-pasarbc')){ pasarBCUI(t.getAttribute('data-pasarbc')); return; }
     if (t.hasAttribute('data-ficha')){ if (ev.target.closest('a')) return; closeSearch(); abrirFicha(t.getAttribute('data-ficha')); return; }
     if (t.hasAttribute('data-pinok')){ pinOk(); return; }
     if (t.hasAttribute('data-pinback')){ state.login={}; renderSheet(); return; }
