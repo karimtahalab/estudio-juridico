@@ -31,6 +31,7 @@ Cómo correrlo: `python3 pruebas/correr.py <carpeta con index.html> <carpeta de 
 | mejora/2026-11-14 | Título de arriba que se achica en vez de cortarse ("Seguimient/o"); estudio/documento ya abierto queda en memoria (la 2ª vez abre al instante, sin otro verEstudio); "Cargar disponibilidad de…" de administración plegado a una línea; ✕ de sacar estudio a 44 px. Sin motor. | Aplicada (en main desde el 14/11, 346dc74) |
 | mejora/2026-11-15 | 📤 Enviar revisa en el celular lo mismo que Wsp.gs (teléfono de 10 números y nombre cargado): si falta, avisa al instante con "✏️ Corregir teléfono/nombre" (abre Corregir datos con el cursor en el campo); en Sin contactar el teléfono mal se ve en rojo con ⚠; si igual lo frena el motor, el aviso dice "Corregir" en vez de "Reintentar". Sin motor. | Pendiente |
 | mejora/2026-11-15-flujo-agendar | Flujo semanal: agendar un lead. "Lo antes posible" arriba de la hoja (3 primeros libres de cada persona en los próximos días hábiles); si el lead no tiene turno, tocar un horario lo agenda al instante con Deshacer (el pedido sale a los 6 s o al salir de la app); chips de día con cuántos libres quedan; la hoja abre en el primer día con lugar; ya no abre la ficha después. Reagendar/corregir/firmar siguen con confirmar. Sin motor. | Pendiente |
+| mejora/2026-11-16 | Primera apertura del día al instante: lo guardado en el celular (misma persona, hasta 4 días; antes 12 horas) se ve enseguida con aviso arriba "Mostrando lo guardado de ayer a las 19:20. Trayendo lo de hoy…"; mientras tanto lo que cambia algo no sale (avisa que espere, la hoja queda como estaba); si no llega lo de hoy, aviso con Reintentar y se puede guardar. Hasta 12 h igual que antes. Sin motor. | Pendiente |
 
 ## 2026-11-05 (primera noche)
 - Armé el banco (rama pruebas-nocturnas, carpeta pruebas/).
@@ -257,6 +258,23 @@ Cómo correrlo: `python3 pruebas/correr.py <carpeta con index.html> <carpeta de 
 - Ideas grandes:
   - getData en CacheService del motor (sigue pendiente; Pri en Windows 10-14 s varias veces el sábado).
   - Registro de uso sin duplicados: que cada lote lleve un id y el motor ignore uno repetido (motor + pantalla).
+
+## 2026-11-15 (noche, corrida de las 22:40)
+- main sin cambios desde 2308dbc (14/11). El banco ya tenía index.html, sw.js y manifest iguales a main.
+- Ramas pendientes: mejora/2026-11-15 y mejora/2026-11-15-flujo-agendar (2). Entran limpias sobre main, cada una y juntas (y junto con la nueva). Ninguna choca. Hubo lugar para una más.
+- Cambios del motor pendientes: ninguno (los 3 archivos dicen APLICADO). No se bajó el Código.gs: la mejora de hoy es solo pantalla.
+- Registro de uso real (USO, 14/11 y 15/11, filas ~3417-3704; usaron la app Pri y Karim el sábado; Fran, Cele y Mica el domingo):
+  - Sin filas de error. 1 aviso de enviarWsp (el teléfono de 8 números del 14/11, ya cubierto por mejora/2026-11-15) y 1 aviso de getData de Pri.
+  - La primera apertura del día espera todo getData con la pantalla vacía: Cele 17,3 s, Fran 16,2 s, Pri 14,2 s, Mica 9,8 s, Karim 3-5 s, todas como "abrir app (datos nuevos)" sin "abrir app (lo guardado)" antes. Causa: lo guardado en el celular solo se usa hasta 12 horas, y de un día al otro pasan más. El motor en frío tarda más en la primera (getData 8,7-17,1 s). → mejora/2026-11-16.
+  - Con lo guardado (segunda apertura del día) 0,06-1,5 s.
+  - getData sigue lento en Windows de Pri (271 pedidos el 14/11, picos 10-14 s). Del motor (idea de CacheService, pendiente).
+  - fin2Calentar de fondo: Mica 36 s, Cele 16 s, Karim 43-50 s (no traba nada).
+- Banco: nuevo pruebas/probar_snap.py (entra, envejece lo guardado a 8 h, 40 h y 5 días, abre con getData retenido 9 s; mide cuándo se ve, el aviso, si deja guardar, y getData que falla; también lo guardado de otra persona).
+- Roles probados con correr.py (390 y 360): Mica, Pri (crea PIN), Estefanía, Karim. probar_snap.py: Cele, Pri, Mica, Karim. 0 errores de JavaScript, 0 pedidos fallidos, sin scroll horizontal. Pestañas: Mica → Finanzas, Agenda, Guiones, Falta cargar; Pri → Reporte, Agenda, Tareas, Seguimiento, Agendar; Estefanía → Agenda, Falta cargar; Karim → Reportes, Agenda, Tareas, Agendar, Falta cargar. Permisos OK con datos falsos.
+- Mejora propuesta: mejora/2026-11-16 (ver tabla). probar_snap.py: lo guardado de 40 h → main: pantalla vacía los 9 s; rama: agenda a los 0,1-0,2 s con aviso. Cargar resultado mientras espera → no sale saveAction, aviso "⏳ Un momento…", la hoja queda con lo elegido; al llegar lo de hoy el aviso se va y se guarda (1 saveAction). getData que falla → aviso "No se pudo traer lo de hoy" + Reintentar y se puede guardar. 8 h → igual que main. 5 días o de otra persona → igual que main (no se muestra). correr.py en la rama igual que main (mismas 110 pantallas auditadas, sin diferencias).
+- Ideas grandes:
+  - getData en CacheService del motor (sigue pendiente; es lo que alarga la primera apertura y los picos de Pri).
+  - Registro de uso sin duplicados (sigue pendiente).
 
 ## Flujos rediseñados (tarea semanal de los domingos)
 | Fecha | Flujo | Para quién | Toques antes → después | Rama | Motor |
