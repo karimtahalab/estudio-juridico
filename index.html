@@ -934,6 +934,8 @@ a.save.wa-go svg{width:20px;height:20px}
 .seg.marca button.on.mk-transito{background:#0B8B8B;color:#fff}
 .campo-pick button{flex:1 1 auto}
 .cre-guion{white-space:pre-wrap;font-size:16px;line-height:1.55;padding:12px 14px}
+.cre-ctx{box-shadow:0 0 0 1.5px color-mix(in srgb,var(--violet) 45%,transparent) inset;background:color-mix(in srgb,var(--violet) 7%,var(--paper))}
+.todo .w span.cre-ctx-l{display:block;margin-top:3px;color:var(--violet);font-size:12.5px;line-height:1.3}
 .cre-acts{display:flex;gap:8px;margin:12px 0 2px}
 .cre-acts .btn2,.cre-acts .btn3{flex:1;justify-content:center}
 .cre-acts.dos{margin-top:14px}
@@ -5051,7 +5053,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
       if (!r.pestana){ body+=emptyBox('Todavía no hay guiones de '+MESES_L[+p[1]-1].toLowerCase(), 'Cuando agreguen la pestaña del mes en la planilla de creativos de '+creRamaLbl(r.rama)+', aparecen acá.'); return; }
       if (!r.videos.length){ body+=emptyBox('La pestaña "'+esc(r.pestana)+'" no tiene videos cargados'); return; }
       body+='<ul class="todo cre-list">'+r.videos.map(function(v){
-        return '<li><button data-creopen="'+r.rama+'|'+v.col+'"><span class="w"><b>'+(v.grabado?'✔ ':'')+esc(v.titulo||v.cab||'Sin título')+'</b><span>'+esc([v.cab, v.formato, v.angulo].filter(Boolean).join(' · ').slice(0,120))+(v.grabado?' · grabado'+(v.grabadoPor?' (marcó '+esc(v.grabadoPor)+')':''):'')+'</span></span><span class="go2'+(v.grabado?' ok':'')+'">'+(v.grabado?'Grabado':'Ver')+'</span></button></li>'; }).join('')+'</ul>';
+        return '<li><button data-creopen="'+r.rama+'|'+v.col+'"><span class="w"><b>'+(v.grabado?'✔ ':'')+esc(v.titulo||v.cab||'Sin título')+'</b><span>'+esc([v.cab, v.formato, v.angulo].filter(Boolean).join(' · ').slice(0,120))+(v.grabado?' · grabado'+(v.grabadoPor?' (marcó '+esc(v.grabadoPor)+')':''):'')+'</span>'+(v.contexto?'<span class="cre-ctx-l">🎬 '+esc(v.contexto.replace(/\s+/g,' ').slice(0,110))+(v.contexto.length>110?'…':'')+'</span>':'')+'</span><span class="go2'+(v.grabado?' ok':'')+'">'+(v.grabado?'Grabado':'Ver')+'</span></button></li>'; }).join('')+'</ul>';
     });
     if (d && d.cargando) body='<p class="hint" style="text-align:center">Actualizando…</p>'+body;
     if (ramas.some(function(r){ return (r.videos||[]).length; })) body='<div class="cre-acts"><button class="btn2" data-creprint>🖨 Imprimir guiones</button></div>'+body;
@@ -5063,8 +5065,10 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     if (!d.hooks) d.hooks=(v.hooksGrabados||[]).slice();
     var html='<div class="grab"></div><div class="sh-head"><div class="sh-who"><h2>'+esc(v.titulo||v.cab||'Guión')+'</h2><div class="mt"><span class="rama r-'+ramaKey(f.R.rama)+'">'+creRamaLbl(f.R.rama)+'</span>'+(v.cab?'<span class="cp">'+esc(v.cab)+'</span>':'')+'</div></div><button class="close" data-close aria-label="Cerrar">'+I.x+'</button></div>';
     if (v.grabado) html+='<div class="ok-box"><b>✔ Grabado</b><span>'+esc([v.grabadoPor?'Lo marcó '+v.grabadoPor:'', v.grabadoEl].filter(Boolean).join(' · '))+((v.hooksGrabados||[]).length?' · hooks '+v.hooksGrabados.join(', '):'')+'</span></div>';
-    var info=fkv('Formato', v.formato, 'pre')+fkv('Ángulo', v.angulo, 'pre')+fkv('Contexto visual', v.contexto, 'pre');
+    var info=fkv('Formato', v.formato, 'pre')+fkv('Ángulo', v.angulo, 'pre');
     if (info) html+='<div class="blk"><div class="box">'+info+'</div></div>';
+    // Contexto visual: dónde y cómo se graba, bien a la vista (es lo primero que necesita producción)
+    html+='<div class="blk"><h3 class="blk-t">🎬 Contexto visual<small>Dónde y cómo se graba</small></h3>'+(v.contexto ? '<div class="box cre-guion cre-ctx">'+esc(v.contexto)+'</div>' : '<p class="hint" style="margin-top:0">Este video no tiene contexto visual cargado en la planilla.</p>')+'</div>';
     var hs=v.hooks.map(function(h,i){ return {t:h, n:i+1}; }).filter(function(x){ return x.t; });
     if (hs.length) html+='<div class="blk"><h3 class="blk-t">Hooks<small>Tocá los que se grabaron</small></h3><div class="box">'+hs.map(function(x){ var on=d.hooks.indexOf(x.n)!==-1;
       return '<button class="cre-hook'+(on?' on':'')+'" data-crehook="'+x.n+'" aria-pressed="'+on+'"><span class="cre-chk">'+(on?'✔':'')+'</span><span><small>Hook '+x.n+'</small>'+esc(x.t)+'</span></button>'; }).join('')+'</div></div>';
