@@ -31,6 +31,7 @@ Cómo correrlo: `python3 pruebas/correr.py <carpeta con index.html> <carpeta de 
 | mejora/2026-11-14 | Título de arriba que se achica en vez de cortarse ("Seguimient/o"); estudio/documento ya abierto queda en memoria (la 2ª vez abre al instante, sin otro verEstudio); "Cargar disponibilidad de…" de administración plegado a una línea; ✕ de sacar estudio a 44 px. Sin motor. | Aplicada (en main desde el 14/11, 346dc74) |
 | mejora/2026-11-15 | 📤 Enviar revisa en el celular lo mismo que Wsp.gs (teléfono de 10 números y nombre cargado): si falta, avisa al instante con "✏️ Corregir teléfono/nombre" (abre Corregir datos con el cursor en el campo); en Sin contactar el teléfono mal se ve en rojo con ⚠; si igual lo frena el motor, el aviso dice "Corregir" en vez de "Reintentar". Sin motor. | Pendiente |
 | mejora/2026-11-15-flujo-agendar | Flujo semanal: agendar un lead. "Lo antes posible" arriba de la hoja (3 primeros libres de cada persona en los próximos días hábiles); si el lead no tiene turno, tocar un horario lo agenda al instante con Deshacer (el pedido sale a los 6 s o al salir de la app); chips de día con cuántos libres quedan; la hoja abre en el primer día con lugar; ya no abre la ficha después. Reagendar/corregir/firmar siguen con confirmar. Sin motor. | Pendiente |
+| mejora/2026-11-16-contexto-visual, mejora/2026-11-16-pasar-bc | Guiones con contexto visual; botón "🚫 No responde más: pasar a BC" en la tarjeta (ramas armadas en chats con Karim) | Aplicadas (en main desde el 16/11, c03e341) |
 | mejora/2026-11-16 | Primera apertura del día al instante: lo guardado en el celular (misma persona, hasta 4 días; antes 12 horas) se ve enseguida con aviso arriba "Mostrando lo guardado de ayer a las 19:20. Trayendo lo de hoy…"; mientras tanto lo que cambia algo no sale (avisa que espere, la hoja queda como estaba); si no llega lo de hoy, aviso con Reintentar y se puede guardar. Hasta 12 h igual que antes. Sin motor. | Pendiente |
 
 ## 2026-11-05 (primera noche)
@@ -275,6 +276,25 @@ Cómo correrlo: `python3 pruebas/correr.py <carpeta con index.html> <carpeta de 
 - Ideas grandes:
   - getData en CacheService del motor (sigue pendiente; es lo que alarga la primera apertura y los picos de Pri).
   - Registro de uso sin duplicados (sigue pendiente).
+
+## 2026-11-16 (noche, corrida del 17/11 01:40 UTC)
+- main al día: c03e341 (entraron mejora/2026-11-16-contexto-visual y -16-pasar-bc, armadas con Karim). Copiados al banco index.html, sw.js y manifest. Tabla actualizada.
+- Ramas pendientes: mejora/2026-11-15, -15-flujo-agendar y -16 (3). Merge local contra main (sin pushear): -15 y -16 entran limpias; -15-flujo-agendar CHOCA en una sola línea de index.html (la lista de selectores del click: main sumó [data-pasarbc] y la rama [data-agprox]; se arregla dejando los dos). Con 3 pendientes, esta noche NO se armó rama nueva.
+- Cambios del motor pendientes: ninguno (los 3 archivos dicen APLICADO). Bajé el Código.gs del motor real (solo lectura) para revisar de dónde salen las fechas.
+- Registro de uso real (USO, filas 3705-4595, 15/11 noche y lunes 16/11; usaron la app Pri, Fran, Karim, Julián, Mica y Cele):
+  - 1 ERROR de pantalla: Karim, Windows navegador 1422x701, versión del 16/11 15:29 (c082f12): "Uncaught TypeError: s.split is not a function" en la línea 1168 (toUTC), 2 veces, en el mismo lote que un saveAction desde agenda. toUTC recibe algo que no es texto (número u objeto) desde addDays/diffDays/dow/longDate/shortDate/mondayOf. Revisé el motor: las fechas de leads, bloqueos, feriados y finanzas salen como texto. No lo pude reproducir en el banco (caza_toutc.py, ~700 toques en Karim 1422 y 390, Pri 1280 y Mica 390, con toUTC avisando). Para la próxima rama: que toUTC acepte cualquier cosa (String(s)) y avise en logUso de dónde vino, así no corta la pantalla.
+  - enviarWsp: ~100 envíos (Pri y Fran), 4-10,9 s, y 5 avisos de Pri; los vistos: "Este lead no tiene nombre cargado." y "El teléfono de Patricia no tiene 10 números". Es justo lo que arregla mejora/2026-11-15 (pendiente).
+  - getData: Fran (Windows instalada) 6 avisos "El servidor no respondió a tiempo" / "Sin conexión", picos 35,3 s, 24,7 s, 22,9 s, 21,4 s; Pri 35,2 s, 34,9 s, 32,5 s, 18,7 s; Mica 19,1 s. El corte de 35 s y el reintento funcionan; lo lento es del motor (idea de CacheService, pendiente).
+  - Primera apertura del día con la pantalla vacía: Karim 25,3 s, Mica 19,4 s, Pri 19,1 s, Cele 16 s, Karim 11,4 s. Es lo que arregla mejora/2026-11-16 (pendiente).
+  - getReporte hasta 20,3 s (Karim) y 20 s (Fran, con aviso). getFin2 hasta 14,9 s (Karim, 1 aviso).
+  - Julián volvió a usar la app (Windows): 1 "Sin conexión" en saveVisto; saveBloqueo OK.
+  - fin2Calentar de fondo: Mica 4.464.333 ms (celular dormido), Julián 57 s, Karim 42 s. Ruido, no traba nada.
+- Banco: nuevos pruebas/probar_pasar_bc.py (botón nuevo "pasar a BC": aparece para intakers en No show/Reagenda/Seguimiento, pide tocar dos veces, saca de la agenda, Deshacer vuelve a la fase anterior con un segundo cambiarFase) y pruebas/caza_toutc.py (toca casi todo buscando el error de toUTC).
+- Roles probados con correr.py (390 y 360): Juan, Fran, Sol, Karim. 0 errores de JavaScript, 0 pedidos fallidos, sin scroll horizontal. Pestañas: Juan → Finanzas, Agenda, Guiones, Falta cargar; Fran → Reporte, Agenda, Tareas, Seguimiento, Agendar; Sol → Finanzas, Agenda, Seguimiento, Agendar, Falta cargar; Karim → Reportes, Agenda, Tareas, Agendar, Falta cargar. Permisos OK con datos falsos.
+- Pasar a BC (Fran): OK. 358x46, confirma con segundo toque, toast con Deshacer, vuelve a No show. Mica (abogada) no lo ve: OK. Detalle: el paso "Tocá de nuevo para confirmar" se ve casi igual que el botón normal (mismo color); para una acción que saca el lead de la agenda convendría que se note (rojo). Anotado para la próxima rama.
+- Ideas grandes:
+  - getData en CacheService del motor (sigue pendiente; hoy hubo pedidos de 32-35 s en Pri y Fran).
+  - Registro de uso con el stack del error (archivo y función), para encontrar errores como el de toUTC sin tener que adivinar.
 
 ## Flujos rediseñados (tarea semanal de los domingos)
 | Fecha | Flujo | Para quién | Toques antes → después | Rama | Motor |
