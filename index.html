@@ -510,15 +510,6 @@ textarea:focus,.inp:focus,select:focus{outline:none;box-shadow:0 0 0 2.5px var(-
 .slot.on{background:var(--navy);color:#fff;box-shadow:none}
 @media (prefers-color-scheme: dark){.slot.on{background:var(--mint);color:#062a20}}
 .ag-note{margin:8px 2px 0;font-size:13px;color:var(--ink-3)}
-/* Agendar: "Lo antes posible" (primeros horarios libres de cada persona, en cualquier día) */
-.px-r{display:grid;grid-template-columns:64px repeat(3,1fr);gap:7px;align-items:center}
-.px-r + .px-r{margin-top:8px}
-.px-r>b{font-size:16px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.px-r>.ag-bq{grid-column:2 / -1;font-size:14px}
-.slot.px{height:auto;min-height:50px;padding:4px 2px;line-height:1.1;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:17px}
-.slot.px small{font-size:13px;font-weight:700;font-stretch:normal;color:var(--ink-3)}
-.slot.px.on small{color:inherit}
-.chip.vacio{opacity:.55}
 .ag-bq{margin:0 2px;font-size:14px;font-weight:600;color:var(--ink-2)}
 .who-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .who{min-height:64px;border-radius:16px;background:var(--paper);box-shadow:0 0 0 1px var(--line) inset;font-weight:800;font-size:17px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:8px}
@@ -1908,9 +1899,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     if (sh.type==='pegar') state.draft={ step:'paste', text:'', items:[] };
     if (sh.type==='lead') markSeen(sh.id);
     if (sh.type==='escribir'){ var le=findLead(sh.id); if (!le) return; state.draft={ campos:camposIniciales(le) }; }
-    if (sh.type==='agendar'){ var la=findLead(sh.id); if (!la) return; var dias=diasAgenda(); state.draft={ fecha:(la.fecha && la.fecha>=nowBA().date)?la.fecha:(dias.indexOf(nextHabil(nowBA().date))!==-1?nextHabil(nowBA().date):dias[0]), abogada:null, hora:null };
-      // Si ese día no le queda nadie libre (por ejemplo, Juan no marcó disponibilidad), se abre en el primero que sí tiene
-      if (!la.fecha && !libresDia(la, state.draft.fecha, false)){ var fx=dias.filter(function(x){ return libresDia(la, x, false); })[0]; if (fx) state.draft.fecha=fx; } }
+    if (sh.type==='agendar'){ var la=findLead(sh.id); if (!la) return; var dias=diasAgenda(); state.draft={ fecha:(la.fecha && la.fecha>=nowBA().date)?la.fecha:(dias.indexOf(nextHabil(nowBA().date))!==-1?nextHabil(nowBA().date):dias[0]), abogada:null, hora:null }; }
     if (sh.type==='yo') state.draft={};
     if (sh.type==='creprint') state.draft={ rama:state.creRama||'todas', faltan:true, porHoja:true };
     if (sh.type==='guion') state.draft=null;
@@ -2861,7 +2850,6 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     setTimeout(function(){ state.sinSes=false; abrirIngreso(); }, 0);
   }
   function salir(){
-    agFlush();
     call('logout', {}).catch(function(){});
     if (state.data && state.data.equipo) state.equipo=state.data.equipo;
     store('tok',''); store('snap',''); store('yo',''); borrarGuardados(); repInvalidar();
@@ -4506,15 +4494,6 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     }
     return {libres:libres, ocup:ocup, bq:bq, todo:todo};
   }
-  /* Flujo de agendar (15/11): arriba los primeros horarios libres de cada persona en los próximos días hábiles;
-     si el lead todavía no tiene turno, tocar un horario lo agenda al instante, con Deshacer (el pedido sale a los 6 s
-     o apenas se sale de la app). Reagendar, corregir y "viene a firmar" siguen con el botón de confirmar. */
-  function proxLibres(l, a, corr, n){
-    var out=[]; diasAgenda().some(function(f){ slotsDe(a, f, l, corr).libres.some(function(t){ out.push({fecha:f, hora:t}); return out.length>=n; }); return out.length>=n; });
-    return out;
-  }
-  function libresDia(l, f, corr){ return elegibles(l).reduce(function(s, a){ return s+slotsDe(a, f, l, corr).libres.length; }, 0); }
-  function agAlInstante(l, d){ return !!(l && state.sheet && state.sheet.id!==NUEVO_ID && !agendada(l.id) && !(d && d.firmar)); }
   // Ya tiene turno: se puede corregir un error de carga sin que cuente como reagenda
   function puedeCorregir(l){ return !!(l && l.fecha && agendada(l.id) && (l.fase==='Consulta agendada' || l.fase==='Reagenda')); }
   function corrige(l, d){ return !!(d && d.corregir && puedeCorregir(l)); }
@@ -4531,15 +4510,8 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
         '<button data-agcorr="0" class="'+(!corr?'on':'')+'" role="radio" aria-checked="'+(!corr)+'" '+bs+'>El cliente pidió cambiarlo</button>'+
         '<button data-agcorr="1" class="'+(corr?'on':'')+'" role="radio" aria-checked="'+corr+'" '+bs+'>Me equivoqué al cargarlo</button></div></div>';
     }
-    var ya=agAlInstante(l, d), abx=elegibles(l);
-    html += '<div class="field"><span class="lbl">Lo antes posible'+(ya?' · tocá y queda agendada':'')+'</span><div class="ag">'+abx.map(function(a){
-      var xs=proxLibres(l, a, corr, 3);
-      return '<div class="px-r"><b>'+esc(a)+'</b>'+(xs.length ? xs.map(function(x){ var on=d.abogada===a && d.hora===x.hora && d.fecha===x.fecha;
-        return '<button class="slot px num'+(on?' on':'')+'" data-agprox="'+esc(a)+'|'+x.fecha+'|'+x.hora+'" aria-pressed="'+on+'" aria-label="'+esc(a)+', '+esc(diaCorto(x.fecha))+' a las '+x.hora+'"><small>'+esc(diaCorto(x.fecha))+'</small>'+x.hora+'</button>'; }).join('')
-        : '<p class="ag-bq">Sin horarios libres en los próximos días.</p>')+'</div>'; }).join('')+'</div></div>';
-    html += '<div class="field"><span class="lbl">Otro día</span><div class="chips" style="margin:0 -16px">'+diasAgenda().map(function(x){
-      var n=libresDia(l, x, corr);
-      return '<button class="chip'+(x===d.fecha?' on':'')+(n?'':' vacio')+'" data-agdia="'+x+'" aria-label="'+esc(diaCorto(x))+': '+plural(n,'horario libre','horarios libres')+'">'+diaCorto(x)+' <b class="num">'+n+'</b></button>'; }).join('')+'</div>'+
+    html += '<div class="field"><span class="lbl">Día</span><div class="chips" style="margin:0 -16px">'+diasAgenda().map(function(x){
+      return '<button class="chip'+(x===d.fecha?' on':'')+'" data-agdia="'+x+'">'+diaCorto(x)+'</button>'; }).join('')+'</div>'+
       '<input class="inp" type="date" id="agFecha" min="'+today+'" value="'+esc(d.fecha)+'" style="margin-top:10px" aria-label="Otro día"></div>';
     var ab=elegibles(l);
     html += '<div class="field"><span class="lbl">Horarios libres, '+longDate(d.fecha).toLowerCase()+(ab.length<personas().length?' (quienes toman '+ramaLabel(l.rama)+')':'')+'</span>';
@@ -4559,8 +4531,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     html += '</div>';
     var dvz=!corr && esDerivacion(l,d);
     var lab = d.hora ? (corr?'Corregir':(dvz?'Derivar':(d.firmar?'Agendar para firmar':(reag?'Reagendar':'Agendar'))))+': '+diaCorto(d.fecha).toLowerCase()+' '+d.hora+' con '+d.abogada : 'Elegí un horario';
-    if (ya) html += '<div class="save-wrap"><p class="hint" style="text-align:center;margin:0">Tocá un horario y queda agendada. Tenés unos segundos para deshacer.</p></div>';
-    else html += '<div class="save-wrap"><button class="save" data-saveag '+(d.hora?'':'disabled')+'>'+esc(lab)+'</button>'+
+    html += '<div class="save-wrap"><button class="save" data-saveag '+(d.hora?'':'disabled')+'>'+esc(lab)+'</button>'+
       (reag?'<p class="hint" style="text-align:center;margin-top:8px">'+(corr ? 'Se corrige el turno: no pasa a Reagenda, no cuenta en los KPIs y las confirmaciones quedan como están.' : dvz ? 'Mismo día con otra abogada: queda como derivación y no cuenta como reagenda.'+(d.hora!==l.hora?' Se borran las confirmaciones.':'') : 'Al reagendar se borran las confirmaciones de la fecha anterior.')+'</p>':'')+'</div>';
     return html;
   }
@@ -4689,39 +4660,19 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     var d=state.draft, id=state.sheet.id, l=findLead(id), reag=agendada(id), corr=corrige(l,d), dvz=!corr && esDerivacion(l,d);
     if (!d.hora || !d.abogada) return;
     if (id===NUEVO_ID){ saveManual(false); return; }
-    var inst=!reag && agAlInstante(l, d); // antes de marcarla agendada en la pantalla
     var dC=JSON.parse(JSON.stringify(d)), copia=l?JSON.parse(JSON.stringify(l)):null;
     var msg=(corr?'✏️ Turno corregido':dvz?'↪ Derivada':(d.firmar?'📝 Agendada para firmar':'📅 '+(reag?'Reagendada':'Agendada')))+': '+(l?l.nombre:'')+', '+diaCorto(d.fecha).toLowerCase()+' '+d.hora+' con '+d.abogada;
     // Se ve agendada al instante; si el servidor no puede (por ejemplo, alguien tomó ese horario), vuelve como estaba y se reabre
     if (copia){ var n0=JSON.parse(JSON.stringify(copia)); n0.fecha=d.fecha; n0.hora=d.hora; n0.abogada=d.abogada; if (n0.sinDia){ delete n0.sinDia; } else if (!dvz && !corr){ n0.fase='Consulta agendada'; if (n0.fecha!==copia.fecha || n0.hora!==copia.hora){ n0.confPrev=''; n0.confDia=''; } } replaceLead(n0); markSeen(id); }
-    var enviar=function(){ return call('agendar',{id:id, fecha:d.fecha, hora:d.hora, abogada:d.abogada, corregir:corr, firmar:!!d.firmar}).then(function(nl){
+    closeSheet(); if (copia) openSheet({type:'lead', id:id}); render(); toast(msg);
+    call('agendar',{id:id, fecha:d.fecha, hora:d.hora, abogada:d.abogada, corregir:corr, firmar:!!d.firmar}).then(function(nl){
       replaceLead(nl); markSeen(id); render(); if (state.sheet && state.sheet.type==='lead' && state.sheet.id===id) renderSheet(); wspTrasAgendar(nl);
     }).catch(function(e){
       if (copia){ state.data.leads=(state.data.leads||[]).filter(function(x){ return x.id!==id; }); if (reag) state.data.leads.push(copia); else (state.data.porAgendar||(state.data.porAgendar=[])).unshift(copia); }
       render(); openSheet({type:'agendar', id:id}); state.draft=dC; renderSheet();
       toast((e&&e.message)||'No se pudo agendar.', true);
-    }); };
-    if (copia && inst){
-      // Lead nuevo: queda agendado en la pantalla y se sigue con la lista; el pedido sale a los 6 s (o al salir de la app)
-      var P=state.agPend||(state.agPend={}), it={}, nom=String(l.nombre||'Lead').split(' ')[0];
-      state.wPend=(state.wPend||0)+1; state.wSeq=(state.wSeq||0)+1; // mientras espera, una actualización no lo pisa
-      var soltar=function(){ clearTimeout(it.t); delete P[id]; if (state.undo===it.undo){ state.undo=null; var tt=$('toast'); if (tt && /undo/.test(tt.className)) tt.className='toast'+(state.sheet?' top':''); } };
-      var menos=function(){ state.wPend=Math.max(0,(state.wPend||0)-1); if (!state.wPend && state.wRecargar){ state.wRecargar=false; setTimeout(function(){ load(true); }, 300); } };
-      it.mandar=function(){ if (P[id]!==it) return; soltar(); enviar(); menos(); };
-      it.undo=function(){ if (P[id]!==it) return; soltar();
-        state.data.leads=(state.data.leads||[]).filter(function(x){ return x.id!==id; }); (state.data.porAgendar||(state.data.porAgendar=[])).unshift(copia);
-        menos(); render(); toast(nom+' volvió a Por agendar. No se guardó nada.'); };
-      it.t=setTimeout(it.mandar, AG_ESPERA); P[id]=it;
-      closeSheet(); render(); toastUndo(msg, it.undo);
-      return;
-    }
-    closeSheet(); if (copia) openSheet({type:'lead', id:id}); render(); toast(msg);
-    enviar();
+    });
   }
-  var AG_ESPERA=6000;
-  function agFlush(){ var P=state.agPend||{}; Object.keys(P).forEach(function(k){ if (P[k] && P[k].mandar) P[k].mandar(); }); }
-  document.addEventListener('visibilitychange', function(){ if (document.visibilityState==='hidden') agFlush(); });
-  window.addEventListener('pagehide', agFlush);
 
   /* ---------- buscador ---------- */
   function openSearch(){ $('search').classList.add('on'); $('q').value=''; renderSearch(); setTimeout(function(){ $('q').focus(); }, 50); }
@@ -4742,7 +4693,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
 
   /* ---------- eventos ---------- */
   document.addEventListener('click', function(ev){
-    var t = ev.target.closest('[data-intocultar],[data-reptile],[data-repctl],[data-repsemq],[data-pindesbloq],[data-fin],[data-equipo],[data-view],[data-undo],[data-agotra],[data-agbuscartodo],[data-ficha],[data-pinok],[data-pinback],[data-pinreset],[data-salir],[data-fimodo],[data-fase],[data-notasave],[data-datosave],[data-mnfase],[data-mnsin],[data-dupfase],[data-derivar],[data-reagsindia],[data-pasarbc],[data-dvsel],[data-dvhora],[data-dvsave],[data-deon],[data-deque],[data-desem],[data-decopia],[data-deamplio],[data-dedia],[data-dequick],[data-decopy],[data-devolver],[data-definde],[data-demodo],[data-desave],[data-decancel],[data-repweek],[data-deadm],[data-reprow],[data-repmodo],[data-rtrama],[data-rtfresco],[data-repretry],[data-agmode],[data-wgday],[data-agrama],[data-agfase],[data-agmas],[data-agmes],[data-agvista],[data-agclr],[data-agnuevo],[data-mnrama],[data-mnorigen],[data-mnsig],[data-mncrear],[data-open],[data-result],[data-bloq],[data-nuevo],[data-week],[data-day],[data-sum],[data-chip],[data-abog],[data-close],[data-res],[data-motivo],[data-save],[data-bqwho],[data-bqtodo],[data-savebq],[data-delbq],[data-retry],[data-pastefor],[data-pasteall],[data-rvcheck],[data-rvtoggle],[data-rvsave],[data-rvback],[data-yo],[data-yocambiar],[data-vcabrir],[data-vcsalir],[data-vercomo],[data-visto],[data-conf],[data-escribir],[data-agendar],[data-agfirmar],[data-agcorregir],[data-agdia],[data-slot],[data-agprox],[data-agcorr],[data-saveag],[data-savecampos]');
+    var t = ev.target.closest('[data-intocultar],[data-reptile],[data-repctl],[data-repsemq],[data-pindesbloq],[data-fin],[data-equipo],[data-view],[data-undo],[data-agotra],[data-agbuscartodo],[data-ficha],[data-pinok],[data-pinback],[data-pinreset],[data-salir],[data-fimodo],[data-fase],[data-notasave],[data-datosave],[data-mnfase],[data-mnsin],[data-dupfase],[data-derivar],[data-reagsindia],[data-pasarbc],[data-dvsel],[data-dvhora],[data-dvsave],[data-deon],[data-deque],[data-desem],[data-decopia],[data-deamplio],[data-dedia],[data-dequick],[data-decopy],[data-devolver],[data-definde],[data-demodo],[data-desave],[data-decancel],[data-repweek],[data-deadm],[data-reprow],[data-repmodo],[data-rtrama],[data-rtfresco],[data-repretry],[data-agmode],[data-wgday],[data-agrama],[data-agfase],[data-agmas],[data-agmes],[data-agvista],[data-agclr],[data-agnuevo],[data-mnrama],[data-mnorigen],[data-mnsig],[data-mncrear],[data-open],[data-result],[data-bloq],[data-nuevo],[data-week],[data-day],[data-sum],[data-chip],[data-abog],[data-close],[data-res],[data-motivo],[data-save],[data-bqwho],[data-bqtodo],[data-savebq],[data-delbq],[data-retry],[data-pastefor],[data-pasteall],[data-rvcheck],[data-rvtoggle],[data-rvsave],[data-rvback],[data-yo],[data-yocambiar],[data-vcabrir],[data-vcsalir],[data-vercomo],[data-visto],[data-conf],[data-escribir],[data-agendar],[data-agfirmar],[data-agcorregir],[data-agdia],[data-slot],[data-agcorr],[data-saveag],[data-savecampos]');
     if (!t) return;
     if (t.hasAttribute('data-intocultar')){ var oc=intOcultas(); ((state.data && state.data.paraMi)||[]).forEach(function(l){ intAbiertaMia(l).forEach(function(x){ var k=intOcId(l, x); if (x.tipo!=='control' && oc.indexOf(k)===-1) oc.push(k); }); }); var antes=store(intOcKey())||'[]'; store(intOcKey(), JSON.stringify(oc.slice(-300))); render(); toastUndo('Listo, lo saqué. Si te llega una consulta nueva, vuelve a aparecer.', function(){ store(intOcKey(), antes); render(); }); return; }
     if (t.hasAttribute('data-pindesbloq')){ var nd=t.getAttribute('data-pindesbloq'); t.disabled=true; t.textContent='Desbloqueando…'; call('desbloquearPin', {nombre:nd}).then(function(p){ if (state.data) state.data.pines=p; if (state.sheet) renderSheet(); render(); toast('Listo: '+nd+' ya puede entrar de nuevo.'); }).catch(function(e){ t.disabled=false; toast((e&&e.message)||'No se pudo desbloquear.', true); }); return; }
@@ -4846,8 +4797,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     if (state.sheet.type==='agendar'){
       var ad=state.draft;
       if (t.hasAttribute('data-agdia')){ ad.fecha=t.getAttribute('data-agdia'); ad.hora=null; ad.abogada=null; renderSheet(); return; }
-      if (t.hasAttribute('data-slot')){ var sp=t.getAttribute('data-slot').split('|'); ad.abogada=sp[0]; ad.hora=sp[1]; if (agAlInstante(findLead(state.sheet.id), ad)){ saveAgenda(); return; } renderSheet(); return; }
-      if (t.hasAttribute('data-agprox')){ var px=t.getAttribute('data-agprox').split('|'); ad.abogada=px[0]; ad.fecha=px[1]; ad.hora=px[2]; if (agAlInstante(findLead(state.sheet.id), ad)){ saveAgenda(); return; } renderSheet(); return; }
+      if (t.hasAttribute('data-slot')){ var sp=t.getAttribute('data-slot').split('|'); ad.abogada=sp[0]; ad.hora=sp[1]; renderSheet(); return; }
       if (t.hasAttribute('data-agcorr')){ ad.corregir=t.getAttribute('data-agcorr')==='1'; if (!ad.corregir && ad.fecha===nowBA().date && ad.hora && hmin(ad.hora)<=nowBA().min){ ad.hora=null; ad.abogada=null; } renderSheet(); return; }
       if (t.hasAttribute('data-saveag')){ saveAgenda(); return; }
       return;
