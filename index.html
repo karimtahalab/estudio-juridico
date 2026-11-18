@@ -2379,6 +2379,9 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
   function trDe(l){ return trLista().filter(function(t){ return t.lead===l.id && t.estado!=='cancelado'; })[0]||null; }
   function trPuedeCoord(l){ return rol()==='admin' || puede('confirmar') || ((P().leads||[]).indexOf(String(l.rama||'').toUpperCase())!==-1); }
   function trAplica(l){ return !!l && !l.parcial && !!l.fecha && TR_RAMAS.indexOf(String(l.rama||'').toUpperCase())!==-1; }
+  // La consulta ya pasó (Firmó, No vino, etc.) y el Uber se mandó sin cargarlo en la app: se carga después para subir los recibos.
+  // Hasta 3 días atrás, que es lo que el motor sigue mostrando de los traslados sin reintegro pendiente.
+  function trDespues(l){ var hoy=nowBA().date; return trAplica(l) && !trDe(l) && trPuedeCoord(l) && ['Consulta agendada','Reagenda'].indexOf(l.fase)===-1 && l.fecha<=hoy && l.fecha>=addDays(hoy,-3); }
   function trSet(r){ if (r && r.traslados && state.data){ state.data.traslados=r.traslados; } trPintarAviso(); if (state.sheet) renderSheet(); render(); }
   function hmSuma(h, min){ var m=hmin(h); if (m===null) return ''; m=Math.max(0, Math.min(23*60+55, m+min)); m=Math.round(m/5)*5; return pad2(m/60|0)+':'+pad2(m%60); }
   function trTramoTxt(t, k){
@@ -2395,6 +2398,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     var t=trDe(l); // si ya tiene traslado se muestra siempre (aunque después pase a No es caso, No vino, etc.) para cargar recibos y reintegro
     if (!t && !trAplica(l)) return '';
     if (!t){
+      if (trDespues(l)) return '<button class="btn3" data-trnuevo="'+esc(l.id)+'">🧾 Cargar recibos del Uber (viaje ya hecho)</button>';
       if (!trPuedeCoord(l) || ['Consulta agendada','Reagenda'].indexOf(l.fase)===-1) return '';
       return '<button class="btn3" data-trnuevo="'+esc(l.id)+'">🚗 Coordinar traslado (Uber)</button>';
     }
@@ -2413,28 +2417,33 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
   function sheetTraslado(){
     var l=findLead(state.sheet.id); if (!l) return null; var d=state.draft;
     var chk=function(k,t){ return '<button class="'+(d[k]?'on':'')+'" data-trchk="'+k+'" aria-pressed="'+!!d[k]+'">'+(d[k]?'✓ ':'')+t+'</button>'; };
-    var html='<div class="grab"></div><div class="sh-head"><div class="sh-who"><h2>🚗 Traslado de '+esc(l.nombre)+'</h2><p class="hint" style="margin:4px 0 0">Consulta '+esc(diaCorto(l.fecha))+' '+esc(l.hora||'')+(l.abogada?' con '+esc(l.abogada):'')+'. Una hora antes de cada viaje la app avisa para mandar el Uber.</p></div><button class="close" data-close aria-label="Cerrar">'+I.x+'</button></div>';
+    var html='<div class="grab"></div><div class="sh-head"><div class="sh-who"><h2>🚗 Traslado de '+esc(l.nombre)+'</h2><p class="hint" style="margin:4px 0 0">Consulta '+esc(diaCorto(l.fecha))+' '+esc(l.hora||'')+(l.abogada?' con '+esc(l.abogada):'')+'. '+(d.despues?'Marcá qué viajes se hicieron; al guardar se abre para subir el recibo. La dirección es opcional.':'Una hora antes de cada viaje la app avisa para mandar el Uber.')+'</p></div><button class="close" data-close aria-label="Cerrar">'+I.x+'</button></div>';
     html+='<div class="field"><span class="lbl">¿Qué viajes?</span><div class="pick">'+chk('ida','Ida')+chk('vuelta','Vuelta')+'</div></div>';
     if (d.ida) html+='<div class="field"><label for="trDirIda">Ida: dónde lo buscamos</label><input class="inp" id="trDirIda" autocomplete="off" value="'+esc(d.dirIda||'')+'" placeholder="Calle, número, barrio o link de Maps"></div><div class="field"><label for="trHoraIda">Ida: a qué hora sale el Uber</label><input class="inp" id="trHoraIda" type="time" value="'+esc(d.horaIda||'')+'"></div>';
     if (d.vuelta) html+='<div class="field"><label for="trDirVuelta">Vuelta: a dónde lo llevamos</label><input class="inp" id="trDirVuelta" autocomplete="off" value="'+esc(d.dirVuelta||'')+'" placeholder="Si es la misma, se completa sola"></div><div class="field"><label for="trHoraVuelta">Vuelta: a qué hora sale el Uber</label><input class="inp" id="trHoraVuelta" type="time" value="'+esc(d.horaVuelta||'')+'"></div>';
     html+='<div class="field"><label for="trNotas">Nota (opcional)</label><input class="inp" id="trNotas" autocomplete="off" value="'+esc(d.notas||'')+'" placeholder="Ej.: va con acompañante, usa muletas"></div>';
-    html+='<div class="save-wrap"><button class="save" data-trguardar>Guardar traslado</button></div>';
+    html+='<div class="save-wrap"><button class="save" data-trguardar>'+(d.despues?'Guardar y cargar el recibo':'Guardar traslado')+'</button></div>';
     return html;
   }
   function trSync(){ var d=state.draft; if (!d) return; [['dirIda','trDirIda'],['horaIda','trHoraIda'],['dirVuelta','trDirVuelta'],['horaVuelta','trHoraVuelta'],['notas','trNotas']].forEach(function(x){ var e=$(x[1]); if (e) d[x[0]]=e.value; }); }
   function trAbrirForm(id){
     var l=findLead(id); if (!l) return; var t=trDe(l);
     state.draft = t ? {tid:t.id, ida:t.ida, dirIda:t.dirIda, horaIda:t.horaIda, vuelta:t.vuelta, dirVuelta:t.dirVuelta, horaVuelta:t.horaVuelta, notas:t.notas}
-      : {ida:true, vuelta:true, dirIda:'', horaIda:hmSuma(l.hora,-45), dirVuelta:'', horaVuelta:hmSuma(l.hora,60), notas:''};
+      : {ida:true, vuelta:true, dirIda:'', horaIda:hmSuma(l.hora,-45), dirVuelta:'', horaVuelta:hmSuma(l.hora,60), notas:'', despues:trDespues(l)};
     openSheet({type:'traslado', id:id});
     try{ if (window.Notification && Notification.permission==='default') Notification.requestPermission(); }catch(e){}
   }
   function trGuardar(){
     trSync(); var d=state.draft, id=state.sheet.id;
     if (d.vuelta && !String(d.dirVuelta||'').trim()) d.dirVuelta=d.dirIda;
+    if (d.despues){ var sd='Sin dirección (cargado después)'; if (d.ida && !String(d.dirIda||'').trim()) d.dirIda=sd; if (d.vuelta && !String(d.dirVuelta||'').trim()) d.dirVuelta=sd; }
+    var desp=!!d.despues, tramo1=d.ida?'ida':'vuelta';
     busySheet(true,'Guardando…');
     call('saveTraslado',{lead:id, tid:d.tid||'', ida:!!d.ida, dirIda:d.dirIda, horaIda:d.horaIda, vuelta:!!d.vuelta, dirVuelta:d.dirVuelta, horaVuelta:d.horaVuelta, notas:d.notas}).then(function(r){
-      state.data.traslados=r.traslados; toast('🚗 Traslado guardado'); openSheet({type:'lead', id:id}); trPintarAviso(); render();
+      state.data.traslados=r.traslados; trPintarAviso(); render();
+      var lx=findLead(id), tn=desp && lx ? trDe(lx) : null;
+      if (tn){ toast('🚗 Traslado cargado. Ahora el recibo de la '+tramo1+'.'); state.draft={tid:tn.id, tramo:tramo1, monto:'', pago:(state.me&&state.me.nombre)||'', archivo:null}; openSheet({type:'recibo'}); return; }
+      toast('🚗 Traslado guardado'); openSheet({type:'lead', id:id});
     }).catch(function(e){ busySheet(false); renderSheet(); toast((e&&e.message)||'No se pudo guardar.', true); });
   }
   // Recibo: cuánto salió y la foto
@@ -3138,7 +3147,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     if (rol()==='intaker' && scLista().some(function(x){ return x.id===l.id; })) html += '<button class="btn3" data-levante="'+esc(l.id)+'">✓ Ya lo contacté por otro lado (llamada, otro WhatsApp)</button>';
     if (ag) html += '<div class="pa-has" style="margin:12px 2px 0">Ya tiene consulta: '+esc(diaCorto(l.fecha))+' '+esc(l.hora||'')+(l.abogada?' con '+esc(l.abogada):'')+'</div><button class="btn3" data-open="'+esc(l.id)+'">Ver la consulta</button>';
     else if (puede('agendar')) html += '<button class="btn3 fi-ag" data-agendar="'+esc(l.id)+'">'+I.cal+'Agendar consulta</button>';
-    if (ag || trDe(l)) html += trBlk(l);
+    if (ag || trDe(l) || trDespues(l)) html += trBlk(l);
     html += internasBlk(l);
     var b=function(md, t){ var on=u.modo===md; return '<button data-fimodo="'+md+'" class="'+(on?'on':'')+'" aria-pressed="'+on+'">'+t+'</button>'; };
     var conFase=!ag && puede('agendar');
