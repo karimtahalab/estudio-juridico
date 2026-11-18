@@ -1035,7 +1035,7 @@ a.save.wa-go svg{width:20px;height:20px}
   .wsp-box h3{margin:0 0 6px;font-size:17px}
   .wsp-to{margin:0 0 10px;font-size:13px;color:#555}.wsp-to.prueba{color:#9a5b00;font-weight:600}
   .wsp-msg{background:#dcf8c6;border-radius:10px;padding:12px;line-height:1.45;font-size:15px;color:#111}
-  .wsp-aviso{color:#9a5b00;font-size:13px;margin:10px 0 0}.wsp-err{color:#b00020}.wsp-load,.wsp-hint{color:#555;font-size:13px}
+  .wsp-aviso{color:#9a5b00;font-size:13px;margin:10px 0 0}.cl.sc li.sc-of .ct.mal{color:#b00020;font-weight:700}.wsp-err{color:#b00020}.wsp-load,.wsp-hint{color:#555;font-size:13px}
   .wsp-acts{display:flex;gap:10px;margin-top:14px}.wsp-acts button{flex:1;padding:12px;border-radius:12px;border:0;font-weight:700;font-size:15px;cursor:pointer}
   .wsp-no{background:#eee;color:#222}.wsp-si{background:#25d366;color:#fff}.wsp-si:disabled{opacity:.6}
   .wsp-b.wsp-va{background:#f1f3f2;color:#5b6660;cursor:default}
@@ -4031,7 +4031,8 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     if (scOficial(l)){
       var tel=String(l.tel||'').trim(), em=String(l.email||'').trim(), cuando=ingresoCorto(l);
       return '<li class="sc-of"><button class="cn" data-ficha="'+esc(l.id)+'"><b>'+(esNuevoAviso(l)?'🔔 ':'')+esc(l.nombre||'Sin nombre')+'</b><span class="cs">'+faseTag(l.fase)+' '+ramaLabel(l.rama)+(cuando?' · '+esc(cuando):'')+'</span></button>'+
-        '<button class="ct num" data-copiar="'+esc(phone(tel)||tel)+'" aria-label="Copiar el teléfono de '+esc(l.nombre||'')+'">'+esc(phone(tel)||tel)+'</button>'+
+        (wspDatoMal(l)==='tel' ? '<button class="ct num mal" data-wsp="'+esc(l.id)+'" data-wsp-m="primer_contacto" aria-label="El teléfono de '+esc(l.nombre||'')+' no tiene 10 números: corregir">⚠ '+esc(phone(tel)||tel)+'</button>' :
+        '<button class="ct num" data-copiar="'+esc(phone(tel)||tel)+'" aria-label="Copiar el teléfono de '+esc(l.nombre||'')+'">'+esc(phone(tel)||tel)+'</button>')+
         (wspEnv[l.id] ? '<button class="wsp-b sc-env wsp-va" disabled aria-label="Mandando el primer mensaje a '+esc(l.nombre||'')+'">⏳ Enviando…</button>' :
         '<button class="wsp-b sc-env" data-wsp="'+esc(l.id)+'" data-wsp-m="primer_contacto" aria-label="Mandar el primer mensaje oficial a '+esc(l.nombre||'')+'">📤 '+(wspFallo[l.id]?'Reintentar':'Enviar')+'</button>')+
         (em ? '<button class="ce" data-copiar="'+esc(em)+'" aria-label="Copiar el mail">'+esc(em)+'</button>' : '')+'</li>';
@@ -5827,6 +5828,27 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     if (fase==='c') return ['rechazo_no_es_caso','rechazo_fuera_jurisdiccion','rechazo_abogado_interviniendo','rechazo_prescripcion_art','rechazo_sin_art','rechazo_empleo_publico','rechazo_mas_3_meses','reactivacion_formulario'];
     return [auto,'consulta_tiempo_trabajado','seguimiento_sin_respuesta_1','seguimiento_sin_respuesta_2','seguimiento_sin_respuesta_3','inicio_jurisdiccion','reactivacion_formulario'];
   }
+  /* Lo mismo que revisa el motor antes de mandar (Wsp.gs): teléfono de 10 números y nombre cargado.
+   * Se avisa al tocar 📤, al instante y con "Corregir", en vez de esperar 3-5 s a que el motor lo frene (registro de uso: Pri, 11/11 y 14/11). */
+  function wspTelDe(l){ return phone(l&&l.tel).replace(/^549/,'').replace(/^54/,''); }
+  function wspDatoMal(l){ if (!l) return ''; if (wspTelDe(l).length!==10) return 'tel'; if (!wspNombre(l.nombre)) return 'nombre'; return ''; }
+  function wspCorregirDlg(l, que){
+    var nom=wspNombre(l.nombre), tel=String(l.tel||'').trim();
+    var txt=que==='tel'
+      ? (tel ? 'El teléfono de '+(nom||'este lead')+' ('+tel+') no tiene 10 números' : (nom||'Este lead')+' no tiene teléfono cargado')+'. WhatsApp no lo puede mandar así.'
+      : 'Este lead no tiene nombre cargado y el mensaje empieza con su nombre.';
+    wspSt={};
+    wspDlg('<h3>Falta corregir un dato</h3><p class="wsp-err">'+esc(txt)+'</p><p class="wsp-hint" style="margin-top:8px">Corregilo y después tocá 📤 de nuevo.</p>'+
+      '<div class="wsp-acts"><button class="wsp-no" data-wspx>Cerrar</button><button class="wsp-si" data-wspcorr="'+esc(l.id)+'" data-wspque="'+que+'">✏️ Corregir '+(que==='tel'?'teléfono':'nombre')+'</button></div>');
+  }
+  /** Abre la ficha con "Corregir datos" ya abierto y el cursor en el dato que falta. */
+  function wspCorregir(id, que){
+    wspCerrar();
+    if (!findLead(id)){ abrirFicha(id); return; }
+    openSheet({type:'ficha', id:id}); if (!state.sheet || state.sheet.id!==id) return;
+    state.fichaUI={modo:'datos'}; renderSheet();
+    setTimeout(function(){ var x=$(que==='nombre'?'fdNombre':'fdTel'); if (x){ try{ x.scrollIntoView({block:'center'}); }catch(e){} x.focus(); } }, 80);
+  }
   function wspDestino(l, D){ return D.prueba ? (D.destinoPrueba||'MODO PRUEBA') : '+54 9 '+phone(l.tel); }
   function wspAviso(envio, D){ return envio && Date.now()-envio.t < (D.horas||20)*3600000 ? 'Ya se mandó '+wspCuando(envio.t)+' por '+envio.quien+'.' : ''; }
   /** Lo mismo que arma el servidor en wspOpciones, pero acá y al instante. */
@@ -5888,8 +5910,9 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
   /** Botones rápidos (primer mensaje, recordatorios, turno): vista previa al instante si ya están los datos. */
   function wspVer(id, q){
     if (wspOcupado(id)) return;
+    var l0=findLead(id), mal=wspDatoMal(l0); if (mal){ wspCorregirDlg(l0, mal); return; }
     wspSt={id:id, q:q};
-    var l=findLead(id), porMomento={turno:'confirmacion_consulta', previo:'recordatorio_consulta_manana', hoy:'recordatorio_consulta_hoy'};
+    var l=l0, porMomento={turno:'confirmacion_consulta', previo:'recordatorio_consulta_manana', hoy:'recordatorio_consulta_hoy'};
     var local=function(D){
       var tpl=q.tpl || (q.momento==='primer_contacto' ? wspAuto(l) : porMomento[q.momento]);
       var o=D.catalogo.filter(function(x){ return x.tpl===tpl; })[0]; if (!o) return false;
@@ -5934,6 +5957,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
       wspFallo[s.id]=esCorte(e) ? 'corte' : 'error';
       // Si se cortó la conexión, el mensaje pudo haber salido igual: mejor mirar uChat que mandarlo dos veces
       if (esCorte(e)) toastAccion('⚠️ No sé si le llegó'+(nom?' a '+nom:'')+' (se cortó la conexión). Fijate en uChat antes de mandarlo de nuevo.', 'Entendido', function(){}, 12000);
+      else if (/10 números|no tiene nombre cargado/.test(m)) toastAccion('No se pudo mandar'+(nom?' a '+nom:'')+': '+m, 'Corregir', function(){ wspCorregir(s.id, /nombre/.test(m)?'nombre':'tel'); }, 12000);
       else toastAccion('No se pudo mandar'+(nom?' a '+nom:'')+': '+m, 'Reintentar', function(){ wspSt=s; wspMostrar(v); }, 12000);
       pintar();
     });
@@ -5955,7 +5979,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
   }
   function wspMenu(id){
     if (wspOcupado(id)) return;
-    var l=findLead(id);
+    var l=findLead(id), mal=wspDatoMal(l); if (mal){ wspCorregirDlg(l, mal); return; }
     if (l && wspD && wspD.activo){ wspPintarLista(id, wspListaLocal(l, wspD)); wspDatos().catch(function(){}); return; }
     wspSt={id:id}; wspDlg('<p class="wsp-load">Buscando los mensajes para esta persona…</p>');
     var porServidor=function(){ call('wspOpciones', {id:id}).then(function(o){ wspPintarLista(id, o); }).catch(function(e){ wspFalla(e, 'No se pudo abrir la lista.'); }); };
@@ -5968,6 +5992,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     if ((t=ev.target.closest('[data-wspmenu]'))){ ev.preventDefault(); ev.stopPropagation(); wspMenu(t.getAttribute('data-wspmenu')); return; }
     if ((t=ev.target.closest('[data-wsptpl]'))){ ev.preventDefault(); ev.stopPropagation(); wspElegir(t.getAttribute('data-wsptpl')); return; }
     if ((t=ev.target.closest('[data-wspok]'))){ ev.preventDefault(); ev.stopPropagation(); wspMandar(); return; }
+    if ((t=ev.target.closest('[data-wspcorr]'))){ ev.preventDefault(); ev.stopPropagation(); wspCorregir(t.getAttribute('data-wspcorr'), t.getAttribute('data-wspque')); return; }
   }, true);
 })();
 </script>
