@@ -824,6 +824,10 @@ textarea:focus,.inp:focus,select:focus{outline:none;box-shadow:0 0 0 2.5px var(-
 .mn-sin{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
 .mn-sin .btn3{margin-top:10px}
 /* Aviso de filas duplicadas (solo admin) */
+.snap-ban{position:sticky;top:0;z-index:19;display:flex;align-items:center;gap:10px;margin:0 0 12px;padding:11px 14px;border-radius:14px;background:var(--blue-bg,#E8F0FE);color:var(--ink,#1a1a1a);font-size:14px;font-weight:600;line-height:1.35;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.snap-ban span:last-of-type{flex:1}
+.snap-ban.snap-fallo{background:var(--red-bg);color:var(--red)}
+.snap-ban .mini{min-height:44px}
 .dup-ban{background:var(--red-bg);color:var(--red);border-radius:14px;padding:12px 14px;margin:0 0 12px;font-size:14px;line-height:1.4}
 /* Ingreso con PIN */
 .pin-wrap{margin-top:16px}
@@ -1035,7 +1039,7 @@ a.save.wa-go svg{width:20px;height:20px}
   .wsp-box h3{margin:0 0 6px;font-size:17px}
   .wsp-to{margin:0 0 10px;font-size:13px;color:#555}.wsp-to.prueba{color:#9a5b00;font-weight:600}
   .wsp-msg{background:#dcf8c6;border-radius:10px;padding:12px;line-height:1.45;font-size:15px;color:#111}
-  .wsp-aviso{color:#9a5b00;font-size:13px;margin:10px 0 0}.wsp-err{color:#b00020}.wsp-load,.wsp-hint{color:#555;font-size:13px}
+  .wsp-aviso{color:#9a5b00;font-size:13px;margin:10px 0 0}.cl.sc li.sc-of .ct.mal{color:#b00020;font-weight:700}.wsp-err{color:#b00020}.wsp-load,.wsp-hint{color:#555;font-size:13px}
   .wsp-acts{display:flex;gap:10px;margin-top:14px}.wsp-acts button{flex:1;padding:12px;border-radius:12px;border:0;font-weight:700;font-size:15px;cursor:pointer}
   .wsp-no{background:#eee;color:#222}.wsp-si{background:#25d366;color:#fff}.wsp-si:disabled{opacity:.6}
   .wsp-b.wsp-va{background:#f1f3f2;color:#5b6660;cursor:default}
@@ -1274,6 +1278,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
   // Lo que se puede repetir sin duplicar nada: si se corta internet o el servidor no contesta, se reintenta solo antes de avisar
   var REINTENTA={getData:1, saveAction:1, cambiarFase:1, saveResumenes:1, editarDatos:1, deshacerResultado:1};
   // Finanzas: cada pedido lleva la llave (PIN de finanzas). Vive solo en la memoria de la app: al cerrarla, se vuelve a pedir
+  var SNAP_ESPERA={enviarWsp:1, levantarLead:1, saveVisto:1, segComentar:1, segGuardar:1, segHecho:1, subirEstudio:1, borrarEstudio:1, saveTraslado:1, trasladoAccion:1, trasladoRecibo:1, noRepetido:1};
   var VC_SALE={equipoLogin:1, tienePin:1, login:1, crearPin:1, logout:1, resetPin:1, desbloquearPin:1};
   var VER_FN={getData:1, getReporte:1, getRitmo:1, leadsDeFase:1, getLead:1, getCreativos:1, getEstudios:1, verEstudio:1, verRecibo:1}; // lo único que se pide en "Ver como"
   var FIN_FN={getFin2:1, getFin2Panel:1, saveFin2:1, resolverRepFin2:1, getFinanzas:1, saveFinanza:1, borrarFinanza:1};
@@ -1306,6 +1311,8 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     if (arg === undefined || arg === null) arg = {};
     if (typeof arg==='object'){ arg.tok = store('tok') || ''; if (state.me) arg.who = state.me.nombre; if (FIN_FN[fn]) arg.ftok = finTok(); }
     if (state.verComo && VC_SALE[fn]) vcSalir(true); // entrar con PIN o cambiar de persona: primero se sale de "Ver como"
+    // Lo guardado de hace más de 12 horas se puede mirar, pero lo que cambia algo espera a que llegue lo de hoy
+    if (state.snapViejo && !state.snapFallo && (ESCRIBE[fn] || SNAP_ESPERA[fn])) return Promise.reject(new Error('⏳ Un momento: estoy trayendo lo de hoy. Cuando desaparezca el aviso de arriba, probá de nuevo.'));
     if (state.verComo){ // "Ver como": solo mirar. Lo que guarda algo no sale de la app
       if (!VER_FN[fn]) return Promise.reject(new Error('👁 Estás viendo la app como '+state.verComo+': es solo para mirar y no se guarda nada. Tocá Salir arriba para hacer cambios.'));
       if (typeof arg==='object') arg.verComo = state.verComo;
@@ -1340,7 +1347,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
       if (!d.__snap && (state.verComo||'')!==vc0){ setTimeout(function(){ load(false, true); }, 300); return; } // se entró o salió de "Ver como" mientras llegaba
       // Si mientras llegaba se guardó algo (o sigue guardándose), esta lectura puede ser de antes: no se usa y se pide otra al terminar
       if (!d.__snap && state.data && (state.wPend || (state.wSeq||0)!==seq0)){ if (state.wPend) state.wRecargar=true; else setTimeout(function(){ load(true); }, 300); return; }
-      if (d.__snap){ state.snapT=d.__snapT; } else { state.snapT=null; if (!state.verComo) try{ store('snap', JSON.stringify({t:Date.now(), d:d})); }catch(e){} }
+      if (d.__snap){ state.snapT=d.__snapT; state.snapViejo=d.__snapViejo||''; state.snapFallo=false; } else { state.snapT=null; state.snapViejo=''; state.snapFallo=false; if (!state.verComo) try{ store('snap', JSON.stringify({t:Date.now(), d:d})); }catch(e){} }
       state.data = d; state.offline = false;
       if (d.user && d.user.name && !d.__snap){ var yoSrv=(d.equipo||[]).filter(function(e){ return e.nombre===d.user.name; })[0]; if (yoSrv){ state.me=yoSrv; if (!state.verComo) store('yo', yoSrv.nombre); } }
       if (!state.me) state.me = resolveMe(d);
@@ -1365,7 +1372,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     }).catch(function(e){
       if (!state.data){
         $('main').innerHTML = '<div class="err-box">No se pudieron cargar las consultas.<br><small>'+esc(e.message)+'</small><br><button data-retry>Reintentar</button></div>';
-      } else { state.offline = true; render(); }
+      } else { state.offline = true; if (state.snapViejo) state.snapFallo=true; render(); }
     }).then(function(){ state.busy=false; $('btnRefresh').classList.remove('spin'); });
   }
   /* ---------- Registro de uso: errores y tiempos de carga reales (se manda agrupado cada 10 minutos) ---------- */
@@ -1862,7 +1869,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     $('ttl').innerHTML = '<h1>'+v.h1+'</h1><p>'+v.p+'</p>'; ajustarTitulo();
     $('headExtra').innerHTML = v.extra || '';
     $('offline').classList.toggle('on', state.offline);
-    $('main').innerHTML = vcBanner() + trAvisoBanner() + pinBanner() + dupBanner() + internasBanner() + v.body + '<div class="foot">'+(state.snapT?'Mostrando lo guardado a las '+state.snapT+'. Actualizando…':'Actualizado a las '+nowBA().hm)+(state.verComo?'':(state.me?'. Usás la app como '+esc(state.me.nombre)+' ('+({abogada:'parte de abogadas', intaker:'parte de intakers', admin:'administración', produccion:'filmación y edición'}[state.me.rol]||state.me.rol)+')'+' <button data-yocambiar>Cambiar</button>':'')+(state.me && state.me.rol==='admin'?' · <button data-vcabrir>👁 Ver como otra persona</button>':''))+'</div>';
+    $('main').innerHTML = vcBanner() + snapBanner() + trAvisoBanner() + pinBanner() + dupBanner() + internasBanner() + v.body + '<div class="foot">'+(state.snapT?'Mostrando lo guardado a las '+state.snapT+'. Actualizando…':'Actualizado a las '+nowBA().hm)+(state.verComo?'':(state.me?'. Usás la app como '+esc(state.me.nombre)+' ('+({abogada:'parte de abogadas', intaker:'parte de intakers', admin:'administración', produccion:'filmación y edición'}[state.me.rol]||state.me.rol)+')'+' <button data-yocambiar>Cambiar</button>':'')+(state.me && state.me.rol==='admin'?' · <button data-vcabrir>👁 Ver como otra persona</button>':''))+'</div>';
     alignRs();
     renderNav();
     // En modo prueba, arriba a la derecha se ve quién está usando la app y se toca para cambiar de persona o rol
@@ -1917,6 +1924,12 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
   }
   /* ---------- Ver como: administración mira la app como la ve otra persona (solo lectura) ---------- */
   var VC_ROL={abogada:'abogada', intaker:'intaker', admin:'administración', produccion:'filmación y edición'};
+  // Primera apertura del día (lo guardado tiene más de 12 horas): se ve al instante, con aviso, hasta que llega lo de hoy
+  function snapBanner(){
+    if (!state.snapViejo || !state.snapT || state.verComo) return '';
+    if (state.snapFallo) return '<div class="snap-ban snap-fallo" role="status"><span>⚠ Esto es lo guardado '+esc(state.snapViejo)+'. No se pudo traer lo de hoy.</span><button class="mini" data-retry>Reintentar</button></div>';
+    return '<div class="snap-ban" role="status"><span class="spin-dot"></span><span>Mostrando lo guardado '+esc(state.snapViejo)+'. Trayendo lo de hoy…</span></div>';
+  }
   function vcBanner(){
     if (!state.verComo) return '';
     var r=state.me && VC_ROL[state.me.rol];
@@ -2355,6 +2368,9 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
   function trDe(l){ return trLista().filter(function(t){ return t.lead===l.id && t.estado!=='cancelado'; })[0]||null; }
   function trPuedeCoord(l){ return rol()==='admin' || puede('confirmar') || ((P().leads||[]).indexOf(String(l.rama||'').toUpperCase())!==-1); }
   function trAplica(l){ return !!l && !l.parcial && !!l.fecha && TR_RAMAS.indexOf(String(l.rama||'').toUpperCase())!==-1; }
+  // La consulta ya pasó (Firmó, No vino, etc.) y el Uber se mandó sin cargarlo en la app: se carga después para subir los recibos.
+  // Hasta 3 días atrás, que es lo que el motor sigue mostrando de los traslados sin reintegro pendiente.
+  function trDespues(l){ var hoy=nowBA().date; return trAplica(l) && !trDe(l) && trPuedeCoord(l) && ['Consulta agendada','Reagenda'].indexOf(l.fase)===-1 && l.fecha<=hoy && l.fecha>=addDays(hoy,-3); }
   function trSet(r){ if (r && r.traslados && state.data){ state.data.traslados=r.traslados; } trPintarAviso(); if (state.sheet) renderSheet(); render(); }
   function hmSuma(h, min){ var m=hmin(h); if (m===null) return ''; m=Math.max(0, Math.min(23*60+55, m+min)); m=Math.round(m/5)*5; return pad2(m/60|0)+':'+pad2(m%60); }
   function trTramoTxt(t, k){
@@ -2371,6 +2387,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     var t=trDe(l); // si ya tiene traslado se muestra siempre (aunque después pase a No es caso, No vino, etc.) para cargar recibos y reintegro
     if (!t && !trAplica(l)) return '';
     if (!t){
+      if (trDespues(l)) return '<button class="btn3" data-trnuevo="'+esc(l.id)+'">🧾 Cargar recibos del Uber (viaje ya hecho)</button>';
       if (!trPuedeCoord(l) || ['Consulta agendada','Reagenda'].indexOf(l.fase)===-1) return '';
       return '<button class="btn3" data-trnuevo="'+esc(l.id)+'">🚗 Coordinar traslado (Uber)</button>';
     }
@@ -2389,28 +2406,33 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
   function sheetTraslado(){
     var l=findLead(state.sheet.id); if (!l) return null; var d=state.draft;
     var chk=function(k,t){ return '<button class="'+(d[k]?'on':'')+'" data-trchk="'+k+'" aria-pressed="'+!!d[k]+'">'+(d[k]?'✓ ':'')+t+'</button>'; };
-    var html='<div class="grab"></div><div class="sh-head"><div class="sh-who"><h2>🚗 Traslado de '+esc(l.nombre)+'</h2><p class="hint" style="margin:4px 0 0">Consulta '+esc(diaCorto(l.fecha))+' '+esc(l.hora||'')+(l.abogada?' con '+esc(l.abogada):'')+'. Una hora antes de cada viaje la app avisa para mandar el Uber.</p></div><button class="close" data-close aria-label="Cerrar">'+I.x+'</button></div>';
+    var html='<div class="grab"></div><div class="sh-head"><div class="sh-who"><h2>🚗 Traslado de '+esc(l.nombre)+'</h2><p class="hint" style="margin:4px 0 0">Consulta '+esc(diaCorto(l.fecha))+' '+esc(l.hora||'')+(l.abogada?' con '+esc(l.abogada):'')+'. '+(d.despues?'Marcá qué viajes se hicieron; al guardar se abre para subir el recibo. La dirección es opcional.':'Una hora antes de cada viaje la app avisa para mandar el Uber.')+'</p></div><button class="close" data-close aria-label="Cerrar">'+I.x+'</button></div>';
     html+='<div class="field"><span class="lbl">¿Qué viajes?</span><div class="pick">'+chk('ida','Ida')+chk('vuelta','Vuelta')+'</div></div>';
     if (d.ida) html+='<div class="field"><label for="trDirIda">Ida: dónde lo buscamos</label><input class="inp" id="trDirIda" autocomplete="off" value="'+esc(d.dirIda||'')+'" placeholder="Calle, número, barrio o link de Maps"></div><div class="field"><label for="trHoraIda">Ida: a qué hora sale el Uber</label><input class="inp" id="trHoraIda" type="time" value="'+esc(d.horaIda||'')+'"></div>';
     if (d.vuelta) html+='<div class="field"><label for="trDirVuelta">Vuelta: a dónde lo llevamos</label><input class="inp" id="trDirVuelta" autocomplete="off" value="'+esc(d.dirVuelta||'')+'" placeholder="Si es la misma, se completa sola"></div><div class="field"><label for="trHoraVuelta">Vuelta: a qué hora sale el Uber</label><input class="inp" id="trHoraVuelta" type="time" value="'+esc(d.horaVuelta||'')+'"></div>';
     html+='<div class="field"><label for="trNotas">Nota (opcional)</label><input class="inp" id="trNotas" autocomplete="off" value="'+esc(d.notas||'')+'" placeholder="Ej.: va con acompañante, usa muletas"></div>';
-    html+='<div class="save-wrap"><button class="save" data-trguardar>Guardar traslado</button></div>';
+    html+='<div class="save-wrap"><button class="save" data-trguardar>'+(d.despues?'Guardar y cargar el recibo':'Guardar traslado')+'</button></div>';
     return html;
   }
   function trSync(){ var d=state.draft; if (!d) return; [['dirIda','trDirIda'],['horaIda','trHoraIda'],['dirVuelta','trDirVuelta'],['horaVuelta','trHoraVuelta'],['notas','trNotas']].forEach(function(x){ var e=$(x[1]); if (e) d[x[0]]=e.value; }); }
   function trAbrirForm(id){
     var l=findLead(id); if (!l) return; var t=trDe(l);
     state.draft = t ? {tid:t.id, ida:t.ida, dirIda:t.dirIda, horaIda:t.horaIda, vuelta:t.vuelta, dirVuelta:t.dirVuelta, horaVuelta:t.horaVuelta, notas:t.notas}
-      : {ida:true, vuelta:true, dirIda:'', horaIda:hmSuma(l.hora,-45), dirVuelta:'', horaVuelta:hmSuma(l.hora,60), notas:''};
+      : {ida:true, vuelta:true, dirIda:'', horaIda:hmSuma(l.hora,-45), dirVuelta:'', horaVuelta:hmSuma(l.hora,60), notas:'', despues:trDespues(l)};
     openSheet({type:'traslado', id:id});
     try{ if (window.Notification && Notification.permission==='default') Notification.requestPermission(); }catch(e){}
   }
   function trGuardar(){
     trSync(); var d=state.draft, id=state.sheet.id;
     if (d.vuelta && !String(d.dirVuelta||'').trim()) d.dirVuelta=d.dirIda;
+    if (d.despues){ var sd='Sin dirección (cargado después)'; if (d.ida && !String(d.dirIda||'').trim()) d.dirIda=sd; if (d.vuelta && !String(d.dirVuelta||'').trim()) d.dirVuelta=sd; }
+    var desp=!!d.despues, tramo1=d.ida?'ida':'vuelta';
     busySheet(true,'Guardando…');
     call('saveTraslado',{lead:id, tid:d.tid||'', ida:!!d.ida, dirIda:d.dirIda, horaIda:d.horaIda, vuelta:!!d.vuelta, dirVuelta:d.dirVuelta, horaVuelta:d.horaVuelta, notas:d.notas}).then(function(r){
-      state.data.traslados=r.traslados; toast('🚗 Traslado guardado'); openSheet({type:'lead', id:id}); trPintarAviso(); render();
+      state.data.traslados=r.traslados; trPintarAviso(); render();
+      var lx=findLead(id), tn=desp && lx ? trDe(lx) : null;
+      if (tn){ toast('🚗 Traslado cargado. Ahora el recibo de la '+tramo1+'.'); state.draft={tid:tn.id, tramo:tramo1, monto:'', pago:(state.me&&state.me.nombre)||'', archivo:null}; openSheet({type:'recibo'}); return; }
+      toast('🚗 Traslado guardado'); openSheet({type:'lead', id:id});
     }).catch(function(e){ busySheet(false); renderSheet(); toast((e&&e.message)||'No se pudo guardar.', true); });
   }
   // Recibo: cuánto salió y la foto
@@ -3113,7 +3135,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     if (rol()==='intaker' && scLista().some(function(x){ return x.id===l.id; })) html += '<button class="btn3" data-levante="'+esc(l.id)+'">✓ Ya lo contacté por otro lado (llamada, otro WhatsApp)</button>';
     if (ag) html += '<div class="pa-has" style="margin:12px 2px 0">Ya tiene consulta: '+esc(diaCorto(l.fecha))+' '+esc(l.hora||'')+(l.abogada?' con '+esc(l.abogada):'')+'</div><button class="btn3" data-open="'+esc(l.id)+'">Ver la consulta</button>';
     else if (puede('agendar')) html += '<button class="btn3 fi-ag" data-agendar="'+esc(l.id)+'">'+I.cal+'Agendar consulta</button>';
-    if (ag || trDe(l)) html += trBlk(l);
+    if (ag || trDe(l) || trDespues(l)) html += trBlk(l);
     html += internasBlk(l);
     var b=function(md, t){ var on=u.modo===md; return '<button data-fimodo="'+md+'" class="'+(on?'on':'')+'" aria-pressed="'+on+'">'+t+'</button>'; };
     var conFase=!ag && puede('agendar');
@@ -4031,7 +4053,8 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     if (scOficial(l)){
       var tel=String(l.tel||'').trim(), em=String(l.email||'').trim(), cuando=ingresoCorto(l);
       return '<li class="sc-of"><button class="cn" data-ficha="'+esc(l.id)+'"><b>'+(esNuevoAviso(l)?'🔔 ':'')+esc(l.nombre||'Sin nombre')+'</b><span class="cs">'+faseTag(l.fase)+' '+ramaLabel(l.rama)+(cuando?' · '+esc(cuando):'')+'</span></button>'+
-        '<button class="ct num" data-copiar="'+esc(phone(tel)||tel)+'" aria-label="Copiar el teléfono de '+esc(l.nombre||'')+'">'+esc(phone(tel)||tel)+'</button>'+
+        (wspDatoMal(l)==='tel' ? '<button class="ct num mal" data-wsp="'+esc(l.id)+'" data-wsp-m="primer_contacto" aria-label="El teléfono de '+esc(l.nombre||'')+' no tiene 10 números: corregir">⚠ '+esc(phone(tel)||tel)+'</button>' :
+        '<button class="ct num" data-copiar="'+esc(phone(tel)||tel)+'" aria-label="Copiar el teléfono de '+esc(l.nombre||'')+'">'+esc(phone(tel)||tel)+'</button>')+
         (wspEnv[l.id] ? '<button class="wsp-b sc-env wsp-va" disabled aria-label="Mandando el primer mensaje a '+esc(l.nombre||'')+'">⏳ Enviando…</button>' :
         '<button class="wsp-b sc-env" data-wsp="'+esc(l.id)+'" data-wsp-m="primer_contacto" aria-label="Mandar el primer mensaje oficial a '+esc(l.nombre||'')+'">📤 '+(wspFallo[l.id]?'Reintentar':'Enviar')+'</button>')+
         (em ? '<button class="ce" data-copiar="'+esc(em)+'" aria-label="Copiar el mail">'+esc(em)+'</button>' : '')+'</li>';
@@ -5747,11 +5770,19 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     document.addEventListener('touchcancel', function(){ clearTimeout(timer); t0=null; if (g) terminar(); });
     document.addEventListener('contextmenu', function(ev){ if (state.dispEdit && ev.target.closest && ev.target.closest('.de-s')) ev.preventDefault(); });
   })();
-  // Abrir al instante: mientras llega lo nuevo, se muestra lo último que se cargó en este dispositivo (hasta 12 horas)
+  // Abrir al instante: mientras llega lo nuevo, se muestra lo último que se cargó en este dispositivo.
+  // Hasta 12 horas, como siempre. De 12 horas a 4 días (primera apertura del día, lunes) también, si es de la misma persona:
+  // con un aviso arriba y sin dejar guardar nada hasta que llega lo de hoy (el motor tarda 9-17 s en la primera apertura).
   try{
-    var sn=JSON.parse(store('snap')||'null');
-    if (sn && sn.d && !state.data && recibir && store('tok') && Date.now()-sn.t < 12*3600*1000){
+    var sn=JSON.parse(store('snap')||'null'), snEdad=sn ? Date.now()-sn.t : 1e12;
+    var snMio=!!(sn && sn.d && sn.d.user && sn.d.user.name && sn.d.user.name===store('yo'));
+    if (sn && sn.d && !state.data && recibir && store('tok') && snEdad>=0 && (snEdad < 12*3600*1000 || (snMio && snEdad < 4*86400000))){
       var dd=new Date(sn.t); sn.d.__snap=true; sn.d.__snapT=('0'+dd.getHours()).slice(-2)+':'+('0'+dd.getMinutes()).slice(-2);
+      if (snEdad >= 12*3600*1000){
+        var snDia=''; try{ snDia=dd.toLocaleDateString('en-CA',{timeZone:TZ}); }catch(e){}
+        var hoyD=nowBA().date;
+        sn.d.__snapViejo=(snDia===hoyD ? 'de hoy' : (snDia===addDays(hoyD,-1) ? 'de ayer' : (snDia ? 'del '+shortDate(snDia).toLowerCase() : 'de antes')))+' a las '+sn.d.__snapT;
+      }
       recibir(sn.d);
     }
   }catch(e){}
@@ -5827,6 +5858,27 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     if (fase==='c') return ['rechazo_no_es_caso','rechazo_fuera_jurisdiccion','rechazo_abogado_interviniendo','rechazo_prescripcion_art','rechazo_sin_art','rechazo_empleo_publico','rechazo_mas_3_meses','reactivacion_formulario'];
     return [auto,'consulta_tiempo_trabajado','seguimiento_sin_respuesta_1','seguimiento_sin_respuesta_2','seguimiento_sin_respuesta_3','inicio_jurisdiccion','reactivacion_formulario'];
   }
+  /* Lo mismo que revisa el motor antes de mandar (Wsp.gs): teléfono de 10 números y nombre cargado.
+   * Se avisa al tocar 📤, al instante y con "Corregir", en vez de esperar 3-5 s a que el motor lo frene (registro de uso: Pri, 11/11 y 14/11). */
+  function wspTelDe(l){ return phone(l&&l.tel).replace(/^549/,'').replace(/^54/,''); }
+  function wspDatoMal(l){ if (!l) return ''; if (wspTelDe(l).length!==10) return 'tel'; if (!wspNombre(l.nombre)) return 'nombre'; return ''; }
+  function wspCorregirDlg(l, que){
+    var nom=wspNombre(l.nombre), tel=String(l.tel||'').trim();
+    var txt=que==='tel'
+      ? (tel ? 'El teléfono de '+(nom||'este lead')+' ('+tel+') no tiene 10 números' : (nom||'Este lead')+' no tiene teléfono cargado')+'. WhatsApp no lo puede mandar así.'
+      : 'Este lead no tiene nombre cargado y el mensaje empieza con su nombre.';
+    wspSt={};
+    wspDlg('<h3>Falta corregir un dato</h3><p class="wsp-err">'+esc(txt)+'</p><p class="wsp-hint" style="margin-top:8px">Corregilo y después tocá 📤 de nuevo.</p>'+
+      '<div class="wsp-acts"><button class="wsp-no" data-wspx>Cerrar</button><button class="wsp-si" data-wspcorr="'+esc(l.id)+'" data-wspque="'+que+'">✏️ Corregir '+(que==='tel'?'teléfono':'nombre')+'</button></div>');
+  }
+  /** Abre la ficha con "Corregir datos" ya abierto y el cursor en el dato que falta. */
+  function wspCorregir(id, que){
+    wspCerrar();
+    if (!findLead(id)){ abrirFicha(id); return; }
+    openSheet({type:'ficha', id:id}); if (!state.sheet || state.sheet.id!==id) return;
+    state.fichaUI={modo:'datos'}; renderSheet();
+    setTimeout(function(){ var x=$(que==='nombre'?'fdNombre':'fdTel'); if (x){ try{ x.scrollIntoView({block:'center'}); }catch(e){} x.focus(); } }, 80);
+  }
   function wspDestino(l, D){ return D.prueba ? (D.destinoPrueba||'MODO PRUEBA') : '+54 9 '+phone(l.tel); }
   function wspAviso(envio, D){ return envio && Date.now()-envio.t < (D.horas||20)*3600000 ? 'Ya se mandó '+wspCuando(envio.t)+' por '+envio.quien+'.' : ''; }
   /** Lo mismo que arma el servidor en wspOpciones, pero acá y al instante. */
@@ -5888,8 +5940,9 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
   /** Botones rápidos (primer mensaje, recordatorios, turno): vista previa al instante si ya están los datos. */
   function wspVer(id, q){
     if (wspOcupado(id)) return;
+    var l0=findLead(id), mal=wspDatoMal(l0); if (mal){ wspCorregirDlg(l0, mal); return; }
     wspSt={id:id, q:q};
-    var l=findLead(id), porMomento={turno:'confirmacion_consulta', previo:'recordatorio_consulta_manana', hoy:'recordatorio_consulta_hoy'};
+    var l=l0, porMomento={turno:'confirmacion_consulta', previo:'recordatorio_consulta_manana', hoy:'recordatorio_consulta_hoy'};
     var local=function(D){
       var tpl=q.tpl || (q.momento==='primer_contacto' ? wspAuto(l) : porMomento[q.momento]);
       var o=D.catalogo.filter(function(x){ return x.tpl===tpl; })[0]; if (!o) return false;
@@ -5934,6 +5987,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
       wspFallo[s.id]=esCorte(e) ? 'corte' : 'error';
       // Si se cortó la conexión, el mensaje pudo haber salido igual: mejor mirar uChat que mandarlo dos veces
       if (esCorte(e)) toastAccion('⚠️ No sé si le llegó'+(nom?' a '+nom:'')+' (se cortó la conexión). Fijate en uChat antes de mandarlo de nuevo.', 'Entendido', function(){}, 12000);
+      else if (/10 números|no tiene nombre cargado/.test(m)) toastAccion('No se pudo mandar'+(nom?' a '+nom:'')+': '+m, 'Corregir', function(){ wspCorregir(s.id, /nombre/.test(m)?'nombre':'tel'); }, 12000);
       else toastAccion('No se pudo mandar'+(nom?' a '+nom:'')+': '+m, 'Reintentar', function(){ wspSt=s; wspMostrar(v); }, 12000);
       pintar();
     });
@@ -5955,7 +6009,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
   }
   function wspMenu(id){
     if (wspOcupado(id)) return;
-    var l=findLead(id);
+    var l=findLead(id), mal=wspDatoMal(l); if (mal){ wspCorregirDlg(l, mal); return; }
     if (l && wspD && wspD.activo){ wspPintarLista(id, wspListaLocal(l, wspD)); wspDatos().catch(function(){}); return; }
     wspSt={id:id}; wspDlg('<p class="wsp-load">Buscando los mensajes para esta persona…</p>');
     var porServidor=function(){ call('wspOpciones', {id:id}).then(function(o){ wspPintarLista(id, o); }).catch(function(e){ wspFalla(e, 'No se pudo abrir la lista.'); }); };
@@ -5968,6 +6022,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     if ((t=ev.target.closest('[data-wspmenu]'))){ ev.preventDefault(); ev.stopPropagation(); wspMenu(t.getAttribute('data-wspmenu')); return; }
     if ((t=ev.target.closest('[data-wsptpl]'))){ ev.preventDefault(); ev.stopPropagation(); wspElegir(t.getAttribute('data-wsptpl')); return; }
     if ((t=ev.target.closest('[data-wspok]'))){ ev.preventDefault(); ev.stopPropagation(); wspMandar(); return; }
+    if ((t=ev.target.closest('[data-wspcorr]'))){ ev.preventDefault(); ev.stopPropagation(); wspCorregir(t.getAttribute('data-wspcorr'), t.getAttribute('data-wspque')); return; }
   }, true);
 })();
 </script>
