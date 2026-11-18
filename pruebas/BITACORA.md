@@ -296,6 +296,26 @@ Cómo correrlo: `python3 pruebas/correr.py <carpeta con index.html> <carpeta de 
   - getData en CacheService del motor (sigue pendiente; hoy hubo pedidos de 32-35 s en Pri y Fran).
   - Registro de uso con el stack del error (archivo y función), para encontrar errores como el de toUTC sin tener que adivinar.
 
+## 2026-11-17 (noche, corrida de las 22:37)
+- main sin cambios desde c03e341 (16/11). El banco ya tenía index.html, sw.js y manifest iguales a main.
+- Ramas pendientes: mejora/2026-11-15, -15-flujo-agendar y -16 (3). Merge local contra main (sin pushear): -15 y -16 entran limpias (también juntas); -15-flujo-agendar sigue chocando en la misma línea de index.html (selectores del click: [data-pasarbc] de main y [data-agprox] de la rama; se arregla dejando los dos). mejora/2026-11-05, -06 y -08-flujo-sin-contactar siguen figurando sin mergear pero su contenido ya está en main. Con 3 pendientes, esta noche NO se armó rama nueva.
+- Las 3 pendientes juntas sobre main (choque resuelto a mano, solo local): correr.py con Cele, Pri, Estefanía y Mica igual que main (0 errores, mismas pestañas); probar_tel_wsp.py, probar_snap.py, probar_agendar.py y probar_pasar_bc.py OK (solo los 2 "reading 'update'" de siempre del banco).
+- Cambios del motor pendientes: ninguno (los 3 archivos dicen APLICADO). No se bajó el Código.gs (sin rama nueva).
+- Registro de uso real (USO, filas 4596-5102, martes 17/11; usaron la app Pri (casi todo, Windows instalada), Karim, Julián, Mica, Cele y Fran (poco); nada de Sol, Estefanía ni Juan):
+  - Sin filas de error. El error de toUTC del 16/11 no volvió a aparecer.
+  - 3 avisos "Sin conexión" de getData de Mica (Android instalada, agenda, versión actual), uno después de 21,5 s. El corte y el reintento funcionan; parece conexión del celular o motor lento.
+  - getData de Pri: picos 29,8 s, 19,7 s, 17 s, 15,9 s, 13,4 s; promedio ~3,5 s. Julián 11,9 s. Del motor (idea de CacheService, pendiente).
+  - enviarWsp ~40 envíos (Pri), 4-9,2 s, 0 errores y 0 avisos de teléfono/nombre hoy.
+  - agendar hasta 16,2 s (Pri); subirEstudio 16,6 s; segComentar 10,7 s; saveAction de Pri 5-8,8 s en racha (11 en un lote).
+  - Primera apertura con datos nuevos: Mica 8,6 s, Pri 7 s, Julián 5,6 s, Karim 5,5 s (lo arregla mejora/2026-11-16, pendiente).
+  - fin2Calentar de fondo: Karim 30,6 s, Mica 14,3 s (no traba nada).
+- Roles probados con correr.py (390 y 360): Cele, Pri (crea PIN), Estefanía, Mica. 0 errores de JavaScript, 0 pedidos fallidos, sin scroll horizontal. Pestañas: Cele y Mica → Finanzas, Agenda, Guiones, Falta cargar; Pri → Reporte, Agenda, Tareas, Seguimiento, Agendar; Estefanía → Agenda, Falta cargar. Permisos OK con datos falsos.
+- Sin problemas nuevos. Lo chico que marca la auditoría es lo de siempre (con zona táctil agrandada).
+- Para la próxima rama (cuando se apruebe alguna): toUTC que acepte cualquier cosa y avise de dónde vino; "Tocá de nuevo para confirmar" de pasar a BC en rojo.
+- Ideas grandes:
+  - getData en CacheService del motor (sigue pendiente; hoy picos de 20-30 s en Pri).
+  - Registro de uso con el stack del error (sigue pendiente).
+
 ## Flujos rediseñados (tarea semanal de los domingos)
 | Fecha | Flujo | Para quién | Toques antes → después | Rama | Motor |
 |---|---|---|---|---|---|
