@@ -824,6 +824,10 @@ textarea:focus,.inp:focus,select:focus{outline:none;box-shadow:0 0 0 2.5px var(-
 .mn-sin{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
 .mn-sin .btn3{margin-top:10px}
 /* Aviso de filas duplicadas (solo admin) */
+.snap-ban{position:sticky;top:0;z-index:19;display:flex;align-items:center;gap:10px;margin:0 0 12px;padding:11px 14px;border-radius:14px;background:var(--blue-bg,#E8F0FE);color:var(--ink,#1a1a1a);font-size:14px;font-weight:600;line-height:1.35;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.snap-ban span:last-of-type{flex:1}
+.snap-ban.snap-fallo{background:var(--red-bg);color:var(--red)}
+.snap-ban .mini{min-height:44px}
 .dup-ban{background:var(--red-bg);color:var(--red);border-radius:14px;padding:12px 14px;margin:0 0 12px;font-size:14px;line-height:1.4}
 /* Ingreso con PIN */
 .pin-wrap{margin-top:16px}
@@ -1274,6 +1278,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
   // Lo que se puede repetir sin duplicar nada: si se corta internet o el servidor no contesta, se reintenta solo antes de avisar
   var REINTENTA={getData:1, saveAction:1, cambiarFase:1, saveResumenes:1, editarDatos:1, deshacerResultado:1};
   // Finanzas: cada pedido lleva la llave (PIN de finanzas). Vive solo en la memoria de la app: al cerrarla, se vuelve a pedir
+  var SNAP_ESPERA={enviarWsp:1, levantarLead:1, saveVisto:1, segComentar:1, segGuardar:1, segHecho:1, subirEstudio:1, borrarEstudio:1, saveTraslado:1, trasladoAccion:1, trasladoRecibo:1, noRepetido:1};
   var VC_SALE={equipoLogin:1, tienePin:1, login:1, crearPin:1, logout:1, resetPin:1, desbloquearPin:1};
   var VER_FN={getData:1, getReporte:1, getRitmo:1, leadsDeFase:1, getLead:1, getCreativos:1, getEstudios:1, verEstudio:1, verRecibo:1}; // lo único que se pide en "Ver como"
   var FIN_FN={getFin2:1, getFin2Panel:1, saveFin2:1, resolverRepFin2:1, getFinanzas:1, saveFinanza:1, borrarFinanza:1};
@@ -1306,6 +1311,8 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     if (arg === undefined || arg === null) arg = {};
     if (typeof arg==='object'){ arg.tok = store('tok') || ''; if (state.me) arg.who = state.me.nombre; if (FIN_FN[fn]) arg.ftok = finTok(); }
     if (state.verComo && VC_SALE[fn]) vcSalir(true); // entrar con PIN o cambiar de persona: primero se sale de "Ver como"
+    // Lo guardado de hace más de 12 horas se puede mirar, pero lo que cambia algo espera a que llegue lo de hoy
+    if (state.snapViejo && !state.snapFallo && (ESCRIBE[fn] || SNAP_ESPERA[fn])) return Promise.reject(new Error('⏳ Un momento: estoy trayendo lo de hoy. Cuando desaparezca el aviso de arriba, probá de nuevo.'));
     if (state.verComo){ // "Ver como": solo mirar. Lo que guarda algo no sale de la app
       if (!VER_FN[fn]) return Promise.reject(new Error('👁 Estás viendo la app como '+state.verComo+': es solo para mirar y no se guarda nada. Tocá Salir arriba para hacer cambios.'));
       if (typeof arg==='object') arg.verComo = state.verComo;
@@ -1340,7 +1347,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
       if (!d.__snap && (state.verComo||'')!==vc0){ setTimeout(function(){ load(false, true); }, 300); return; } // se entró o salió de "Ver como" mientras llegaba
       // Si mientras llegaba se guardó algo (o sigue guardándose), esta lectura puede ser de antes: no se usa y se pide otra al terminar
       if (!d.__snap && state.data && (state.wPend || (state.wSeq||0)!==seq0)){ if (state.wPend) state.wRecargar=true; else setTimeout(function(){ load(true); }, 300); return; }
-      if (d.__snap){ state.snapT=d.__snapT; } else { state.snapT=null; if (!state.verComo) try{ store('snap', JSON.stringify({t:Date.now(), d:d})); }catch(e){} }
+      if (d.__snap){ state.snapT=d.__snapT; state.snapViejo=d.__snapViejo||''; state.snapFallo=false; } else { state.snapT=null; state.snapViejo=''; state.snapFallo=false; if (!state.verComo) try{ store('snap', JSON.stringify({t:Date.now(), d:d})); }catch(e){} }
       state.data = d; state.offline = false;
       if (d.user && d.user.name && !d.__snap){ var yoSrv=(d.equipo||[]).filter(function(e){ return e.nombre===d.user.name; })[0]; if (yoSrv){ state.me=yoSrv; if (!state.verComo) store('yo', yoSrv.nombre); } }
       if (!state.me) state.me = resolveMe(d);
@@ -1365,7 +1372,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     }).catch(function(e){
       if (!state.data){
         $('main').innerHTML = '<div class="err-box">No se pudieron cargar las consultas.<br><small>'+esc(e.message)+'</small><br><button data-retry>Reintentar</button></div>';
-      } else { state.offline = true; render(); }
+      } else { state.offline = true; if (state.snapViejo) state.snapFallo=true; render(); }
     }).then(function(){ state.busy=false; $('btnRefresh').classList.remove('spin'); });
   }
   /* ---------- Registro de uso: errores y tiempos de carga reales (se manda agrupado cada 10 minutos) ---------- */
@@ -1862,7 +1869,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     $('ttl').innerHTML = '<h1>'+v.h1+'</h1><p>'+v.p+'</p>'; ajustarTitulo();
     $('headExtra').innerHTML = v.extra || '';
     $('offline').classList.toggle('on', state.offline);
-    $('main').innerHTML = vcBanner() + trAvisoBanner() + pinBanner() + dupBanner() + internasBanner() + v.body + '<div class="foot">'+(state.snapT?'Mostrando lo guardado a las '+state.snapT+'. Actualizando…':'Actualizado a las '+nowBA().hm)+(state.verComo?'':(state.me?'. Usás la app como '+esc(state.me.nombre)+' ('+({abogada:'parte de abogadas', intaker:'parte de intakers', admin:'administración', produccion:'filmación y edición'}[state.me.rol]||state.me.rol)+')'+' <button data-yocambiar>Cambiar</button>':'')+(state.me && state.me.rol==='admin'?' · <button data-vcabrir>👁 Ver como otra persona</button>':''))+'</div>';
+    $('main').innerHTML = vcBanner() + snapBanner() + trAvisoBanner() + pinBanner() + dupBanner() + internasBanner() + v.body + '<div class="foot">'+(state.snapT?'Mostrando lo guardado a las '+state.snapT+'. Actualizando…':'Actualizado a las '+nowBA().hm)+(state.verComo?'':(state.me?'. Usás la app como '+esc(state.me.nombre)+' ('+({abogada:'parte de abogadas', intaker:'parte de intakers', admin:'administración', produccion:'filmación y edición'}[state.me.rol]||state.me.rol)+')'+' <button data-yocambiar>Cambiar</button>':'')+(state.me && state.me.rol==='admin'?' · <button data-vcabrir>👁 Ver como otra persona</button>':''))+'</div>';
     alignRs();
     renderNav();
     // En modo prueba, arriba a la derecha se ve quién está usando la app y se toca para cambiar de persona o rol
@@ -1917,6 +1924,12 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
   }
   /* ---------- Ver como: administración mira la app como la ve otra persona (solo lectura) ---------- */
   var VC_ROL={abogada:'abogada', intaker:'intaker', admin:'administración', produccion:'filmación y edición'};
+  // Primera apertura del día (lo guardado tiene más de 12 horas): se ve al instante, con aviso, hasta que llega lo de hoy
+  function snapBanner(){
+    if (!state.snapViejo || !state.snapT || state.verComo) return '';
+    if (state.snapFallo) return '<div class="snap-ban snap-fallo" role="status"><span>⚠ Esto es lo guardado '+esc(state.snapViejo)+'. No se pudo traer lo de hoy.</span><button class="mini" data-retry>Reintentar</button></div>';
+    return '<div class="snap-ban" role="status"><span class="spin-dot"></span><span>Mostrando lo guardado '+esc(state.snapViejo)+'. Trayendo lo de hoy…</span></div>';
+  }
   function vcBanner(){
     if (!state.verComo) return '';
     var r=state.me && VC_ROL[state.me.rol];
@@ -5748,11 +5761,19 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     document.addEventListener('touchcancel', function(){ clearTimeout(timer); t0=null; if (g) terminar(); });
     document.addEventListener('contextmenu', function(ev){ if (state.dispEdit && ev.target.closest && ev.target.closest('.de-s')) ev.preventDefault(); });
   })();
-  // Abrir al instante: mientras llega lo nuevo, se muestra lo último que se cargó en este dispositivo (hasta 12 horas)
+  // Abrir al instante: mientras llega lo nuevo, se muestra lo último que se cargó en este dispositivo.
+  // Hasta 12 horas, como siempre. De 12 horas a 4 días (primera apertura del día, lunes) también, si es de la misma persona:
+  // con un aviso arriba y sin dejar guardar nada hasta que llega lo de hoy (el motor tarda 9-17 s en la primera apertura).
   try{
-    var sn=JSON.parse(store('snap')||'null');
-    if (sn && sn.d && !state.data && recibir && store('tok') && Date.now()-sn.t < 12*3600*1000){
+    var sn=JSON.parse(store('snap')||'null'), snEdad=sn ? Date.now()-sn.t : 1e12;
+    var snMio=!!(sn && sn.d && sn.d.user && sn.d.user.name && sn.d.user.name===store('yo'));
+    if (sn && sn.d && !state.data && recibir && store('tok') && snEdad>=0 && (snEdad < 12*3600*1000 || (snMio && snEdad < 4*86400000))){
       var dd=new Date(sn.t); sn.d.__snap=true; sn.d.__snapT=('0'+dd.getHours()).slice(-2)+':'+('0'+dd.getMinutes()).slice(-2);
+      if (snEdad >= 12*3600*1000){
+        var snDia=''; try{ snDia=dd.toLocaleDateString('en-CA',{timeZone:TZ}); }catch(e){}
+        var hoyD=nowBA().date;
+        sn.d.__snapViejo=(snDia===hoyD ? 'de hoy' : (snDia===addDays(hoyD,-1) ? 'de ayer' : (snDia ? 'del '+shortDate(snDia).toLowerCase() : 'de antes')))+' a las '+sn.d.__snapT;
+      }
       recibir(sn.d);
     }
   }catch(e){}
