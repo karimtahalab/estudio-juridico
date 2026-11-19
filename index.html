@@ -4208,7 +4208,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     if (!ff.length) return '';
     var n=ff.filter(function(l){ return !l.fase; }).length, max=state.ffMas?400:8;
     return '<div id="ffSec"></div><h2 class="sec-t">Falta la fase'+(n?' <span class="cnt num">'+n+'</span>':'')+'</h2>'+
-      '<p class="sec-sub">Ya les escribieron (tienen el nombre de Fran o de Pri) y todavía no tienen fase. Cuando contesten, tocá la fase acá mismo: se guarda al instante y podés deshacer.</p>'+
+      '<p class="sec-sub">Ya les escribieron (tienen el nombre de un intaker) y todavía no tienen fase. Cuando contesten, tocá la fase acá mismo: se guarda al instante y podés deshacer.</p>'+
       '<ul class="cl ff">'+ff.slice(0,max).map(ffRow).join('')+'</ul>'+
       (ff.length>max?'<button class="btn3" data-ffmas>Ver los '+ff.length+'</button>':'');
   }
@@ -4311,7 +4311,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
   }
   function sheetSeg(){
     var d=state.draft||{}, h=nowBA().date, man=addDays(h,1);
-    var html='<div class="grab"></div><div class="sh-head"><div class="sh-who"><h2>'+(d.id?'Editar la nota':'Nota de seguimiento')+'</h2><div class="mt"><span class="cp">La ven Fran, Pri, Sol y administración</span></div></div><button class="close" data-close aria-label="Cerrar">'+I.x+'</button></div>';
+    var html='<div class="grab"></div><div class="sh-head"><div class="sh-who"><h2>'+(d.id?'Editar la nota':'Nota de seguimiento')+'</h2><div class="mt"><span class="cp">La ven los intakers, Sol y administración</span></div></div><button class="close" data-close aria-label="Cerrar">'+I.x+'</button></div>';
     if (d.lead) html+='<p class="hint" style="margin:4px 2px 0">Queda unida a la ficha de <b>'+esc(d.nombre||'este lead')+'</b>.</p>';
     html+='<div class="two"><div class="field"><label for="sgNom">Nombre</label><input class="inp" id="sgNom" autocomplete="off" value="'+esc(d.nombre||'')+'" placeholder="Ej.: Damián"></div>'+
       '<div class="field"><label for="sgTel">Teléfono</label><input class="inp" id="sgTel" inputmode="tel" autocomplete="off" value="'+esc(d.tel||'')+'" placeholder="261 555-1234"></div></div>';
@@ -4433,11 +4433,11 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     if (otros.length){
       var abierto=!!state.scOtros;
       otrosHtml='<button class="rs-ctl" data-scotros aria-expanded="'+abierto+'" style="margin-top:14px"><span>Ya clasificados o "Falta enviar leads" sin nombre de intaker ('+otros.length+')</span><small>'+(abierto?'Ocultar ▴':'Ver ▾')+'</small></button>'+
-        (abierto?'<p class="hint" style="margin:8px 2px 0">Tienen fase (casi todos C) pero ningún nombre de Fran ni de Pri en la primera columna.</p>'+scHtml(otros):'');
+        (abierto?'<p class="hint" style="margin:8px 2px 0">Tienen fase (casi todos C) pero ningún nombre de intaker en la primera columna.</p>'+scHtml(otros):'');
     }
     body += ffHtml(ffL) + '<div id="scSec"></div>'+secTarea('Sin contactar', sc.length, rol()==='intaker' ?
-      'Leads nuevos: todavía no tienen fase ni el nombre de Fran o de Pri en la planilla. Primero los que hace más que entraron. <b>ART y Laboral:</b> tocá <b>📤 Enviar</b> y queda tu nombre en la planilla solo. <b>Tránsito:</b> tocá 💬 para escribirle; al volver te pregunta si le escribiste. Si lo contactaste por otro lado (llamada), abrí la ficha y tocá <b>Ya lo contacté</b>.' :
-      'Leads nuevos sin clasificar: todavía no tienen fase ni el nombre de Fran o de Pri en la planilla. Primero los que hace más que entraron. Tocá el número para copiarlo. Cuando le mandes el primer mensaje, tocá <b>✓ Contacté</b> y queda tu nombre en la planilla.',
+      'Leads nuevos: todavía no tienen fase ni el nombre de un intaker en la planilla. Primero los que hace más que entraron. <b>ART y Laboral:</b> tocá <b>📤 Enviar</b> y queda tu nombre en la planilla solo. <b>Tránsito:</b> tocá 💬 para escribirle; al volver te pregunta si le escribiste. Si lo contactaste por otro lado (llamada), abrí la ficha y tocá <b>Ya lo contacté</b>.' :
+      'Leads nuevos sin clasificar: todavía no tienen fase ni el nombre de un intaker en la planilla. Primero los que hace más que entraron. Tocá el número para copiarlo. Cuando le mandes el primer mensaje, tocá <b>✓ Contacté</b> y queda tu nombre en la planilla.',
       scHtml(sc)) + otrosHtml;
     if (pa.length) body += '<button class="btn3" data-view="agendar">Ver todos los leads por agendar ('+pa.length+')</button>';
     total += sc.length + comSolPend().length;
