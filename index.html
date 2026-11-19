@@ -1053,6 +1053,8 @@ a.save.wa-go svg{width:20px;height:20px}
 @media (min-width:1100px){.top-row,.head-extra,main,.search-top,.search-body{max-width:1080px;margin-left:auto;margin-right:auto}.nav{padding-left:calc((100% - 1080px)/2);padding-right:calc((100% - 1080px)/2)}.toast{max-width:1048px;margin:0 auto}}
 /* Ficha: acciones secundarias en dos columnas (ocupan la mitad de alto) */
 .fi-sec{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.fi-sec .btn3{margin-top:0;height:auto;min-height:44px;font-size:14px;line-height:1.2;padding:6px 8px;text-align:center}.fi-sec .btn3:last-child:nth-child(odd){grid-column:1/-1}.fi-sec .btn3.on{box-shadow:0 0 0 2px var(--blue) inset;background:var(--blue-bg)}
+.btn3.bc-conf{height:auto;min-height:46px;padding:6px 14px;line-height:1.25;text-align:center;color:var(--red);background:var(--red-bg);box-shadow:0 0 0 2px var(--red) inset}
+.mail-h{margin:4px 2px 0;color:var(--red);font-size:14px}.mail-h:empty{display:none}
 /* Mensaje oficial de WhatsApp en "¿Confirmó que viene?" y marca de "mandado" en Tareas */
 .cbs.wsp{grid-template-columns:1fr 1fr 46px}.cbs .wsp-b{height:42px;padding:0;display:inline-flex;align-items:center;justify-content:center;font-size:18px;border-radius:12px}
 .cp.wsp-ya{color:#0a7a3e;background:#e7f8ee}
@@ -1169,7 +1171,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     var h = parseInt(g('hour'),10)%24, m = parseInt(g('minute'),10);
     return { date: g('year')+'-'+g('month')+'-'+g('day'), min: h*60+m, hm: ('0'+h).slice(-2)+':'+('0'+m).slice(-2) };
   }
-  function toUTC(s){ var a=s.split('-'); return new Date(Date.UTC(+a[0],+a[1]-1,+a[2])); }
+  function toUTC(s){ if (typeof s!=='string'){ try{ usoError('toUTC recibió '+(s===null?'null':typeof s)+': '+String(s).slice(0,40), 'pantalla (fecha)'); }catch(x){} s=String(s==null?'':s); } var a=s.split('-'); return new Date(Date.UTC(+a[0],+a[1]-1,+a[2])); }
   function fmt(d){ return d.toISOString().slice(0,10); }
   function addDays(s,n){ var d=toUTC(s); d.setUTCDate(d.getUTCDate()+n); return fmt(d); }
   function diffDays(a,b){ return Math.round((toUTC(a)-toUTC(b))/86400000); }
@@ -1999,7 +2001,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     if (puede('agendar') && s==='nofirmo') html += '<button class="btn3" data-agfirmar="'+esc(l.id)+'">'+I.cal+'Viene a firmar: agendar</button>';
     if (segPuede() && !l.parcial) html += '<button class="btn3" data-segnueva="'+esc(l.id)+'">📝 Nota de seguimiento</button>';
     // Vino y no firmó / no vino / pidió reagendar, y después de 3 mensajes no responde más: pasa a BC desde acá (pide confirmar con un segundo toque)
-    if (puedeBC(l)){ var bq=state.bcConf===l.id; html += '<button class="btn3'+(bq?' on':'')+'" data-pasarbc="'+esc(l.id)+'">'+(bq?'Tocá de nuevo para confirmar: pasa a BC y sale de la agenda':'🚫 No responde más: pasar a BC')+'</button>'; }
+    if (puedeBC(l)){ var bq=state.bcConf===l.id; html += '<button class="btn3'+(bq?' on bc-conf':'')+'" data-pasarbc="'+esc(l.id)+'">'+(bq?'Tocá de nuevo para confirmar: pasa a BC y sale de la agenda':'🚫 No responde más: pasar a BC')+'</button>'; }
     var sec='';
     if (puede('agendar') && puedeCorregir(l)) sec += '<button class="btn3" data-agcorregir="'+esc(l.id)+'" title="Me equivoqué al cargar el horario: lo corrijo y no cuenta como reagenda">✏️ Corregir el horario</button>';
     if (puedeDerivar(l)) sec += '<button class="btn3" data-derivar="'+esc(l.id)+'">'+I.swap+'Derivar a otra abogada</button>';
@@ -3187,13 +3189,15 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     var p=call('cambiarFase', {id:id, fase:f});
     toastUndo('Fase: '+faseLbl(antes)+' → '+faseLbl(f), function(){
       p.then(function(){
-        call('cambiarFase', {id:id, fase:antes}).then(function(n2){ replaceAny(n2); if (state.sheet) renderSheet(); render(); toast('Volvió a '+faseLbl(n2.fase)+'.'); })
-          .catch(function(e){ toast((e&&e.message)||'No se pudo deshacer.', true); });
+        call('cambiarFase', {id:id, fase:antes, deshacer:1, desde:f}).then(function(n2){ replaceAny(n2); if (state.sheet) renderSheet(); render(); toast('Volvió a '+faseLbl(n2.fase)+'.'); })
+          .catch(function(e){ toast(msgDeshacerFase(e, f, antes), true); });
       }, function(){});
     });
     p.then(function(nl){ replaceAny(nl); if (state.sheet) renderSheet(); render(); })
      .catch(function(e){ replaceAny(copia); if (state.sheet) renderSheet(); render(); toast((e&&e.message)||'No se pudo cambiar la fase.', true); });
   }
+  // Si el motor todavía no acepta volver a una fase que no se elige a mano (No show, Reagenda, Consulta agendada), se dice claro en qué quedó
+  function msgDeshacerFase(e, f, antes){ var m=(e&&e.message)||''; return /no se cambia desde/i.test(m) ? 'No se pudo deshacer: quedó en '+faseLbl(f)+'. La app todavía no deja volver a '+faseLbl(antes)+'.' : (m||'No se pudo deshacer.'); }
   function guardarNota(){
     var id=state.sheet.id, u=state.fichaUI||{}, t=String(u.nota||'').trim(); if (!t) return;
     state.fichaUI={}; renderSheet(); toast('Guardando la nota…');
@@ -3206,6 +3210,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     if (u.tel!==undefined && u.tel.trim()!==String(l.tel||'').trim()) arg.tel=u.tel; // también si solo se limpia el formato (54, 9, 15, espacios)
     if (u.email!==undefined && u.email.trim().toLowerCase()!==String(l.email||'').toLowerCase()) arg.email=u.email;
     if (arg.nombre===undefined && arg.tel===undefined && arg.email===undefined){ toast('No hay cambios para guardar: escribí el dato nuevo en el campo.', true); return; }
+    if (arg.email!==undefined && !emailOk(arg.email)){ toast('Revisá el email (ej.: nombre@gmail.com).', true); var fe=$('fdEmail'); if (fe) try{ fe.focus(); }catch(x){} return; }
     busySheet(true, 'Guardando…');
     call('editarDatos', arg).then(function(nl){ replaceAny(nl); state.fichaUI={}; renderSheet(); render(); toast('Datos corregidos.'); })
       .catch(function(e){ renderSheet(); toast((e&&e.message)||'No se pudo guardar.', true); });
@@ -3277,7 +3282,9 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     state.manual={ nombre: dig.length>=6 ? '' : q, tel: dig.length>=6 ? q : '', rama: r0, origen:'', nota:'' };
     state.nuevoLead=null; closeSearch(); openSheet({type:'manual'});
   }
-  function manualOk(){ var m=state.manual||{}; return String(m.nombre||'').trim().length>=2 && phone(m.tel).length>=8 && !!m.rama && !!m.origen; }
+  function emailOk(v){ v=String(v||'').trim(); return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v); } // misma regla que el motor ("Revisá el email.")
+  function emailHint(v){ v=String(v||'').trim(); return (v && !emailOk(v)) ? '⚠ Le falta algo al email (ej.: nombre@gmail.com). Si no lo tenés, dejalo vacío.' : ''; }
+  function manualOk(){ var m=state.manual||{}; return String(m.nombre||'').trim().length>=2 && phone(m.tel).length>=8 && !!m.rama && !!m.origen && !emailHint(m.email); }
   function dupLocal(tel){ var p=phone(tel); if (p.length<8) return null; var all=(state.data.leads||[]).concat(state.data.porAgendar||[]); for (var i=0;i<all.length;i++){ if (phone(all[i].tel)===p) return all[i]; } return null; }
   function dupHtml(){
     var d=dupLocal((state.manual||{}).tel); if (!d) return '';
@@ -3289,7 +3296,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     return '<div class="grab"></div><div class="sh-head"><div class="sh-who"><h2>Cargar a alguien nuevo</h2><p class="hint" style="margin:4px 0 0">Para quien no está en la lista (por ejemplo, llegó por chat o es referido). Se agrega una fila en la planilla de la rama.</p></div><button class="close" data-close aria-label="Cerrar">'+I.x+'</button></div>'+
       '<div class="field"><label for="mnNombre">Nombre y apellido</label><input class="inp" id="mnNombre" autocomplete="off" value="'+esc(m.nombre||'')+'"></div>'+
       '<div class="field"><label for="mnTel">Teléfono</label><input class="inp" id="mnTel" type="tel" inputmode="tel" autocomplete="off" value="'+esc(m.tel||'')+'"></div>'+
-        '<div class="field"><label for="mnEmail">Email (opcional)</label><input class="inp" id="mnEmail" type="email" inputmode="email" autocomplete="off" value="'+esc(m.email||'')+'"></div>'+
+        '<div class="field"><label for="mnEmail">Email (opcional)</label><input class="inp" id="mnEmail" type="email" inputmode="email" autocomplete="off" aria-describedby="mnEmailH" value="'+esc(m.email||'')+'"><p class="hint mail-h" id="mnEmailH" role="status">'+esc(emailHint(m.email))+'</p></div>'+
       '<div id="mnDup">'+dupHtml()+'</div>'+
       '<div class="field"><span class="lbl">Rama</span><div class="pick">'+[['ART','ART'],['LABORAL','Laboral'],['TRANSITO','Tránsito']].filter(function(x){ return leadsRamas().indexOf(x[0])!==-1; }).map(function(x){ return pick('data-mnrama',x[0],x[1],m.rama===x[0]); }).join('')+'</div></div>'+
       '<div class="field"><span class="lbl">¿De dónde viene?</span><div class="pick">'+(state.data.origenes||[]).map(function(o){ return pick('data-mnorigen',o,o,m.origen===o); }).join('')+'</div></div>'+
@@ -4588,8 +4595,8 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     toastUndo('🚫 '+nom+': pasó a BC y salió de la agenda.', function(){
       deshecho=true; volver(); render();
       p.then(function(){
-        call('cambiarFase', {id:id, fase:antes}).then(function(n2){ if (n2) otrasMover(n2); render(); toast('Volvió a '+faseLbl(antes)+'.'); })
-          .catch(function(e){ sacar(); render(); toast((e&&e.message)||'No se pudo deshacer.', true); });
+        call('cambiarFase', {id:id, fase:antes, deshacer:1, desde:'BC'}).then(function(n2){ if (n2) otrasMover(n2); render(); toast('Volvió a '+faseLbl(antes)+'.'); })
+          .catch(function(e){ sacar(); render(); toast(msgDeshacerFase(e, 'BC', antes), true); });
       }, function(){});
     });
     p.then(function(nl){ if (nl && !deshecho) otrasMover(nl); render(); })
@@ -4838,6 +4845,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
       var mn=state.manual||(state.manual={}); mn[({mnNombre:'nombre', mnTel:'tel', mnNota:'nota', mnEmail:'email'})[id]]=ev.target.value;
       var bs=document.querySelector('[data-mnsig]'); if (bs) bs.disabled=!manualOk(); var bsn=document.querySelector('[data-mnsin]'); if (bsn) bsn.disabled=!(manualOk() && (state.manual||{}).fase);
       if (id==='mnTel' && $('mnDup')) $('mnDup').innerHTML=dupHtml();
+      if (id==='mnEmail' && $('mnEmailH')) $('mnEmailH').textContent=emailHint(ev.target.value);
     }
     if (id==='detalle' && state.draft){ state.draft.detalle=ev.target.value; var l=findLead(state.sheet.id), btn=$('sheet').querySelector('[data-save]'); if (btn && l) btn.disabled=!canSave(l); }
     if (id==='q') renderSearch();
@@ -5815,7 +5823,8 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
   function wspDatos(){
     if (wspD && Date.now()-wspDT < 5*60000) return Promise.resolve(wspD);
     if (!wspDP) wspDP=call('wspDatos', {}).then(function(d){ wspD=d; wspDT=Date.now(); wspDP=null; return d; }, function(e){ wspDP=null; throw e; });
-    return wspD ? Promise.resolve(wspD) : wspDP;
+    if (wspD){ wspDP.catch(function(){}); return Promise.resolve(wspD); } // se renueva atrás; si falla, se sigue con lo que había
+    return wspDP;
   }
   var WSP_DIAS=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
   function wspHoy(){ return nowBA().date; }
