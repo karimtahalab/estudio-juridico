@@ -638,6 +638,36 @@ textarea:focus,.inp:focus,select:focus{outline:none;box-shadow:0 0 0 2.5px var(-
 .rp-t td.nc{color:var(--ink-3);font-weight:500;font-size:12px}
 .rp-t th small{display:block;font-weight:500;font-size:10.5px;color:var(--ink-3)}
 .rp-t td:first-child small{display:block;font-weight:500;font-size:12px;color:var(--ink-3);margin:1px 0 0 16px}
+/* Reporte del turno (intakers) */
+.tu-tot{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}
+.tu-tot div{background:var(--paper);border-radius:14px;box-shadow:0 0 0 1px var(--line) inset;padding:12px 8px;text-align:center}
+.tu-tot b{display:block;font-size:30px;font-weight:800;font-stretch:var(--cond);line-height:1}
+.tu-tot span{display:block;font-size:12.5px;color:var(--ink-2);font-weight:700;margin-top:5px;line-height:1.2}
+@media (max-width:430px){.tu-tot{grid-template-columns:repeat(2,1fr)}}
+.tu-card{margin-top:12px;background:var(--paper);border-radius:var(--r-lg);box-shadow:0 0 0 1px var(--line) inset;padding:12px 14px 6px}
+.tu-card h3{margin:0 0 4px;font-size:16px;display:flex;align-items:center;gap:8px}
+.tu-row{display:flex;width:100%;align-items:center;gap:10px;padding:11px 0;border-top:1px solid var(--line);text-align:left;font-size:15px;font-weight:700;color:var(--ink);background:none}
+.tu-card h3+.tu-row{border-top:0}
+.tu-row .tu-l{flex:1;min-width:0}
+.tu-row small{display:block;font-weight:600;color:var(--ink-3);font-size:12.5px;margin-top:2px}
+.tu-row b{font-size:22px;font-weight:800;min-width:30px;text-align:right}
+.tu-row .tu-car{width:14px;font-style:normal;color:var(--ink-3);font-size:13px}
+.tu-row.cero{color:var(--ink-3);cursor:default}
+.tu-row.cero b{color:var(--ink-3);font-weight:700}
+.tu-abc{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 10px}
+.tu-abc span{padding:5px 10px;border-radius:9px;background:var(--paper-2);font-weight:700;font-size:14px}
+.tu-abc span small{font-weight:600;color:var(--ink-3)}
+.tu-list{list-style:none;margin:0 0 10px;padding:0}
+.tu-list li{padding:8px 10px;border-radius:10px;background:var(--paper-2);margin-top:6px;font-size:14px}
+.tu-list li span{display:block;color:var(--ink-3);font-size:12.5px;margin-top:2px}
+.tu-pick{margin-top:10px;padding:12px 14px;border-radius:14px;background:var(--paper);box-shadow:0 0 0 1px var(--line) inset}
+.tu-pick label{display:block;font-size:13px;font-weight:700;color:var(--ink-2);margin-bottom:6px}
+.tu-pick-r{display:flex;gap:8px}
+.tu-pick-r .inp{flex:1;margin:0}
+.tu-pick-r .btn2{flex:none;padding:0 18px}
+.tu-acts{margin-top:16px}
+.tu-conf{padding:14px;border-radius:14px;background:var(--paper);box-shadow:0 0 0 1px var(--line) inset}
+.tu-conf p{margin:0 0 10px;font-size:14.5px;line-height:1.4}
 .rp-sem{margin:12px 0 0;padding:12px 14px;border-radius:14px;background:var(--paper);box-shadow:0 0 0 1px var(--line) inset;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .rp-sem b{font-size:16px}
 .rp-sem span{color:var(--ink-3);font-size:13.5px;flex:1 1 180px}
@@ -3806,7 +3836,124 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     var segR=ramas.length>1 ? '<div class="seg marca" role="tablist" aria-label="Rama">'+ramas.map(function(r){ return '<button class="'+(cur===r?'on':'')+(r==='TRANSITO'?' mk-transito':'')+'" data-rtrama="'+r+'" role="tab" aria-selected="'+(cur===r)+'">'+RT_NOM[r]+'</button>'; }).join('')+'</div>' : '';
     return { h1:'Reportes', p:'Ritmo de ingresos de clientes', extra:repModoSeg()+segR, body:equipoBtn()+body };
   }
+  /* ---------- Reporte del turno (intakers): lo que trabajó cada una desde que cerró el turno anterior ----------
+     Pedido de Pri (19/11): armar el reporte de fin de turno sin entrar a la planilla. Sale del HISTORIAL de las tres ramas.
+     Los turnos no se superponen, así que el turno va desde el último "cerrar turno" hasta ahora.
+     Leads nuevos: cómo quedaron (A, B, C u otra fase) o si se les agendó consulta o llamada. De turnos anteriores: solo consultas y llamadas. */
+  function turBA(ms){ return new Date(ms-3*3600000); } // Mendoza: UTC-3 todo el año
+  function turHM(ms){ var d=turBA(ms); return pad2(d.getUTCHours())+':'+pad2(d.getUTCMinutes()); }
+  function turDia(ms){ return diaCorto(turBA(ms).toISOString().slice(0,10)); }
+  function turCuando(ms){ var dc=turDia(ms); return (dc==='Hoy'?'hoy':(dc==='Mañana'?'mañana':dc))+' a las '+turHM(ms); }
+  function turFechaTxt(ms){ var d=turBA(ms); return ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'][d.getUTCDay()]+' '+pad2(d.getUTCDate())+'/'+pad2(d.getUTCMonth()+1); }
+  function turInput(ms){ return turBA(ms).toISOString().slice(0,16); }
+  function turDesdeMs(v){ var m=String(v||'').match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/); return m ? Date.UTC(+m[1], +m[2]-1, +m[3], +m[4]+3, +m[5]) : 0; }
+  function loadTurno(force){
+    var q=state.turQ||{}, k=JSON.stringify(q), T=state.tur;
+    if (!force && T && T.k===k && (T.cargando || (T.d && Date.now()-T.at<60000))) return;
+    var mio=state.tur={k:k, at:Date.now(), cargando:true, d:(T && T.k===k) ? T.d : null};
+    call('reporteTurno', q).then(function(d){ if (state.tur!==mio) return; mio.d=d; mio.at=Date.now(); mio.cargando=false; mio.error=''; if (state.view==='reporte') render(); })
+      .catch(function(e){ if (state.tur!==mio) return; mio.cargando=false; mio.error=(e&&e.message)||'No se pudo armar el reporte.'; if (state.view==='reporte') render(); });
+  }
+  function turCuentas(r){
+    var c={nuevos:0, A:0, B:0, C:0, otra:0, otras:{}, consulta:0, llamada:0, llamadaConsulta:0, consultaAnt:0, llamadaAnt:0, llamadaConsultaAnt:0, consultaNue:0, llamadaNue:0, llamadaConsultaNue:0};
+    (r.items||[]).forEach(function(i){
+      var k=i.cat;
+      if (i.nuevo) c.nuevos++;
+      if (k==='otra'){ c.otra++; var f=faseLbl(i.fase)||i.fase||'Otra'; c.otras[f]=(c.otras[f]||0)+1; return; }
+      c[k]=(c[k]||0)+1;
+      if (k==='consulta' || k==='llamada' || k==='llamadaConsulta') c[k+(i.nuevo?'Nue':'Ant')]++;
+    });
+    return c;
+  }
+  function turOtrasTxt(c){ return Object.keys(c.otras).map(function(f){ return f+' '+c.otras[f]; }).join(', '); }
+  // Texto para pegar en el grupo de WhatsApp
+  function turTexto(d){
+    var hoy=turDia(d.desde)===turDia(d.hasta);
+    var ls=['📋 Reporte de turno – '+(d.yo||''), (hoy ? turFechaTxt(d.hasta)+', de '+turHM(d.desde)+' a '+turHM(d.hasta) : 'Desde el '+turFechaTxt(d.desde)+' '+turHM(d.desde)+' hasta el '+turFechaTxt(d.hasta)+' '+turHM(d.hasta))];
+    (d.ramas||[]).forEach(function(r){
+      var c=turCuentas(r), det=['A '+c.A, 'B '+c.B, 'C '+c.C];
+      if (c.consultaNue) det.push('con consulta '+c.consultaNue);
+      if (c.llamadaNue) det.push('con llamada '+c.llamadaNue);
+      if (c.llamadaConsultaNue) det.push('llamada y consulta '+c.llamadaConsultaNue);
+      if (c.otra) det.push('otras '+c.otra+' ('+turOtrasTxt(c)+')');
+      var ant=function(n){ return n ? ' ('+n+' de turnos anteriores)' : ''; };
+      ls.push('', '*'+ramaLabel(r.rama)+'*');
+      ls.push('• Leads nuevos: '+c.nuevos+(c.nuevos ? ' → '+det.join(' · ') : ''));
+      ls.push('• Consultas agendadas: '+c.consulta+ant(c.consultaAnt));
+      ls.push('• Llamadas agendadas: '+c.llamada+ant(c.llamadaAnt));
+      if (c.llamadaConsulta) ls.push('• Llamada y consulta agendada: '+c.llamadaConsulta+ant(c.llamadaConsultaAnt));
+    });
+    return ls.join('\n');
+  }
+  function turItem(i){
+    return '<li><b>'+esc(i.n)+'</b><span>'+esc((i.camino||[]).map(function(f){ return faseLbl(f)||f; }).join(' → '))+' · '+turHM(i.t)+(i.nuevo?'':' · lead de otro turno')+'</span></li>';
+  }
+  function turRamaCard(r){
+    var c=turCuentas(r), its=r.items||[], ab=state.turAbierto||{};
+    var fila=function(k, n, label, sub, xs){
+      var key=r.rama+'|'+k, on=!!ab[key] && n>0;
+      return '<button class="tu-row'+(n?'':' cero')+(on?' on':'')+'" data-turabrir="'+esc(key)+'"'+(n?' aria-expanded="'+on+'"':' disabled')+'><span class="tu-l">'+label+(sub?'<small>'+sub+'</small>':'')+'</span><b class="num">'+n+'</b><i class="tu-car" aria-hidden="true">'+(n?(on?'▴':'▾'):'')+'</i></button>'+
+        (on ? '<ul class="tu-list">'+xs.map(turItem).join('')+'</ul>' : '');
+    };
+    var ant=function(n){ return n ? plural(n,'es de un lead de otro turno','son de leads de otros turnos') : ''; };
+    var html='<div class="tu-card"><h3><span class="rama r-'+ramaKey(r.rama)+'">'+ramaLabel(r.rama)+'</span></h3>';
+    if (r.error) html+='<div class="warn" style="margin:6px 0">'+esc(r.error)+'</div>';
+    html+=fila('nuevos', c.nuevos, 'Leads nuevos que levantaste', '', its.filter(function(i){ return i.nuevo; }));
+    if (c.nuevos) html+='<div class="tu-abc">'+['A','B','C'].map(function(x){ return '<span><b>'+x+'</b> '+c[x]+'</span>'; }).join('')+
+      (c.consultaNue ? '<span>Con consulta '+c.consultaNue+'</span>' : '')+(c.llamadaNue ? '<span>Con llamada '+c.llamadaNue+'</span>' : '')+
+      (c.llamadaConsultaNue ? '<span>Llamada y consulta '+c.llamadaConsultaNue+'</span>' : '')+
+      (c.otra ? '<span>Otras '+c.otra+' <small>('+esc(turOtrasTxt(c))+')</small></span>' : '')+'</div>';
+    html+=fila('consulta', c.consulta, 'Consultas agendadas', ant(c.consultaAnt), its.filter(function(i){ return i.cat==='consulta'; }));
+    html+=fila('llamada', c.llamada, 'Llamadas agendadas', ant(c.llamadaAnt), its.filter(function(i){ return i.cat==='llamada'; }));
+    html+=fila('llamadaConsulta', c.llamadaConsulta, 'Llamada y consulta agendada', 'Las dos en este turno', its.filter(function(i){ return i.cat==='llamadaConsulta'; }));
+    return html+'</div>';
+  }
+  function repTipoSeg(){ var t=state.repTipo||store('repTipo')||'turno'; return '<div class="seg2" role="tablist" aria-label="Qué reporte"><button data-reptipo="turno" class="'+(t==='turno'?'on':'')+'" role="tab" aria-selected="'+(t==='turno')+'">Mi turno</button><button data-reptipo="semana" class="'+(t==='semana'?'on':'')+'" role="tab" aria-selected="'+(t==='semana')+'">Semana</button></div>'; }
+  function viewTurno(){
+    loadTurno();
+    var T=state.tur||{}, d=T.d, q=state.turQ||{}, pasado=!!q.hasta, body='';
+    if (!d && T.cargando) body='<div class="skel"></div><div class="skel"></div><p class="hint" style="text-align:center">Armando el reporte del turno…</p>';
+    else if (!d) body='<div class="err-box">'+esc(T.error||'No se pudo armar el reporte.')+'<br><button data-turretry>Reintentar</button></div>';
+    else {
+      if (T.error) body+='<div class="warn">'+esc(T.error)+'</div>';
+      if (state.turHecho && !pasado && !q.desde) body+='<div class="ok-box" style="margin-top:12px"><b>✓ Cerraste tu turno a las '+esc(turHM(state.turHecho.cuando))+'.</b><span>El reporte quedó copiado: pegalo en el grupo. El turno que sigue arranca desde acá.</span><button class="link" data-turver="'+esc(state.turHecho.desde+'|'+state.turHecho.cuando)+'">Ver el turno que cerraste</button></div>';
+      var expl = pasado ? 'Turno de '+esc((d.cierres||[]).filter(function(c){ return c.cuando===d.hasta; }).map(function(c){ return c.quien; })[0]||'')+', hasta '+esc(turCuando(d.hasta))+'.'
+        : (q.desde ? 'Elegiste desde cuándo. Hasta ahora.' : (d.base ? 'Desde que '+esc(d.base.quien)+' cerró su turno. Hasta ahora.' : 'Todavía nadie cerró un turno: arranca a las 00:00 de hoy.'));
+      body+='<div class="rp-sem"><b>🕘 Desde '+esc(turCuando(d.desde))+'</b><span>'+expl+'</span><button data-turcambiar aria-expanded="'+!!state.turCambiar+'">'+(state.turCambiar?'Listo':'Cambiar')+'</button></div>';
+      if (state.turCambiar){
+        body+='<div class="tu-pick"><label for="turDesde">Desde cuándo</label><div class="tu-pick-r"><input class="inp" id="turDesde" type="datetime-local" value="'+esc(turInput(d.desde))+'"><button class="btn2" data-turdesdeok>Ver</button></div>'+
+          ((q.desde||q.hasta) ? '<button class="link" data-turactual>Volver al turno de ahora</button>' : '')+
+          ((d.cierres||[]).length ? '<p class="sec-sub" style="margin:12px 0 0">O mirá un turno que ya se cerró:</p><div class="chips" style="margin-top:8px">'+d.cierres.map(function(c){
+            var on=pasado && q.hasta===c.cuando; return '<button class="chip'+(on?' on':'')+'" data-turver="'+esc((c.desde||'')+'|'+c.cuando)+'">'+esc(c.quien)+' · '+esc(turDia(c.cuando))+' '+esc(turHM(c.cuando))+'</button>'; }).join('')+'</div>' : '')+'</div>';
+      }
+      var tot={nuevos:0, consulta:0, llamada:0, llamadaConsulta:0};
+      (d.ramas||[]).forEach(function(r){ var c=turCuentas(r); Object.keys(tot).forEach(function(k){ tot[k]+=c[k]; }); });
+      body+='<div class="tu-tot">'+[['nuevos','Leads nuevos'],['consulta','Consultas agendadas'],['llamada','Llamadas agendadas'],['llamadaConsulta','Llamada y consulta']].map(function(x){
+        return '<div><b class="num">'+tot[x[0]]+'</b><span>'+x[1]+'</span></div>'; }).join('')+'</div>';
+      (d.ramas||[]).forEach(function(r){ body+=turRamaCard(r); });
+      body+='<p class="hint" style="margin:10px 2px 0">Sale del HISTORIAL de las planillas: cuenta los cambios de fase hechos en la app y en la planilla. Tocá cada número para ver quiénes son.</p>';
+      if (pasado) body+='<div class="tu-acts"><button class="save" data-turcopiar>📋 Copiar este reporte</button><button class="link" data-turactual style="display:block;margin:10px auto 0">Volver al turno de ahora</button></div>';
+      else if (state.turConfirmar) body+='<div class="tu-acts tu-conf"><p><b>¿Cerrar tu turno?</b> Se copia el reporte y el turno que sigue arranca desde ahora.</p><button class="save" data-turcerrar'+(state.turCerrando?' disabled':'')+'>'+(state.turCerrando?'Cerrando…':'Sí, copiar y cerrar mi turno')+'</button><button class="link" data-turnoconf style="display:block;margin:10px auto 0">Todavía no</button></div>';
+      else body+='<div class="tu-acts"><button class="save" data-turconf>📋 Copiar el reporte y cerrar mi turno</button><button class="link" data-turcopiar style="display:block;margin:10px auto 0">Solo copiar, sin cerrar el turno</button></div>';
+    }
+    return { h1:'Reporte', p: pasado ? 'Un turno que ya se cerró' : 'Lo que trabajaste en este turno', extra: repTipoSeg(), body: body };
+  }
+  function copiarReporte(t){
+    var ok=function(){ toast('📋 Reporte copiado: pegalo en el grupo.'); };
+    try{ if (navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(t).then(ok, function(){ copiarViejo(t) ? ok() : toast('No se pudo copiar', true); }); return; } }catch(e){}
+    copiarViejo(t) ? ok() : toast('No se pudo copiar', true);
+  }
+  function cerrarTurnoUI(){
+    var T=state.tur, d=T && T.d; if (!d || state.turCerrando) return;
+    var txt=turTexto(d); copiarReporte(txt);
+    state.turCerrando=true; render();
+    call('cerrarTurno', {desde:d.desde, texto:txt}).then(function(r){
+      state.turCerrando=false; state.turConfirmar=false; state.turQ={}; state.turHecho={cuando:r.cuando, desde:d.desde};
+      loadTurno(true); render(); toast('✓ Turno cerrado y reporte copiado: pegalo en el grupo.');
+    }).catch(function(e){ state.turCerrando=false; render(); toast(((e&&e.message)||'No se pudo cerrar el turno.')+' El reporte igual quedó copiado.', true); });
+  }
   function viewReporte(ctrl){
+    if (!ctrl && (state.repTipo||store('repTipo')||'turno')==='turno') return viewTurno();
     if (ctrl && state.repModo==='finanzas'){ if (!(state.data && state.data.finAcceso)) state.repModo='control'; else { var vf=viewFin2(); vf.h1='Reportes'; vf.extra=repModoSeg()+vf.extra; return vf; } }
     if (ctrl && state.repModo==='ritmo') return viewRitmo();
     if (ctrl && state.repModo==='resumen'){ var vr=viewResumen(); vr.h1='Reportes'; vr.extra=repModoSeg()+(vr.extra||''); vr.body=equipoBtn()+vr.body; return vr; }
@@ -3837,7 +3984,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
       } else (d.ramas||[]).forEach(function(r){ body+=repRama(r, ctrl); });
       if (!(d.ramas||[]).length) body+=emptyBox('No hay planillas de leads para este reporte');
     }
-    return { h1: ctrl?'Reportes':'Reporte de la semana', p:(cual?cual+', ':'Semana del ')+semTxt, extra:(ctrl?repModoSeg():'')+nav, body:(ctrl?equipoBtn():'')+(viejo?notaViejo(viejo.t):'')+body };
+    return { h1: ctrl?'Reportes':'Reporte de la semana', p:(cual?cual+', ':'Semana del ')+semTxt, extra:(ctrl?repModoSeg():repTipoSeg())+nav, body:(ctrl?equipoBtn():'')+(viejo?notaViejo(viejo.t):'')+body };
   }
 
   /* ---------- Disponibilidad por persona (cada una elige su modo) ---------- */
@@ -4765,7 +4912,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
 
   /* ---------- eventos ---------- */
   document.addEventListener('click', function(ev){
-    var t = ev.target.closest('[data-intocultar],[data-reptile],[data-repctl],[data-repsemq],[data-pindesbloq],[data-fin],[data-equipo],[data-view],[data-undo],[data-agotra],[data-agbuscartodo],[data-ficha],[data-pinok],[data-pinback],[data-pinreset],[data-salir],[data-fimodo],[data-fase],[data-notasave],[data-datosave],[data-mnfase],[data-mnsin],[data-dupfase],[data-derivar],[data-reagsindia],[data-pasarbc],[data-dvsel],[data-dvhora],[data-dvsave],[data-deon],[data-deque],[data-desem],[data-decopia],[data-deamplio],[data-dedia],[data-dequick],[data-decopy],[data-devolver],[data-definde],[data-demodo],[data-desave],[data-decancel],[data-repweek],[data-deadm],[data-reprow],[data-repmodo],[data-rtrama],[data-rtfresco],[data-repretry],[data-agmode],[data-wgday],[data-agrama],[data-agfase],[data-agmas],[data-agmes],[data-agvista],[data-agclr],[data-agnuevo],[data-mnrama],[data-mnorigen],[data-mnsig],[data-mncrear],[data-open],[data-result],[data-bloq],[data-nuevo],[data-week],[data-day],[data-sum],[data-chip],[data-abog],[data-close],[data-res],[data-motivo],[data-save],[data-bqwho],[data-bqtodo],[data-savebq],[data-delbq],[data-retry],[data-pastefor],[data-pasteall],[data-rvcheck],[data-rvtoggle],[data-rvsave],[data-rvback],[data-yo],[data-yocambiar],[data-vcabrir],[data-vcsalir],[data-vercomo],[data-visto],[data-conf],[data-escribir],[data-agendar],[data-agfirmar],[data-agcorregir],[data-agdia],[data-slot],[data-agcorr],[data-saveag],[data-savecampos]');
+    var t = ev.target.closest('[data-reptipo],[data-turabrir],[data-turcambiar],[data-turdesdeok],[data-turactual],[data-turver],[data-turretry],[data-turcopiar],[data-turconf],[data-turnoconf],[data-turcerrar],[data-intocultar],[data-reptile],[data-repctl],[data-repsemq],[data-pindesbloq],[data-fin],[data-equipo],[data-view],[data-undo],[data-agotra],[data-agbuscartodo],[data-ficha],[data-pinok],[data-pinback],[data-pinreset],[data-salir],[data-fimodo],[data-fase],[data-notasave],[data-datosave],[data-mnfase],[data-mnsin],[data-dupfase],[data-derivar],[data-reagsindia],[data-pasarbc],[data-dvsel],[data-dvhora],[data-dvsave],[data-deon],[data-deque],[data-desem],[data-decopia],[data-deamplio],[data-dedia],[data-dequick],[data-decopy],[data-devolver],[data-definde],[data-demodo],[data-desave],[data-decancel],[data-repweek],[data-deadm],[data-reprow],[data-repmodo],[data-rtrama],[data-rtfresco],[data-repretry],[data-agmode],[data-wgday],[data-agrama],[data-agfase],[data-agmas],[data-agmes],[data-agvista],[data-agclr],[data-agnuevo],[data-mnrama],[data-mnorigen],[data-mnsig],[data-mncrear],[data-open],[data-result],[data-bloq],[data-nuevo],[data-week],[data-day],[data-sum],[data-chip],[data-abog],[data-close],[data-res],[data-motivo],[data-save],[data-bqwho],[data-bqtodo],[data-savebq],[data-delbq],[data-retry],[data-pastefor],[data-pasteall],[data-rvcheck],[data-rvtoggle],[data-rvsave],[data-rvback],[data-yo],[data-yocambiar],[data-vcabrir],[data-vcsalir],[data-vercomo],[data-visto],[data-conf],[data-escribir],[data-agendar],[data-agfirmar],[data-agcorregir],[data-agdia],[data-slot],[data-agcorr],[data-saveag],[data-savecampos]');
     if (!t) return;
     if (t.hasAttribute('data-intocultar')){ var oc=intOcultas(); ((state.data && state.data.paraMi)||[]).forEach(function(l){ intAbiertaMia(l).forEach(function(x){ var k=intOcId(l, x); if (x.tipo!=='control' && oc.indexOf(k)===-1) oc.push(k); }); }); var antes=store(intOcKey())||'[]'; store(intOcKey(), JSON.stringify(oc.slice(-300))); render(); toastUndo('Listo, lo saqué. Si te llega una consulta nueva, vuelve a aparecer.', function(){ store(intOcKey(), antes); render(); }); return; }
     if (t.hasAttribute('data-pindesbloq')){ var nd=t.getAttribute('data-pindesbloq'); t.disabled=true; t.textContent='Desbloqueando…'; call('desbloquearPin', {nombre:nd}).then(function(p){ if (state.data) state.data.pines=p; if (state.sheet) renderSheet(); render(); toast('Listo: '+nd+' ya puede entrar de nuevo.'); }).catch(function(e){ t.disabled=false; toast((e&&e.message)||'No se pudo desbloquear.', true); }); return; }
@@ -4805,6 +4952,17 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     if (t.hasAttribute('data-repctl')){ var rc=t.getAttribute('data-repctl'); state.repCtl=state.repCtl||{}; state.repCtl[rc]=!state.repCtl[rc]; render(); return; }
     if (t.hasAttribute('data-reprow')){ var ro=t.getAttribute('data-reprow'); state.repOpen=state.repOpen||{}; state.repOpen[ro]=!state.repOpen[ro]; render(); return; }
     if (t.hasAttribute('data-repmodo')){ state.repModo=t.getAttribute('data-repmodo'); render(); return; }
+    if (t.hasAttribute('data-reptipo')){ state.repTipo=t.getAttribute('data-reptipo'); store('repTipo', state.repTipo); render(); return; }
+    if (t.hasAttribute('data-turabrir')){ var tk=t.getAttribute('data-turabrir'), TA=state.turAbierto||(state.turAbierto={}); TA[tk]=!TA[tk]; render(); return; }
+    if (t.hasAttribute('data-turcambiar')){ state.turCambiar=!state.turCambiar; render(); return; }
+    if (t.hasAttribute('data-turdesdeok')){ var tin=$('turDesde'), tms=turDesdeMs(tin && tin.value); if (!tms){ toast('Elegí el día y la hora.', true); return; } state.turQ={desde:tms}; state.turCambiar=false; state.turHecho=null; loadTurno(true); render(); return; }
+    if (t.hasAttribute('data-turactual')){ state.turQ={}; state.turCambiar=false; loadTurno(true); render(); return; }
+    if (t.hasAttribute('data-turver')){ var tp=t.getAttribute('data-turver').split('|'); state.turQ={desde:(+tp[0])||0, hasta:+tp[1]}; state.turCambiar=false; loadTurno(true); render(); return; }
+    if (t.hasAttribute('data-turretry')){ loadTurno(true); render(); return; }
+    if (t.hasAttribute('data-turcopiar')){ var td=state.tur && state.tur.d; if (td) copiarReporte(turTexto(td)); return; }
+    if (t.hasAttribute('data-turconf')){ state.turConfirmar=true; render(); return; }
+    if (t.hasAttribute('data-turnoconf')){ state.turConfirmar=false; render(); return; }
+    if (t.hasAttribute('data-turcerrar')){ cerrarTurnoUI(); return; }
     if (t.hasAttribute('data-repsemq')){ var q=t.getAttribute('data-repsemq'), m0q=mondayOf(nowBA().date); store('repSemPref', q); state.repSem = q==='esta' ? m0q : addDays(m0q,-7); state.repOpen={}; render(); return; }
     if (t.hasAttribute('data-rtrama')){ state.rtRama=t.getAttribute('data-rtrama'); render(); return; }
     if (t.hasAttribute('data-rtfresco')){ rtLoad(state.rtRama||'', true); render(); return; }
