@@ -4279,15 +4279,17 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     var base=todas.filter(pasa);
     var cnt={ pend: base.filter(function(s){ return s.estado!=='Hecho'; }).length, hoy: base.filter(segUrgente).length, hechas: base.filter(function(s){ return s.estado==='Hecho'; }).length };
     var xs=base.filter(function(s){ return f==='pend' ? s.estado!=='Hecho' : (f==='hoy' ? segUrgente(s) : (f==='hechas' ? s.estado==='Hecho' : true)); });
-    // Como en la planilla: de la más vieja a la más nueva. Las hechas, la última que se hizo arriba.
-    xs.sort(f==='hechas' ? function(a,b){ return String(b.hechoEl).localeCompare(String(a.hechoEl)); }
-      : function(a,b){ return (a.estado==='Hecho')-(b.estado==='Hecho') || String(a.creado).localeCompare(String(b.creado)); });
+    // Orden por la columna Fecha (cuándo se dejó la nota). Por defecto como en la planilla: de la más antigua a la más reciente.
+    // Cada uno elige el orden y queda guardado en su celular o compu. En "Todas", las pendientes siguen arriba de las hechas.
+    var o=state.segO||store('segO')||'asc', dir=o==='desc'?-1:1;
+    xs.sort(function(a,b){ return (f==='todas' ? (a.estado==='Hecho')-(b.estado==='Hecho') : 0) || dir*String(a.creado).localeCompare(String(b.creado)); });
     var chip=function(k, t, n){ return '<button class="chip'+(f===k?' on':'')+'" data-segf="'+k+'">'+t+(n!==undefined?' <b class="num">'+n+'</b>':'')+'</button>'; };
     var chipR=function(k, t){ return '<button class="chip'+(r===k?' on':'')+'" data-segr="'+k+'">'+t+'</button>'; };
     var body='<div class="segt-top"><button class="btn3 seg-nueva" data-segnueva>📝 Dejar una nota de seguimiento</button>'+
       '<input class="inp seg-q" id="segQ" type="search" placeholder="Buscar por nombre, teléfono o nota" value="'+esc(state.segQ||'')+'" autocomplete="off"></div>'+
       '<div class="chips segt-f" role="group" aria-label="Estado">'+chip('pend','Pendientes',cnt.pend)+chip('hoy','Para hoy',cnt.hoy)+chip('hechas','Hechas',cnt.hechas)+chip('todas','Todas')+'</div>'+
-      '<div class="chips segt-f" role="group" aria-label="Origen">'+chipR('','Todas las ramas')+chipR('ART','ART')+chipR('LABORAL','Laboral')+chipR('TRANSITO','Tránsito')+'</div>';
+      '<div class="chips segt-f" role="group" aria-label="Origen">'+chipR('','Todas las ramas')+chipR('ART','ART')+chipR('LABORAL','Laboral')+chipR('TRANSITO','Tránsito')+'</div>'+
+      '<div class="chips segt-f" role="group" aria-label="Orden"><button class="chip'+(o==='asc'?' on':'')+'" data-sego="asc">↑ Más antiguas primero</button><button class="chip'+(o==='desc'?' on':'')+'" data-sego="desc">↓ Más recientes primero</button></div>';
     if (!xs.length) body+='<p class="done">'+(q||r?'No hay notas que coincidan.':(f==='hechas'?'Todavía no hay notas hechas en las últimas 2 semanas.':(f==='hoy'?'✓ No hay nada para hoy':'✓ No hay nada pendiente')))+'</p>';
     else body+=segTabla(xs);
     if (f==='hechas' && xs.length) body+='<p class="sec-sub" style="margin-top:10px">Se ven las hechas de las últimas 2 semanas.</p>';
@@ -4391,7 +4393,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     if (ev.target && ev.target.id==='sgPara' && state.sheet && state.sheet.type==='seg'){ segLeerForm(); state.draft.para=ev.target.value||''; renderSheet(); }
   });
   document.addEventListener('click', function(ev){
-    var t=ev.target.closest && ev.target.closest('[data-segf],[data-segr],[data-segnueva],[data-segver],[data-seghecho],[data-segdeshacer],[data-segrama],[data-segpara],[data-segrep],[data-segsave],[data-segcomsave],[data-segeditar],[data-segficha]'); if (!t) return;
+    var t=ev.target.closest && ev.target.closest('[data-segf],[data-segr],[data-sego],[data-segnueva],[data-segver],[data-seghecho],[data-segdeshacer],[data-segrama],[data-segpara],[data-segrep],[data-segsave],[data-segcomsave],[data-segeditar],[data-segficha]'); if (!t) return;
     if (state.verComo && (t.hasAttribute('data-segnueva') || t.hasAttribute('data-seghecho') || t.hasAttribute('data-segdeshacer') || t.hasAttribute('data-segsave') || t.hasAttribute('data-segcomsave'))){ toast('👁 Estás viendo la app como '+state.verComo+': es solo para mirar.'); return; }
     if (t.hasAttribute('data-segnueva')){
       var lid=t.getAttribute('data-segnueva'), l=lid && findLead(lid);
@@ -4400,6 +4402,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     }
     if (t.hasAttribute('data-segf')){ state.segF=t.getAttribute('data-segf'); render(); return; }
     if (t.hasAttribute('data-segr')){ state.segR=t.getAttribute('data-segr'); render(); return; }
+    if (t.hasAttribute('data-sego')){ state.segO=t.getAttribute('data-sego'); store('segO', state.segO); render(); return; }
     if (t.hasAttribute('data-segver')){ if (ev.target.closest('a')) return; state.draft={}; openSheet({type:'segver', id:t.getAttribute('data-segver')}); return; }
     if (t.hasAttribute('data-seghecho')){ segMarcar(t.getAttribute('data-seghecho'), true); return; }
     if (t.hasAttribute('data-segdeshacer')){ var sx=segBuscar(t.getAttribute('data-segdeshacer')); if (state.sheet && state.sheet.type==='segver') closeSheet(); segDeshacer(t.getAttribute('data-segdeshacer'), sx?sx.para:undefined); return; }
