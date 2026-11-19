@@ -108,18 +108,54 @@ a{color:inherit;text-decoration:none}
 .agbar .seg2 button::after{content:'';position:absolute;left:0;right:0;top:-7px;bottom:-7px}
 .seg-nueva{margin-top:6px}
 .seg-q{margin-top:10px;height:44px}
-.todo.segl li.seg-li{display:flex;align-items:flex-start;gap:6px}
-.todo.segl li.seg-ok{opacity:.65}
-.todo.segl .seg-main{flex:1;min-width:0;width:auto;height:auto;min-height:0;white-space:normal;display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:11px 8px 11px 14px}
-.seg-top{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
-.seg-top b{font-size:15.5px;font-weight:700}
-.seg-nota{font-size:14.5px;color:var(--ink);white-space:pre-wrap;overflow-wrap:anywhere}
-.seg-ult{font-size:13px;color:var(--ink-2);overflow-wrap:anywhere}
-.seg-meta{font-size:12px;color:var(--ink-3)}
-.seg-tag{font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;background:color-mix(in srgb,var(--blue) 10%,transparent);color:var(--blue)}
-.seg-tag.seg-hoy{background:color-mix(in srgb,var(--mint) 22%,transparent);color:var(--ink)}
-.seg-tag.seg-atr{background:color-mix(in srgb,#e5484d 14%,transparent);color:#c62a2f}
-.seg-acts{display:flex;flex-direction:column;align-items:flex-end;gap:6px;padding:10px 10px 10px 0;flex:none}
+/* Seguimiento tipo planilla: en el celular y la tablet cada fila se apila; desde 1024px es una tabla con columnas */
+.segt-top{display:flex;flex-direction:column}
+.segt-f{margin-top:10px}
+.segt-f+.segt-f{margin-top:8px}
+.segt-f .chip{height:34px}
+.segt{margin-top:12px;background:var(--paper);border-radius:14px;box-shadow:0 0 0 1px var(--line) inset;overflow:hidden}
+.segt-row{display:grid;grid-template-columns:1fr auto;grid-template-areas:"cli est" "obs obs" "meta acts";gap:2px 10px;padding:11px 12px;border-top:1px solid var(--line);cursor:pointer;outline:none}
+.segt-row:first-child{border-top:0}
+.segt-row:focus-visible{box-shadow:0 0 0 2px var(--blue) inset}
+.segt-cab{display:none}
+.segt-c{min-width:0;overflow-wrap:anywhere;font-size:14px}
+.segt-row .c-fecha,.segt-row .c-resp,.segt-row .c-num,.segt-row .c-ori{display:none}
+.c-cli{grid-area:cli;font-size:15.5px;align-self:start;padding-top:2px}
+.c-est{grid-area:est;text-align:right}
+.c-meta{grid-area:meta;font-size:12.5px;color:var(--ink-3);align-self:center;margin-top:6px}
+.c-meta span{white-space:nowrap}
+.c-obs{grid-area:obs;margin-top:4px}
+.c-acts{grid-area:acts;display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-top:6px}
+.c-acts .ib{width:38px;height:38px}
+.segt-row.urg{background:var(--amber-bg)}
+.segt-row.ok{opacity:.72}
+.segt-est{display:inline-block;padding:3px 10px;border-radius:7px;background:var(--red);color:var(--paper);font-weight:800;font-size:13px;white-space:nowrap}
+.segt-est.ok{background:var(--green)}
+.segt-cu{display:block;font-size:12px;font-weight:700;color:var(--ink-2);margin-top:4px}
+.segt-cu.hoy{color:var(--amber)}
+.segt-cu.atr{color:var(--red)}
+.segt-nota{display:block;white-space:pre-wrap;font-size:14.5px;color:var(--ink);line-height:1.4}
+.segt-ult{display:block;font-size:13px;color:var(--ink-2);margin-top:5px}
+.segt-ult i{font-style:normal;color:var(--ink-3)}
+.segt-vacio{color:var(--ink-3)}
+@media (hover:hover){.segt-row:not(.segt-cab):not(.urg):hover{background:var(--paper-2)}}
+@media (min-width:1024px){
+  .segt-top{flex-direction:row;gap:10px;align-items:center}
+  .segt-top .seg-nueva{width:auto;flex:none;padding:0 18px;margin-top:0}
+  .segt-top .seg-q{flex:1;margin-top:0;height:46px}
+  .segt-row{grid-template-columns:62px 106px 126px 94px minmax(110px,1fr) 128px minmax(240px,2.4fr) 136px;grid-template-areas:none;gap:0;padding:0}
+  .segt-row .c-fecha,.segt-row .c-resp,.segt-row .c-num,.segt-row .c-ori{white-space:nowrap;overflow-wrap:normal;overflow:hidden;text-overflow:ellipsis}
+  .segt-row .segt-c{display:block;grid-area:auto;padding:8px 10px;border-left:1px solid var(--line);margin:0;text-align:left;align-self:stretch}
+  .segt-row .segt-c:first-child{border-left:0}
+  .segt-row .c-meta{display:none}
+  .segt-row .c-acts{display:flex;flex-direction:row;align-items:flex-start;justify-content:flex-end;gap:6px;padding:6px 8px}
+  .segt-row .c-acts .ib{width:34px;height:34px}
+  .segt-row .c-acts .seg-b{padding:7px 9px}
+  .segt-row .c-cli{font-size:14.5px}
+  .segt-cab{display:grid;cursor:default;background:var(--paper-2)}
+  .segt-cab .segt-c{font-size:11.5px;font-weight:800;color:var(--ink-2);text-transform:uppercase;letter-spacing:.04em;padding:9px 10px;white-space:nowrap;overflow-wrap:normal}
+  .c-fecha,.c-num{font-variant-numeric:tabular-nums}
+}
 .seg-b{padding:7px 11px;border-radius:10px;font-size:13.5px;font-weight:700;color:var(--blue);background:color-mix(in srgb,var(--blue) 10%,transparent);white-space:nowrap}
 .seg-b.seg-hecho{color:#0d6b4f;background:color-mix(in srgb,var(--mint) 22%,transparent)}
 .next-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;margin-top:8px;padding:11px 14px;border-radius:14px;background:var(--paper);box-shadow:0 0 0 1px var(--line) inset;font-weight:700;font-size:14.5px;text-align:left;color:var(--ink)}
@@ -4195,47 +4231,67 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
   function segPend(){ return segTodas().filter(function(s){ return s.estado!=='Hecho'; }); }
   function segParaHoy(){ var h=nowBA().date; return segPend().filter(function(s){ return s.para && s.para<=h; }); }
   function segFecha(x){ var m=String(x||'').match(/^(\d{4})-(\d{2})-(\d{2})(?: (\d{2}:\d{2}))?/); return m ? m[3]+'/'+m[2]+(m[4] && m[4]!=='00:00'?' '+m[4]:'') : String(x||''); }
-  function segCuando(s){
-    if (!s.para) return '';
-    var h=nowBA().date;
-    if (s.para<h) return '<span class="seg-tag seg-atr">Atrasada · era '+esc(diaCorto(s.para))+'</span>';
-    return '<span class="seg-tag'+(s.para===h?' seg-hoy':'')+'">'+esc(diaCorto(s.para))+'</span>';
+  /* Vista tipo planilla (pedido de los intakers): varias notas a la vez, una por fila, con el estado y las observaciones a la vista.
+     Columnas como la planilla de guardias: Fecha · Responsable · Número · Origen · Cliente · Estado · Observaciones. En el celular cada fila se apila. */
+  function segDia(x){ var m=String(x||'').match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? m[3]+'/'+m[2] : String(x||''); }
+  function segUrgente(s){ return s.estado!=='Hecho' && s.para && s.para<=nowBA().date; }
+  function segEstado(s){
+    if (s.estado==='Hecho') return '<span class="segt-est ok">Hecho</span>'+(s.hechoPor||s.hechoEl?'<small class="segt-cu">'+esc([s.hechoPor||'', segFecha(s.hechoEl)].filter(Boolean).join(' · '))+'</small>':'');
+    var h=nowBA().date, cu='';
+    if (s.para){
+      if (s.para<h) cu='<small class="segt-cu atr">Atrasada · era '+esc(diaCorto(s.para))+'</small>';
+      else { var dc=diaCorto(s.para); cu='<small class="segt-cu'+(s.para===h?' hoy':'')+'">Para '+esc(dc==='Hoy'?'hoy':(dc==='Mañana'?'mañana':dc))+'</small>'; }
+    }
+    return '<span class="segt-est">Pendiente</span>'+cu+(s.repetir?'<small class="segt-cu">🔁 cada semana</small>':'');
   }
-  function segRow(s){
-    var hecho=s.estado==='Hecho', tel=String(s.tel||'').trim(), ph=phone(tel);
-    var titulo=s.nombre || (ph ? ph : 'Sin nombre');
-    var meta=[s.rama?ramaLabel(s.rama):'', (s.nombre && ph)?ph:'', 'la dejó '+(s.quien||'')+' el '+segFecha(s.creado)].filter(Boolean).join(' · ');
-    var ult=(s.historial||[]).filter(function(x){ return !/Traída de la planilla/.test(x); }).slice(-1)[0];
-    var h='<li class="seg-li'+(hecho?' seg-ok':'')+'"><button class="seg-main" data-segver="'+esc(s.id)+'">'+
-      '<span class="seg-top"><b>'+esc(titulo)+'</b>'+segCuando(s)+(s.repetir?'<span class="seg-tag">🔁 cada semana</span>':'')+'</span>'+
-      '<span class="seg-nota">'+esc(s.nota||'')+'</span>'+
-      (ult?'<span class="seg-ult">💬 '+esc((function(x){ var q=String(x).split(' · '); return q.length>2 ? segFecha(q[0])+' '+q[1]+': '+q.slice(2).join(' · ') : x; })(ult))+'</span>':'')+
-      '<span class="seg-meta">'+esc(meta)+(hecho?' · ✔ '+esc(s.hechoPor||'')+' '+esc(segFecha(s.hechoEl)):'')+'</span></button>'+
-      '<span class="seg-acts">'+(ph.length>=10?'<a class="ib wa" href="'+waHref(tel)+'" target="_blank" rel="noopener" aria-label="WhatsApp a '+esc(titulo)+'">'+I.chat+'</a>':'')+
-      (hecho ? '<button class="seg-b" data-segdeshacer="'+esc(s.id)+'">↩ Pendiente</button>' : '<button class="seg-b seg-hecho" data-seghecho="'+esc(s.id)+'">✔ Hecho</button>')+'</span></li>';
-    return h;
+  function segFila(s){
+    var hecho=s.estado==='Hecho', tel=String(s.tel||'').trim(), ph=phone(tel), num=tel||ph;
+    var cli=s.nombre || 'Sin nombre', rama=s.rama?'<span class="rama r-'+ramaKey(s.rama)+'">'+ramaLabel(s.rama)+'</span>':'<span class="segt-vacio">—</span>';
+    var hist=(s.historial||[]).filter(function(x){ return !/Traída de la planilla/.test(x); }), ult=hist.slice(-1)[0];
+    var ultTx=ult ? (function(x){ var q=String(x).split(' · '); return q.length>2 ? segFecha(q[0])+' '+q[1]+': '+q.slice(2).join(' · ') : x; })(ult) : '';
+    var obs='<span class="segt-nota">'+esc(s.nota||'')+'</span>'+(ult?'<span class="segt-ult">💬 '+esc(ultTx)+(hist.length>1?' <i>('+hist.length+' comentarios)</i>':'')+'</span>':'');
+    var acts=(ph.length>=10?'<a class="ib wa" href="'+waHref(tel)+'" target="_blank" rel="noopener" aria-label="WhatsApp a '+esc(cli)+'">'+I.chat+'</a>':'')+
+      (hecho ? '<button class="seg-b" data-segdeshacer="'+esc(s.id)+'">↩ Pendiente</button>' : '<button class="seg-b seg-hecho" data-seghecho="'+esc(s.id)+'">✔ Hecho</button>');
+    return '<div class="segt-row'+(hecho?' ok':'')+(segUrgente(s)?' urg':'')+'" role="row" data-segver="'+esc(s.id)+'" tabindex="0">'+
+      '<div class="segt-c c-fecha num" role="cell">'+esc(segDia(s.creado))+'</div>'+
+      '<div class="segt-c c-resp" role="cell">'+esc(s.quien||'')+'</div>'+
+      '<div class="segt-c c-num num" role="cell">'+(num?esc(num):'<span class="segt-vacio">—</span>')+'</div>'+
+      '<div class="segt-c c-ori" role="cell">'+rama+'</div>'+
+      '<div class="segt-c c-cli" role="cell"><b>'+esc(cli)+'</b></div>'+
+      '<div class="segt-c c-est" role="cell">'+segEstado(s)+'</div>'+
+      '<div class="segt-c c-obs" role="cell">'+obs+'</div>'+
+      '<div class="segt-c c-meta" aria-hidden="true">'+[segDia(s.creado), s.quien||'', s.rama?ramaLabel(s.rama):'', num].filter(Boolean).map(function(x){ return '<span>'+esc(x)+'</span>'; }).join(' · ')+'</div>'+
+      '<div class="segt-c c-acts" role="cell">'+acts+'</div></div>';
   }
-  function segOrden(a,b){ return String(a.para||'9999').localeCompare(String(b.para||'9999')) || String(a.creado).localeCompare(String(b.creado)); }
-  function segBloque(t, xs, sub){
-    if (!xs.length) return '';
-    return '<h3 class="sc-rama">'+t+' <span class="cnt num">'+xs.length+'</span></h3>'+(sub?'<p class="sec-sub">'+sub+'</p>':'')+'<ul class="todo segl">'+xs.sort(segOrden).map(segRow).join('')+'</ul>';
+  function segTabla(xs){
+    var cab=['Fecha','Responsable','Número','Origen','Cliente','Estado','Observaciones',''];
+    return '<div class="segt" role="table" aria-label="Notas de seguimiento"><div class="segt-row segt-cab" role="row">'+
+      cab.map(function(t, i){ return '<div class="segt-c" role="columnheader">'+t+'</div>'; }).join('')+'</div>'+xs.map(segFila).join('')+'</div>';
   }
   function segHtml(){
-    var xs=segPend(), h=nowBA().date, q=normTxt(state.segQ||'');
-    if (q) xs=xs.filter(function(s){ return normTxt([s.nombre,s.tel,s.nota,s.quien,(s.historial||[]).join(' ')].join(' ')).indexOf(q)!==-1; });
-    var hoy=xs.filter(function(s){ return s.para && s.para<=h; }), prox=xs.filter(function(s){ return s.para && s.para>h; }), sin=xs.filter(function(s){ return !s.para; });
-    var hechas=segTodas().filter(function(s){ return s.estado==='Hecho'; }).sort(function(a,b){ return String(b.hechoEl).localeCompare(String(a.hechoEl)); });
-    var body='<button class="btn3 seg-nueva" data-segnueva>📝 Dejar una nota de seguimiento</button>'+
-      '<input class="inp seg-q" id="segQ" type="search" placeholder="Buscar por nombre, teléfono o nota" value="'+esc(state.segQ||'')+'" autocomplete="off">';
-    if (!xs.length) body+='<p class="done">'+(q?'No hay notas que coincidan.':'✓ No hay nada pendiente')+'</p>';
-    body+=segBloque('Para hoy', hoy, 'Lo que hay que hacer hoy o quedó atrasado. Cuando lo hagas, tocá <b>✔ Hecho</b>.');
-    body+=segBloque('Próximos días', prox, '');
-    body+=segBloque('Sin fecha', sin, 'Para tener presente. Tocá la nota para ponerle fecha o dejar un comentario.');
-    if (hechas.length && !q){
-      var ab=!!state.segHechas;
-      body+='<button class="rs-ctl" data-seghechas aria-expanded="'+ab+'" style="margin-top:16px"><span>Hechas en las últimas 2 semanas ('+hechas.length+')</span><small>'+(ab?'Ocultar ▴':'Ver ▾')+'</small></button>'+
-        (ab?'<ul class="todo segl" style="margin-top:8px">'+hechas.map(segRow).join('')+'</ul>':'');
-    }
+    var todas=segTodas(), q=normTxt(state.segQ||''), f=state.segF||'pend', r=state.segR||'';
+    var pasa=function(s){
+      if (r && ramaKey(s.rama||'')!==ramaKey(r)) return false;
+      if (r && !s.rama) return false;
+      if (q && normTxt([s.nombre,s.tel,s.nota,s.quien,(s.historial||[]).join(' ')].join(' ')).indexOf(q)===-1) return false;
+      return true;
+    };
+    var base=todas.filter(pasa);
+    var cnt={ pend: base.filter(function(s){ return s.estado!=='Hecho'; }).length, hoy: base.filter(segUrgente).length, hechas: base.filter(function(s){ return s.estado==='Hecho'; }).length };
+    var xs=base.filter(function(s){ return f==='pend' ? s.estado!=='Hecho' : (f==='hoy' ? segUrgente(s) : (f==='hechas' ? s.estado==='Hecho' : true)); });
+    // Como en la planilla: de la más vieja a la más nueva. Las hechas, la última que se hizo arriba.
+    xs.sort(f==='hechas' ? function(a,b){ return String(b.hechoEl).localeCompare(String(a.hechoEl)); }
+      : function(a,b){ return (a.estado==='Hecho')-(b.estado==='Hecho') || String(a.creado).localeCompare(String(b.creado)); });
+    var chip=function(k, t, n){ return '<button class="chip'+(f===k?' on':'')+'" data-segf="'+k+'">'+t+(n!==undefined?' <b class="num">'+n+'</b>':'')+'</button>'; };
+    var chipR=function(k, t){ return '<button class="chip'+(r===k?' on':'')+'" data-segr="'+k+'">'+t+'</button>'; };
+    var body='<div class="segt-top"><button class="btn3 seg-nueva" data-segnueva>📝 Dejar una nota de seguimiento</button>'+
+      '<input class="inp seg-q" id="segQ" type="search" placeholder="Buscar por nombre, teléfono o nota" value="'+esc(state.segQ||'')+'" autocomplete="off"></div>'+
+      '<div class="chips segt-f" role="group" aria-label="Estado">'+chip('pend','Pendientes',cnt.pend)+chip('hoy','Para hoy',cnt.hoy)+chip('hechas','Hechas',cnt.hechas)+chip('todas','Todas')+'</div>'+
+      '<div class="chips segt-f" role="group" aria-label="Origen">'+chipR('','Todas las ramas')+chipR('ART','ART')+chipR('LABORAL','Laboral')+chipR('TRANSITO','Tránsito')+'</div>';
+    if (!xs.length) body+='<p class="done">'+(q||r?'No hay notas que coincidan.':(f==='hechas'?'Todavía no hay notas hechas en las últimas 2 semanas.':(f==='hoy'?'✓ No hay nada para hoy':'✓ No hay nada pendiente')))+'</p>';
+    else body+=segTabla(xs);
+    if (f==='hechas' && xs.length) body+='<p class="sec-sub" style="margin-top:10px">Se ven las hechas de las últimas 2 semanas.</p>';
+    else if (xs.length && f!=='hechas') body+='<p class="sec-sub" style="margin-top:10px">Tocá una fila para ver los comentarios, dejar uno o editar la nota. Resaltadas: las que son para hoy o quedaron atrasadas.</p>';
     return body;
   }
   function viewSeguimiento(){
@@ -4325,6 +4381,9 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     call('segComentar', { id:id, texto:tx }).then(function(lista){ segAplicar(lista); state.draft={}; renderSheet(); render(); toast('💬 Comentario guardado'); })
       .catch(function(e){ renderSheet(); toast((e&&e.message)||'No se pudo guardar.', true); });
   }
+  document.addEventListener('keydown', function(ev){ // la fila de la tabla también se abre con Enter
+    if (ev.key==='Enter' && ev.target && ev.target.classList && ev.target.classList.contains('segt-row') && ev.target.getAttribute('data-segver')){ ev.preventDefault(); state.draft={}; openSheet({type:'segver', id:ev.target.getAttribute('data-segver')}); }
+  });
   document.addEventListener('input', function(ev){
     if (ev.target && ev.target.id==='segQ'){ state.segQ=ev.target.value; var pos=ev.target.selectionStart; render(); var q=$('segQ'); if (q){ q.focus(); try { q.setSelectionRange(pos,pos); } catch(x){} } }
   });
@@ -4332,17 +4391,18 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     if (ev.target && ev.target.id==='sgPara' && state.sheet && state.sheet.type==='seg'){ segLeerForm(); state.draft.para=ev.target.value||''; renderSheet(); }
   });
   document.addEventListener('click', function(ev){
-    var t=ev.target.closest && ev.target.closest('[data-segnueva],[data-segver],[data-seghecho],[data-segdeshacer],[data-seghechas],[data-segrama],[data-segpara],[data-segrep],[data-segsave],[data-segcomsave],[data-segeditar],[data-segficha]'); if (!t) return;
+    var t=ev.target.closest && ev.target.closest('[data-segf],[data-segr],[data-segnueva],[data-segver],[data-seghecho],[data-segdeshacer],[data-segrama],[data-segpara],[data-segrep],[data-segsave],[data-segcomsave],[data-segeditar],[data-segficha]'); if (!t) return;
     if (state.verComo && (t.hasAttribute('data-segnueva') || t.hasAttribute('data-seghecho') || t.hasAttribute('data-segdeshacer') || t.hasAttribute('data-segsave') || t.hasAttribute('data-segcomsave'))){ toast('👁 Estás viendo la app como '+state.verComo+': es solo para mirar.'); return; }
     if (t.hasAttribute('data-segnueva')){
       var lid=t.getAttribute('data-segnueva'), l=lid && findLead(lid);
       segAbrir(l ? { nombre:l.nombre||'', tel:l.tel||'', rama:String(l.rama||'').toUpperCase().indexOf('TRANS')===0?'TRANSITO':String(l.rama||'').toUpperCase(), lead:l.id } : {});
       return;
     }
-    if (t.hasAttribute('data-segver')){ state.draft={}; openSheet({type:'segver', id:t.getAttribute('data-segver')}); return; }
+    if (t.hasAttribute('data-segf')){ state.segF=t.getAttribute('data-segf'); render(); return; }
+    if (t.hasAttribute('data-segr')){ state.segR=t.getAttribute('data-segr'); render(); return; }
+    if (t.hasAttribute('data-segver')){ if (ev.target.closest('a')) return; state.draft={}; openSheet({type:'segver', id:t.getAttribute('data-segver')}); return; }
     if (t.hasAttribute('data-seghecho')){ segMarcar(t.getAttribute('data-seghecho'), true); return; }
     if (t.hasAttribute('data-segdeshacer')){ var sx=segBuscar(t.getAttribute('data-segdeshacer')); if (state.sheet && state.sheet.type==='segver') closeSheet(); segDeshacer(t.getAttribute('data-segdeshacer'), sx?sx.para:undefined); return; }
-    if (t.hasAttribute('data-seghechas')){ state.segHechas=!state.segHechas; render(); return; }
     if (t.hasAttribute('data-segficha')){ var fid=t.getAttribute('data-segficha'); closeSheet(); setTimeout(function(){ openSheet({type:'ficha', id:fid}); }, 0); return; }
     if (t.hasAttribute('data-segeditar')){ var s=segBuscar(t.getAttribute('data-segeditar')); if (!s) return; segAbrir({ id:s.id, nombre:s.nombre, tel:s.tel, rama:s.rama, lead:s.lead, nota:s.nota, para:s.para, repetir:!!s.repetir }); return; }
     if (t.hasAttribute('data-segcomsave')){ segComentar(); return; }
