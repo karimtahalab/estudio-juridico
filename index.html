@@ -3177,6 +3177,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     var conFase=!ag && puede('agendar');
     html += '<div class="fi-acts'+(conFase?'':' dos')+'">'+(conFase?b('fase','Cambiar fase'):'')+b('nota','＋ Nota')+b('datos','Corregir datos')+'</div>'+fichaPanel(l, u);
     if (puedeMarca(l)) html += '<button class="btn3" data-marcanueva="'+esc(l.id)+'">'+I.swap+'Pasar a otra rama</button>';
+    html += fichaResumenBlk(l);
     html += '<div class="blk"><h3 class="blk-t">Contacto</h3><div class="box">'+fkv('Teléfono', l.tel||'—', 'num')+fkv('Email', l.email)+'</div></div>';
     if (l.info && l.info.length) html += '<div class="blk"><h3 class="blk-t">Lo que contó en el formulario</h3><div class="box">'+l.info.map(function(c){ return fkv(c.label, c.text, 'pre'); }).join('')+'</div></div>';
     html += estBlk(l);
@@ -3185,6 +3186,14 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
       '<div class="note">Todavía no hay notas. Tocá "＋ Nota" para dejar una.</div>')+'</div>';
     html += '<div class="blk"><h3 class="blk-t">De dónde vino</h3><div class="box">'+origenRows(l)+'</div></div>';
     return html+'<div style="height:12px"></div>';
+  }
+  // Resumen del caso en la ficha del lead (antes solo se veía en "Ver la consulta": en un Reagenda sin día, un NO SHOW o un C no había forma de leerlo)
+  function fichaResumenBlk(l){
+    var rf=l.resumen ? fieldsOf(l.resumen) : [], ed=puede('agendar');
+    if (rf.length) return '<div class="blk"><h3 class="blk-t blk-row">Resumen del caso'+(ed?'<button class="mini" data-escribir="'+esc(l.id)+'">Editar</button>':'')+'</h3><div class="case">'+
+      rf.map(function(f){ return '<div class="kv stack"><span>'+esc(f.k)+'</span><b>'+esc(f.v)+'</b></div>'; }).join('')+'</div></div>';
+    if (!ed) return '';
+    return '<div class="blk"><h3 class="blk-t">Resumen del caso</h3><div class="missing"><span>Todavía no hay resumen.</span><button class="btn2" data-escribir="'+esc(l.id)+'">'+I.pen+'Escribir</button></div><button class="link" data-pastefor="'+esc(l.id)+'">O pegá el mensaje de WhatsApp</button></div>';
   }
   function fichaPanel(l, u){
     if (u.modo==='fase'){
