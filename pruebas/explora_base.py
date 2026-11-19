@@ -48,7 +48,7 @@ AUDIT_JS = r"""() => {
 
 def explora(browser, who, vp, tag, OUTX):
     api = FakeApi()
-    ctx = browser.new_context(viewport=vp['vp'], device_scale_factor=1, is_mobile=True, has_touch=True, locale='es-AR', timezone_id='America/Argentina/Buenos_Aires', service_workers='block')
+    ctx = browser.new_context(viewport=vp['vp'], device_scale_factor=vp.get('dsf',1), is_mobile=True, has_touch=True, locale='es-AR', timezone_id='America/Argentina/Buenos_Aires', service_workers='block')
     page = ctx.new_page(); page.clock.install(time='2026-11-05T11:20:00-03:00')
     def route(r):
         u = r.request.url

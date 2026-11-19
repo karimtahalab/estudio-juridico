@@ -1,3 +1,4 @@
+import os
 # -*- coding: utf-8 -*-
 """DATOS DE PRUEBA — TODO ES INVENTADO.
 Nombres, teléfonos y casos son ficticios. Nada de acá sale de las planillas reales.
@@ -124,6 +125,9 @@ def wsp_datos(who):
     return {"activo": True, "prueba": False, "yo": who, "firma": who + " (prueba)", "horas": 20, "catalogo": copy.deepcopy(WSP_CATALOGO),
             "textos": dict(WSP_TEXTOS), "envios": {}, "abogadas": {"Mica": "Dra. Mica", "Cele": "Dra. Cele"}}
 
+FASES_MANUALES = ['A', 'B', 'C', 'BC', 'Llamada pendiente', 'Seguimiento', 'Repetido', 'Numero incorrecto']
+FASES_VOLVER = ['Consulta agendada', 'Reagenda', 'No show']
+
 class FakeApi:
     def __init__(self):
         self.leads = leads_agendados()
@@ -226,10 +230,18 @@ class FakeApi:
                 else: l[arg.get("action")] = arg.get("value")
             elif fn == "deshacerResultado": l.update({k: arg.get(k, "") for k in ("fase", "motivo", "detalle")})
             elif fn == "cambiarFase":
-                l["fase"] = arg.get("fase")
+                # Igual que cambiarFase del motor real (v77+): solo las fases manuales. Con MOTOR_DESHACER=1 se simula el
+                # cambio del motor de mejora-2026-11-19.json (volver a No show/Reagenda/Consulta agendada si es un deshacer)
+                nueva = arg.get("fase") or ""
+                volver = bool(arg.get("deshacer")) and nueva not in FASES_MANUALES and nueva in FASES_VOLVER and os.environ.get("MOTOR_DESHACER") == "1"
+                if nueva not in FASES_MANUALES and not volver: return False, "Esa fase no se cambia desde acá (se agenda o se carga el resultado)."
+                if volver and (l["fase"] not in FASES_MANUALES or l["fase"] != arg.get("desde")): return False, "No se pudo deshacer: la fase ya cambió. Abrí la ficha para ver en qué quedó."
+                l["fase"] = nueva
                 # Como anotarIntaker_ del motor: el primer cambio de fase de un intaker deja su nombre
                 if who in ("Fran", "Pri") and l in self.sc: self.sc.remove(l); l["intaker"] = who; self.pa.insert(0, l)
-            elif fn == "editarDatos": l.update({k: arg[k] for k in ("nombre", "tel", "email") if arg.get(k) is not None})
+            elif fn == "editarDatos":
+                if arg.get("email") is not None and not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", str(arg["email"]).strip().lower()): return False, "Revisá el email."
+                l.update({k: arg[k] for k in ("nombre", "tel", "email") if arg.get(k) is not None})
             elif fn == "agregarNota": l["comentarios"] = l["comentarios"] + [{"label": "%s · hoy" % who, "text": arg.get("texto", "")}]
             elif fn == "agendar":
                 l.update({"fecha": arg.get("fecha"), "hora": arg.get("hora"), "abogada": arg.get("abogada") or l["abogada"]})
@@ -267,6 +279,8 @@ class FakeApi:
             self.bloqueos = [b for b in self.bloqueos if b["id"] != arg.get("id")]; return True, self.bloqueos
         if fn == "saveDisponibilidad": return True, self.disp
         if fn == "agendarNuevo":
+            em = str(arg.get("email") or "").strip().lower()
+            if em and not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", em): return False, "Revisá el email."  # como agendarNuevo del motor real
             self.seq += 1
             l = _lead(self.seq, arg.get("nombre", ""), arg.get("tel", ""), arg.get("rama", "ART"), arg.get("fecha", ""), arg.get("hora", ""), arg.get("abogada", ""), fase=arg.get("fase") or "Agendado", ingreso=D(0))
             (self.pa if arg.get("sinAgendar") else self.leads).append(l); return True, {"lead": copy.deepcopy(l)}

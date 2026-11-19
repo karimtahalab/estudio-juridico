@@ -1,3 +1,4 @@
+# Ojo: el motor falso frena cambiarFase como el real (solo fases manuales). MOTOR_DESHACER=1 simula el cambio de mejora-2026-11-19.json.
 # Uso: python3 pruebas/probar_pasar_bc.py <carpeta con index.html> <carpeta capturas>. Datos falsos: P001-P003 pasan a No show/Reagenda/Seguimiento para que aparezca el botón.
 import sys, os, json
 sys.argv=[sys.argv[0], sys.argv[1], sys.argv[2]]
@@ -15,7 +16,7 @@ OUT=sys.argv[2]; os.makedirs(OUT,exist_ok=True); res={}
 with sync_playwright() as pw:
     br=pw.chromium.launch()
     for who in ['Fran','Mica']:
-        page,ctx,shot,api=B.explora(br,who,{'vp':{'width':390,'height':844}},'bc',OUT)
+        page,ctx,shot,api=B.explora(br,who,{'vp':{'width':390,'height':844},'dsf':3},'bc',OUT)
         calls=[]
         orig=api.handle
         def h(fn,arg,orig=orig):
@@ -42,6 +43,10 @@ with sync_playwright() as pw:
             u=page.query_selector('#toast [data-undo]')
             if u: u.click(); page.wait_for_timeout(1200)
             r['vuelve']=bool(page.query_selector('[data-open="%s"]'%found)); shot('bc_deshecho')
+            r['toast_deshacer']=page.inner_text('#toast') if page.query_selector('#toast.on') else ''
+            r['fase_final']=next((x['fase'] for x in api.leads if x['id']==found), '?')
+            if found:
+                b2=None
             r['calls']=calls
         res[who]=r; ctx.close()
     br.close()

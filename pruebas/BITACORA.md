@@ -33,6 +33,7 @@ Cómo correrlo: `python3 pruebas/correr.py <carpeta con index.html> <carpeta de 
 | mejora/2026-11-15-flujo-agendar | Flujo semanal: agendar un lead. "Lo antes posible" arriba de la hoja (3 primeros libres de cada persona en los próximos días hábiles); si el lead no tiene turno, tocar un horario lo agenda al instante con Deshacer (el pedido sale a los 6 s o al salir de la app); chips de día con cuántos libres quedan; la hoja abre en el primer día con lugar; ya no abre la ficha después. Reagendar/corregir/firmar siguen con confirmar. Sin motor. | RECHAZADA por Karim (18/11): "Lo antes posible" no lo quiere. Se mergeó y se revirtió en main (772f719). No volver a proponer agendar con un toque ni la caja "Lo antes posible" |
 | mejora/2026-11-16-contexto-visual, mejora/2026-11-16-pasar-bc | Guiones con contexto visual; botón "🚫 No responde más: pasar a BC" en la tarjeta (ramas armadas en chats con Karim) | Aplicadas (en main desde el 16/11, c03e341) |
 | mejora/2026-11-16 | Primera apertura del día al instante: lo guardado en el celular (misma persona, hasta 4 días; antes 12 horas) se ve enseguida con aviso arriba "Mostrando lo guardado de ayer a las 19:20. Trayendo lo de hoy…"; mientras tanto lo que cambia algo no sale (avisa que espere, la hoja queda como estaba); si no llega lo de hoy, aviso con Reintentar y se puede guardar. Hasta 12 h igual que antes. Sin motor. | Aplicada (en main desde el 18/11, 80cbdd9) |
+| mejora/2026-11-19 | Deshacer de "pasar a BC" y de cambiar fase en la ficha: manda deshacer:1 y desde; con el motor nuevo vuelve a No show/Reagenda (hoy el motor lo frena y el lead queda en BC); sin el motor, aviso claro de en qué fase quedó. Cargar a alguien nuevo: email revisado en el celular con la regla del motor (aviso rojo debajo del campo y botón apagado) y Corregir datos lo revisa antes de mandar. Confirmar de pasar a BC en rojo. wspDatos de fondo sin promesa sin atender. toUTC que acepta cualquier cosa y lo anota en el registro. Motor: mejora-2026-11-19.json (cambiarFase). | Pendiente |
 
 ## 2026-11-05 (primera noche)
 - Armé el banco (rama pruebas-nocturnas, carpeta pruebas/).
@@ -321,6 +322,33 @@ Cómo correrlo: `python3 pruebas/correr.py <carpeta con index.html> <carpeta de 
 - Verificado en main (fd83fc7/772f719, cache consultas-20261118200407): entraron mejora/2026-11-15 (📤 Enviar con "Corregir teléfono/nombre") y mejora/2026-11-16 (lo guardado al abrir); mejora/2026-11-15-flujo-agendar se mergeó y se revirtió (772f719, sin "Lo antes posible" ni data-agprox). También entró 381c842 (Traslados: recibos del Uber cuando la consulta ya pasó).
 - Ramas pendientes ahora: ninguna. La próxima noche hay lugar para rama nueva.
 - Banco: copiados index.html, sw.js y manifest de main al 18/11. probar_agendar.py y flujo_agendar.py prueban la rama rechazada: ya no aplican a main (no usar como regresión).
+
+## 2026-11-18 (noche, corrida de las 22:37)
+- main sin cambios desde 772f719 (18/11). El banco ya tenía index.html, sw.js y manifest iguales a main.
+- Ramas pendientes antes de esta noche: ninguna (-05, -06 y -08-flujo-sin-contactar figuran sin mergear pero su contenido está en main). Hubo lugar para una nueva.
+- Cambios del motor pendientes: ninguno antes de esta noche. Bajé el Código.gs del motor real y del entorno de prueba (solo lectura).
+- Registro de uso real (USO, filas 5095-5986, 17/11 noche y miércoles 18/11; usaron la app Pri (481 filas), Fran, Karim, Cele, Julián y Mica; nada de Sol, Estefanía ni Juan):
+  - 1 ERROR "pantalla (promesa)": Pri, "Sin conexión", en el mismo lote que wspDatos, enviarWsp, cambiarFase y getData fallados desde tareas > ficha. Causa: wspDatos() renueva atrás cuando lo guardado tiene más de 5 min y devuelve lo viejo; si esa renovación falla nadie la atiende. Solo ensucia el registro (no traba nada). Reproducido en node (pruebas/probar_wspdatos_node.js). → mejora/2026-11-19.
+  - 1 aviso de cambiarFase de Pri desde agenda: "Esa fase no se cambia desde acá". Es el Deshacer de "pasar a BC": vuelve a la fase anterior (No show o Reagenda) y el motor real solo acepta fases manuales. El lead queda en BC sin que se note bien. El banco no lo mostraba porque el motor falso aceptaba cualquier fase. → mejora/2026-11-19 + mejora-2026-11-19.json.
+  - 1 aviso de agendarNuevo de Fran: "Revisá el email." (2 rechazos en el lote, desde agendar > manual). La pantalla no revisa el email y el motor lo frena recién al final, después de elegir día y horario. → mejora/2026-11-19.
+  - ~20 avisos "Sin conexión" / "El servidor no respondió a tiempo" (Pri en Windows, Cele en iPhone, Mica, Karim): getData, getReporte, getCreativos, agendarNuevo, saveAction, equipoLogin. El corte y el reintento funcionan.
+  - getData: 206 lentos; picos 49,1 s (Cele), 35,6 y 35,3 s (Pri), 28,1 s (Pri), 25,8 s (Fran). getReporte hasta 33,3 s (Pri). Del motor (idea de CacheService, pendiente).
+  - enviarWsp 32 lentos, hasta 12,9 s; 1 "Sin conexión" (Pri). subirEstudio 31 s (Pri, 2 veces). agendarNuevo 35,2 s una vez (Pri).
+  - Aperturas con datos nuevos: Julián 38,3 s (Windows), Fran 28 s, Cele 16,7 s y 12,6 s, Pri 16,3 s, Karim 13,1 s; con lo guardado 0,4-1,7 s (mejora/2026-11-16 funcionando: casi todas las aperturas lentas tienen antes "lo guardado").
+  - Ruido de celular dormido: cambiarFase 370 s (Pri), saveAction 8.501.118 ms (Mica), Karim abrir app 384 s, fin2Calentar 104 s (Cele).
+- Banco:
+  - datos_falsos.py: cambiarFase frena como el motor real (solo FASES_MANUALES; con MOTOR_DESHACER=1 simula el cambio de mejora-2026-11-19.json); agendarNuevo y editarDatos revisan el email como el motor.
+  - explora_base.py acepta 'dsf' en el viewport (capturas x3).
+  - probar_pasar_bc.py ahora mide el Deshacer (aviso y fase final). Nuevos probar_email.py y probar_wspdatos_node.js.
+- Roles probados con correr.py (390 y 360): Juan, Sol, Fran, Karim. 0 errores de JavaScript, 0 pedidos fallidos, sin scroll horizontal. Pestañas: Juan → Finanzas, Agenda, Guiones, Falta cargar; Sol → Finanzas, Agenda, Seguimiento, Agendar, Falta cargar; Fran → Reporte, Agenda, Tareas, Seguimiento, Agendar; Karim → Reportes, Agenda, Tareas, Agendar, Falta cargar. Permisos OK con datos falsos.
+- Resultados de la rama:
+  - probar_pasar_bc.py (Fran, lead en No show): main → Deshacer falla, "Esa fase no se cambia desde acá", queda en BC. Rama sin motor nuevo → igual, con aviso "No se pudo deshacer: quedó en BC. La app todavía no deja volver a NO SHOW." Rama + motor nuevo → "Volvió a NO SHOW." y vuelve a la agenda. Confirmar en rojo. Mica no ve el botón.
+  - probar_email.py (Fran, 390 y 360, "rosa.lucero@gmail"): main → se entera a los 3 toques, después de elegir horario, con 1 agendarNuevo rechazado; rama → aviso rojo debajo del campo al escribir, botón apagado, 0 pedidos; con ".com" se prende.
+  - probar_wspdatos_node.js: main 1 promesa sin atender, rama 0.
+  - correr.py en la rama igual que main (mismo resultado JSON). probar_wsp.py y probar_tel_wsp.py OK en la rama.
+- Ideas grandes:
+  - getData en CacheService del motor (sigue pendiente; hoy picos de 35-49 s y aperturas de 28-38 s en Windows).
+  - Registro de uso con el stack del error (sigue pendiente).
 
 ## Flujos rediseñados (tarea semanal de los domingos)
 | Fecha | Flujo | Para quién | Toques antes → después | Rama | Motor |
