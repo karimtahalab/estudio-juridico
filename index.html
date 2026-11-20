@@ -1409,6 +1409,8 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     if (fresh){ state.otras={}; state.busq=null; state.otrasPre=false; } // Actualizar: las otras fases se vuelven a pedir
     state.busy = true; $('btnRefresh').classList.add('spin');
     var seq0=state.wSeq||0, vc0=state.verComo||'';
+    // Producción (filmación y edición) solo usa Guiones: se piden junto con getData, sin esperar a que llegue
+    if (!state.crePre && !state.verComo){ var yoP=state.me || (state.equipo||[]).filter(function(x){ return x.nombre===store('yo'); })[0]; if (yoP && yoP.rol==='produccion'){ state.crePre=true; try{ loadCre(false); }catch(e){} } }
     call('getData', {fresh: !!fresh, revalidar: !!revalidar, swr: 1, who: store('yo') || ''}).then(recibir = function(d){
       if (!d.__snap && (state.verComo||'')!==vc0){ setTimeout(function(){ load(false, true); }, 300); return; } // se entró o salió de "Ver como" mientras llegaba
       // Si mientras llegaba se guardó algo (o sigue guardándose), esta lectura puede ser de antes: no se usa y se pide otra al terminar
@@ -1443,6 +1445,8 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
   }
   /* ---------- Registro de uso: errores y tiempos de carga reales (se manda agrupado cada 10 minutos) ---------- */
   var APP_V='';
+  // Sin la versión guardada (navegador sin la app instalada o primera vez), va la fecha de la pantalla que bajó: "lm" + AAAAMMDDhhmm (UTC)
+  try{ var lm=new Date(document.lastModified); if (!isNaN(lm)) APP_V='lm'+lm.toISOString().replace(/\D/g,'').slice(0,12); }catch(e){}
   try{ if (window.caches && caches.keys) caches.keys().then(function(ks){ var k=(ks||[]).filter(function(x){ return /^consultas-/.test(x); })[0]; if (k) APP_V=k.slice(10); }).catch(function(){}); }catch(e){}
   var USO={fns:{}, lentos:[], errs:{}, carga:[], enviando:false};
   var USO_NO={logUso:1};
