@@ -5775,7 +5775,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     }
     if (b.tieneClientes){
       var cl=b.clientes||[];
-      body+=f2Sec('Clientes nuevos', cl.length, null, (F.cliente && F.gasto)?'cliente':'', 'Los que firmaron entran solos desde la agenda. Tocá uno para completar '+(hom?'el tipo y la lesión':'el detalle')+'.');
+      body+=f2Sec('Clientes nuevos', cl.length, null, F.cliente?'cliente':'', 'Los que firmaron entran solos desde la agenda. Tocá uno para completar '+(hom?'el tipo y la lesión':'el detalle')+'. Si falta alguno, cargalo con ＋ Cargar.');
       body+=f2RepHtml(b.posiblesRep||[]);
       body+=cl.length ? '<ul class="todo">'+cl.map(function(c){ var falta=!c.lesion || (hom && !c.tipo); return f2Fila('cl','👤', c.nombre, [shortDate(c.fecha), c.tipo, c.lesion, c.atiende?'atendió '+c.atiende:''].filter(Boolean).join(' · '), falta?'Completar':'', f2At('cliente', c)); }).join('')+'</ul>' : emptyBox('Todavía no hay clientes nuevos');
     } else if ((b.firmados||[]).length){
