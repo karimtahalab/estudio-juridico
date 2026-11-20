@@ -34,6 +34,7 @@ Cómo correrlo: `python3 pruebas/correr.py <carpeta con index.html> <carpeta de 
 | mejora/2026-11-16-contexto-visual, mejora/2026-11-16-pasar-bc | Guiones con contexto visual; botón "🚫 No responde más: pasar a BC" en la tarjeta (ramas armadas en chats con Karim) | Aplicadas (en main desde el 16/11, c03e341) |
 | mejora/2026-11-16 | Primera apertura del día al instante: lo guardado en el celular (misma persona, hasta 4 días; antes 12 horas) se ve enseguida con aviso arriba "Mostrando lo guardado de ayer a las 19:20. Trayendo lo de hoy…"; mientras tanto lo que cambia algo no sale (avisa que espere, la hoja queda como estaba); si no llega lo de hoy, aviso con Reintentar y se puede guardar. Hasta 12 h igual que antes. Sin motor. | Aplicada (en main desde el 18/11, 80cbdd9) |
 | mejora/2026-11-19 | Deshacer de "pasar a BC" y de cambiar fase en la ficha: manda deshacer:1 y desde; con el motor nuevo vuelve a No show/Reagenda (hoy el motor lo frena y el lead queda en BC); sin el motor, aviso claro de en qué fase quedó. Cargar a alguien nuevo: email revisado en el celular con la regla del motor (aviso rojo debajo del campo y botón apagado) y Corregir datos lo revisa antes de mandar. Confirmar de pasar a BC en rojo. wspDatos de fondo sin promesa sin atender. toUTC que acepta cualquier cosa y lo anota en el registro. Motor: mejora-2026-11-19.json (cambiarFase). | Pendiente |
+| mejora/2026-11-20 | Producción (Fede, Iván): Guiones se pide junto con getData (antes esperaba a que terminara getData); registro de uso con versión "lm"+fecha de la pantalla cuando no hay app instalada. Motor: mejora-2026-11-20.json (getData no lee las planillas de leads para quien no ve agenda, leads ni internas). | Pendiente |
 
 ## 2026-11-05 (primera noche)
 - Armé el banco (rama pruebas-nocturnas, carpeta pruebas/).
@@ -349,6 +350,29 @@ Cómo correrlo: `python3 pruebas/correr.py <carpeta con index.html> <carpeta de 
 - Ideas grandes:
   - getData en CacheService del motor (sigue pendiente; hoy picos de 35-49 s y aperturas de 28-38 s en Windows).
   - Registro de uso con el stack del error (sigue pendiente).
+
+## 2026-11-19 (noche, corrida de las 22:40)
+- main al día: dda09cf (entraron en chats con Karim: Seguimiento con formato de planilla y orden por fecha, resumen del caso en la ficha del lead, textos sin nombres fijos de intakers (se suma Agus) y "Reporte del turno" para intakers (Mi turno | Semana, reporteTurno y cerrarTurno)). Copiados al banco index.html, sw.js y manifest. Las ramas -19-ficha-resumen, -19-reporte-turno, -19-seguimiento-orden y -19-seguimiento-planilla están en main.
+- Ramas pendientes: solo mejora/2026-11-19 (entra limpia sobre main, sin pushear). Hubo lugar para una nueva. mejora-2026-11-19.json sigue sin aplicar (cambiarFase del motor real todavía no tiene deshacer).
+- Equipo nuevo en el motor real: Agus (intaker, igual que Fran y Pri) y Fede e Iván (producción: solo Guiones).
+- Registro de uso real (USO, filas 5986-6682, 18/11 noche y 19/11; Pri 281 filas, Fran 202, Karim 76, Agus 62, Iván 42, Fede 17, Mica 9, Cele 8; nada de Sol, Estefanía, Juan ni Julián):
+  - Sin filas de error.
+  - 4 avisos "El servidor no respondió a tiempo": getData de Pri (agendar, 35 s), Agus (seguimiento, 18 s) y Fede (guiones, 2 veces, una con el celular dormido 2 h); getReporte de Pri (13 s).
+  - Producción espera getData para nada: Fede getData 35,5 s cortado y apertura 23,7 s; Iván aperturas 29,6 s y 17,6 s. getData les lee las 3 planillas aunque no ven leads ni agenda, y Guiones (getCreativos) recién se pedía al terminar getData. → mejora/2026-11-20 + mejora-2026-11-20.json.
+  - getData: 144 lentos, casi todo 4-12 s (Pri, Fran, Agus). getReporte hasta 21,5 s (Karim). cambiarFase hasta 18,9 s y enviarWsp hasta 13,2 s (Fran, agendar > ficha). reporteTurno (nuevo) 10 lentos hasta 9 s (Fran).
+  - 124 filas sin versión (Agus, Fede, Iván y parte de Karim, en navegador sin la app instalada): la versión salía solo del cache del service worker. → mejora/2026-11-20 (fallback "lm"+fecha de la pantalla).
+  - Karim en navegador: "abrir app (lo guardado)" hasta 5,2 s (mide desde que empieza a bajar la página de 480 KB; sin service worker no hay copia local).
+  - fin2Calentar de Karim 52,6 s (de fondo, no traba nada).
+- Banco:
+  - datos_falsos.py: Agus (intaker) y Fede (producción) con los permisos de CONFIG.EQUIPO del motor real; respuestas falsas para reporteTurno y cerrarTurno (forma de viewTurno).
+  - Nuevos pruebas/probar_turno.py (Reporte del turno: pedidos quedándose en la pantalla, cerrar turno) y pruebas/probar_prod.py (async: Fede con getData lento o rápido y getCreativos de 4 s; FOTO=9.5 saca captura a esa altura).
+- Roles probados con correr.py (390 y 360): Cele, Pri (crea PIN), Estefanía, Karim, Agus, Fede. 0 errores de JavaScript, 0 pedidos fallidos, sin scroll horizontal. Pestañas: Cele → Finanzas, Agenda, Guiones, Falta cargar; Pri y Agus → Reporte, Agenda, Tareas, Seguimiento, Agendar; Estefanía → Agenda, Falta cargar; Karim → Reportes, Agenda, Tareas, Agendar, Falta cargar; Fede → solo Guiones. Permisos OK con datos falsos.
+- Reporte del turno (Pri): cerrar turno en 2 toques con confirmación, queda el cuadro "Cerraste tu turno" y el reporte copiado. Quedándose 6 min en la pantalla salen 4 reporteTurno (se renueva en cada render después de 60 s). No es grave; anotado.
+- Resultado de la rama (probar_prod.py, Fede, 390x844): getData 9 s → main ve Guiones a los 13,3 s, rama 9,2 s; getData 1,5 s (motor con el cambio) → main 5,8 s, rama 4,2 s. correr.py en la rama igual que main (mismas 140 pantallas auditadas, 0 errores, mismas pestañas).
+- Motor: mejora-2026-11-20.json aplica sobre el Código.gs del motor real y pasa new Function; sobre el entorno de prueba NO aplica (le falta swr) → "Sincronizar primero el entorno de prueba".
+- Ideas grandes:
+  - getData en CacheService del motor (sigue pendiente; hoy picos de 26-35 s en Pri).
+  - Reporte del turno: renovar solo al entrar a la pantalla o al tocar "Copiar/cerrar", no en cada render (menos pedidos al motor).
 
 ## Flujos rediseñados (tarea semanal de los domingos)
 | Fecha | Flujo | Para quién | Toques antes → después | Rama | Motor |

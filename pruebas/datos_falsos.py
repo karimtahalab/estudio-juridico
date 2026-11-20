@@ -24,6 +24,8 @@ EQUIPO = [
     {"nombre": "Pri", "rol": "intaker", "tiene": False},
     {"nombre": "Karim", "rol": "admin", "tiene": True},
     {"nombre": "Julián", "rol": "admin", "tiene": True},
+    {"nombre": "Agus", "rol": "intaker", "tiene": True},  # desde el 19/11 (motor real)
+    {"nombre": "Fede", "rol": "produccion", "tiene": True},  # filmación y edición
 ]
 RAMAS_POR_PERSONA = {"Mica": ["ART", "LABORAL"], "Cele": ["ART", "LABORAL"], "Sol": ["ART", "LABORAL"], "Estefanía": ["LABORAL"], "Juan": ["TRANSITO"]}
 ABOGADAS = ["Mica", "Cele", "Sol", "Estefanía", "Juan"]  # como CONFIG.ABOGADAS del motor
@@ -39,6 +41,8 @@ PERMISOS = {
     "Pri": {"agenda": ["ART", "LABORAL", "TRANSITO"], "agendar": True, "leads": ["ART", "LABORAL", "TRANSITO"], "seguimiento": True},
     "Karim": {"agenda": ["ART", "LABORAL", "TRANSITO"], "agendar": True, "leads": ["ART", "LABORAL", "TRANSITO"], "seguimiento": True},
     "Julián": {"agenda": ["ART", "LABORAL", "TRANSITO"], "agendar": True, "leads": ["ART", "LABORAL", "TRANSITO"], "seguimiento": True},
+    "Agus": {"agenda": ["ART", "LABORAL", "TRANSITO"], "agendar": True, "leads": ["ART", "LABORAL", "TRANSITO"], "seguimiento": True},
+    "Fede": {"agenda": [], "agendar": False, "leads": [], "fin": [], "creativos": ["ART", "LABORAL", "TRANSITO"]},
 }
 
 RES_LARGO = ("[PRUEBA] Trabajador de depósito, 34 años. Se lesionó la espalda levantando cajas el 12/09. "
@@ -358,6 +362,23 @@ class FakeApi:
             return True, copy.deepcopy(self.seg)
         if fn == "getCreativos": return True, {"ramas": []}
         if fn in ("finPinEntrar",): return True, {"ftok": "fake-fin", "creado": False}
+        if fn == "reporteTurno":  # 19/11: reporte del turno de intakers (forma de viewTurno en index.html)
+            hasta = 1793888400000  # 05/11 11:20 Mendoza (reloj del banco)
+            desde = arg.get("desde") or (hasta - 3 * 3600000)
+            if isinstance(desde, str): desde = hasta - 3 * 3600000
+            cierres = self.cierres_turno if hasattr(self, "cierres_turno") else [{"quien": "Fran", "desde": hasta - 27 * 3600000, "cuando": hasta - 3 * 3600000}]
+            self.cierres_turno = cierres
+            it = lambda n, cam, cat, nuevo, m: {"n": n + " (prueba)", "camino": cam, "cat": cat, "nuevo": nuevo, "fase": cam[-1], "t": hasta - m * 60000}
+            return True, {"yo": who, "desde": desde, "hasta": arg.get("hasta") or hasta, "base": {"quien": cierres[-1]["quien"]} if cierres else None,
+                          "cierres": cierres, "ramas": [
+                {"rama": "ART", "items": [it("Lucía Ferreyra", ["SIN CONTACTAR", "A"], "A", True, 150), it("Ramón Ortiz", ["A", "CONSULTA AGENDADA"], "consulta", False, 90),
+                                          it("Sonia Vera", ["SIN CONTACTAR", "B"], "B", True, 60), it("Jorge Lima", ["SIN CONTACTAR", "C"], "C", True, 30)]},
+                {"rama": "LABORAL", "items": [it("Paula Quiroga", ["SIN CONTACTAR", "A", "CONSULTA AGENDADA"], "consulta", True, 40)]},
+                {"rama": "TRANSITO", "items": []}]}
+        if fn == "cerrarTurno":
+            ahora = 1793888400000
+            self.cierres_turno = getattr(self, "cierres_turno", []) + [{"quien": who, "desde": arg.get("desde"), "cuando": ahora}]
+            return True, {"cuando": ahora}
         self.sin_fake.add(fn)
         print("[harness] fn SIN respuesta falsa:", fn, flush=True)
         return True, {}

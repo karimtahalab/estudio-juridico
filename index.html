@@ -108,18 +108,54 @@ a{color:inherit;text-decoration:none}
 .agbar .seg2 button::after{content:'';position:absolute;left:0;right:0;top:-7px;bottom:-7px}
 .seg-nueva{margin-top:6px}
 .seg-q{margin-top:10px;height:44px}
-.todo.segl li.seg-li{display:flex;align-items:flex-start;gap:6px}
-.todo.segl li.seg-ok{opacity:.65}
-.todo.segl .seg-main{flex:1;min-width:0;width:auto;height:auto;min-height:0;white-space:normal;display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:11px 8px 11px 14px}
-.seg-top{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
-.seg-top b{font-size:15.5px;font-weight:700}
-.seg-nota{font-size:14.5px;color:var(--ink);white-space:pre-wrap;overflow-wrap:anywhere}
-.seg-ult{font-size:13px;color:var(--ink-2);overflow-wrap:anywhere}
-.seg-meta{font-size:12px;color:var(--ink-3)}
-.seg-tag{font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;background:color-mix(in srgb,var(--blue) 10%,transparent);color:var(--blue)}
-.seg-tag.seg-hoy{background:color-mix(in srgb,var(--mint) 22%,transparent);color:var(--ink)}
-.seg-tag.seg-atr{background:color-mix(in srgb,#e5484d 14%,transparent);color:#c62a2f}
-.seg-acts{display:flex;flex-direction:column;align-items:flex-end;gap:6px;padding:10px 10px 10px 0;flex:none}
+/* Seguimiento tipo planilla: en el celular y la tablet cada fila se apila; desde 1024px es una tabla con columnas */
+.segt-top{display:flex;flex-direction:column}
+.segt-f{margin-top:10px}
+.segt-f+.segt-f{margin-top:8px}
+.segt-f .chip{height:34px}
+.segt{margin-top:12px;background:var(--paper);border-radius:14px;box-shadow:0 0 0 1px var(--line) inset;overflow:hidden}
+.segt-row{display:grid;grid-template-columns:1fr auto;grid-template-areas:"cli est" "obs obs" "meta acts";gap:2px 10px;padding:11px 12px;border-top:1px solid var(--line);cursor:pointer;outline:none}
+.segt-row:first-child{border-top:0}
+.segt-row:focus-visible{box-shadow:0 0 0 2px var(--blue) inset}
+.segt-cab{display:none}
+.segt-c{min-width:0;overflow-wrap:anywhere;font-size:14px}
+.segt-row .c-fecha,.segt-row .c-resp,.segt-row .c-num,.segt-row .c-ori{display:none}
+.c-cli{grid-area:cli;font-size:15.5px;align-self:start;padding-top:2px}
+.c-est{grid-area:est;text-align:right}
+.c-meta{grid-area:meta;font-size:12.5px;color:var(--ink-3);align-self:center;margin-top:6px}
+.c-meta span{white-space:nowrap}
+.c-obs{grid-area:obs;margin-top:4px}
+.c-acts{grid-area:acts;display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-top:6px}
+.c-acts .ib{width:38px;height:38px}
+.segt-row.urg{background:var(--amber-bg)}
+.segt-row.ok{opacity:.72}
+.segt-est{display:inline-block;padding:3px 10px;border-radius:7px;background:var(--red);color:var(--paper);font-weight:800;font-size:13px;white-space:nowrap}
+.segt-est.ok{background:var(--green)}
+.segt-cu{display:block;font-size:12px;font-weight:700;color:var(--ink-2);margin-top:4px}
+.segt-cu.hoy{color:var(--amber)}
+.segt-cu.atr{color:var(--red)}
+.segt-nota{display:block;white-space:pre-wrap;font-size:14.5px;color:var(--ink);line-height:1.4}
+.segt-ult{display:block;font-size:13px;color:var(--ink-2);margin-top:5px}
+.segt-ult i{font-style:normal;color:var(--ink-3)}
+.segt-vacio{color:var(--ink-3)}
+@media (hover:hover){.segt-row:not(.segt-cab):not(.urg):hover{background:var(--paper-2)}}
+@media (min-width:1024px){
+  .segt-top{flex-direction:row;gap:10px;align-items:center}
+  .segt-top .seg-nueva{width:auto;flex:none;padding:0 18px;margin-top:0}
+  .segt-top .seg-q{flex:1;margin-top:0;height:46px}
+  .segt-row{grid-template-columns:62px 106px 126px 94px minmax(110px,1fr) 128px minmax(240px,2.4fr) 136px;grid-template-areas:none;gap:0;padding:0}
+  .segt-row .c-fecha,.segt-row .c-resp,.segt-row .c-num,.segt-row .c-ori{white-space:nowrap;overflow-wrap:normal;overflow:hidden;text-overflow:ellipsis}
+  .segt-row .segt-c{display:block;grid-area:auto;padding:8px 10px;border-left:1px solid var(--line);margin:0;text-align:left;align-self:stretch}
+  .segt-row .segt-c:first-child{border-left:0}
+  .segt-row .c-meta{display:none}
+  .segt-row .c-acts{display:flex;flex-direction:row;align-items:flex-start;justify-content:flex-end;gap:6px;padding:6px 8px}
+  .segt-row .c-acts .ib{width:34px;height:34px}
+  .segt-row .c-acts .seg-b{padding:7px 9px}
+  .segt-row .c-cli{font-size:14.5px}
+  .segt-cab{display:grid;cursor:default;background:var(--paper-2)}
+  .segt-cab .segt-c{font-size:11.5px;font-weight:800;color:var(--ink-2);text-transform:uppercase;letter-spacing:.04em;padding:9px 10px;white-space:nowrap;overflow-wrap:normal}
+  .c-fecha,.c-num{font-variant-numeric:tabular-nums}
+}
 .seg-b{padding:7px 11px;border-radius:10px;font-size:13.5px;font-weight:700;color:var(--blue);background:color-mix(in srgb,var(--blue) 10%,transparent);white-space:nowrap}
 .seg-b.seg-hecho{color:#0d6b4f;background:color-mix(in srgb,var(--mint) 22%,transparent)}
 .next-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;margin-top:8px;padding:11px 14px;border-radius:14px;background:var(--paper);box-shadow:0 0 0 1px var(--line) inset;font-weight:700;font-size:14.5px;text-align:left;color:var(--ink)}
@@ -602,6 +638,36 @@ textarea:focus,.inp:focus,select:focus{outline:none;box-shadow:0 0 0 2.5px var(-
 .rp-t td.nc{color:var(--ink-3);font-weight:500;font-size:12px}
 .rp-t th small{display:block;font-weight:500;font-size:10.5px;color:var(--ink-3)}
 .rp-t td:first-child small{display:block;font-weight:500;font-size:12px;color:var(--ink-3);margin:1px 0 0 16px}
+/* Reporte del turno (intakers) */
+.tu-tot{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}
+.tu-tot div{background:var(--paper);border-radius:14px;box-shadow:0 0 0 1px var(--line) inset;padding:12px 8px;text-align:center}
+.tu-tot b{display:block;font-size:30px;font-weight:800;font-stretch:var(--cond);line-height:1}
+.tu-tot span{display:block;font-size:12.5px;color:var(--ink-2);font-weight:700;margin-top:5px;line-height:1.2}
+@media (max-width:430px){.tu-tot{grid-template-columns:repeat(2,1fr)}}
+.tu-card{margin-top:12px;background:var(--paper);border-radius:var(--r-lg);box-shadow:0 0 0 1px var(--line) inset;padding:12px 14px 6px}
+.tu-card h3{margin:0 0 4px;font-size:16px;display:flex;align-items:center;gap:8px}
+.tu-row{display:flex;width:100%;align-items:center;gap:10px;padding:11px 0;border-top:1px solid var(--line);text-align:left;font-size:15px;font-weight:700;color:var(--ink);background:none}
+.tu-card h3+.tu-row{border-top:0}
+.tu-row .tu-l{flex:1;min-width:0}
+.tu-row small{display:block;font-weight:600;color:var(--ink-3);font-size:12.5px;margin-top:2px}
+.tu-row b{font-size:22px;font-weight:800;min-width:30px;text-align:right}
+.tu-row .tu-car{width:14px;font-style:normal;color:var(--ink-3);font-size:13px}
+.tu-row.cero{color:var(--ink-3);cursor:default}
+.tu-row.cero b{color:var(--ink-3);font-weight:700}
+.tu-abc{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 10px}
+.tu-abc span{padding:5px 10px;border-radius:9px;background:var(--paper-2);font-weight:700;font-size:14px}
+.tu-abc span small{font-weight:600;color:var(--ink-3)}
+.tu-list{list-style:none;margin:0 0 10px;padding:0}
+.tu-list li{padding:8px 10px;border-radius:10px;background:var(--paper-2);margin-top:6px;font-size:14px}
+.tu-list li span{display:block;color:var(--ink-3);font-size:12.5px;margin-top:2px}
+.tu-pick{margin-top:10px;padding:12px 14px;border-radius:14px;background:var(--paper);box-shadow:0 0 0 1px var(--line) inset}
+.tu-pick label{display:block;font-size:13px;font-weight:700;color:var(--ink-2);margin-bottom:6px}
+.tu-pick-r{display:flex;gap:8px}
+.tu-pick-r .inp{flex:1;margin:0}
+.tu-pick-r .btn2{flex:none;padding:0 18px}
+.tu-acts{margin-top:16px}
+.tu-conf{padding:14px;border-radius:14px;background:var(--paper);box-shadow:0 0 0 1px var(--line) inset}
+.tu-conf p{margin:0 0 10px;font-size:14.5px;line-height:1.4}
 .rp-sem{margin:12px 0 0;padding:12px 14px;border-radius:14px;background:var(--paper);box-shadow:0 0 0 1px var(--line) inset;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .rp-sem b{font-size:16px}
 .rp-sem span{color:var(--ink-3);font-size:13.5px;flex:1 1 180px}
@@ -3141,6 +3207,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     var conFase=!ag && puede('agendar');
     html += '<div class="fi-acts'+(conFase?'':' dos')+'">'+(conFase?b('fase','Cambiar fase'):'')+b('nota','＋ Nota')+b('datos','Corregir datos')+'</div>'+fichaPanel(l, u);
     if (puedeMarca(l)) html += '<button class="btn3" data-marcanueva="'+esc(l.id)+'">'+I.swap+'Pasar a otra rama</button>';
+    html += fichaResumenBlk(l);
     html += '<div class="blk"><h3 class="blk-t">Contacto</h3><div class="box">'+fkv('Teléfono', l.tel||'—', 'num')+fkv('Email', l.email)+'</div></div>';
     if (l.info && l.info.length) html += '<div class="blk"><h3 class="blk-t">Lo que contó en el formulario</h3><div class="box">'+l.info.map(function(c){ return fkv(c.label, c.text, 'pre'); }).join('')+'</div></div>';
     html += estBlk(l);
@@ -3149,6 +3216,14 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
       '<div class="note">Todavía no hay notas. Tocá "＋ Nota" para dejar una.</div>')+'</div>';
     html += '<div class="blk"><h3 class="blk-t">De dónde vino</h3><div class="box">'+origenRows(l)+'</div></div>';
     return html+'<div style="height:12px"></div>';
+  }
+  // Resumen del caso en la ficha del lead (antes solo se veía en "Ver la consulta": en un Reagenda sin día, un NO SHOW o un C no había forma de leerlo)
+  function fichaResumenBlk(l){
+    var rf=l.resumen ? fieldsOf(l.resumen) : [], ed=puede('agendar');
+    if (rf.length) return '<div class="blk"><h3 class="blk-t blk-row">Resumen del caso'+(ed?'<button class="mini" data-escribir="'+esc(l.id)+'">Editar</button>':'')+'</h3><div class="case">'+
+      rf.map(function(f){ return '<div class="kv stack"><span>'+esc(f.k)+'</span><b>'+esc(f.v)+'</b></div>'; }).join('')+'</div></div>';
+    if (!ed) return '';
+    return '<div class="blk"><h3 class="blk-t">Resumen del caso</h3><div class="missing"><span>Todavía no hay resumen.</span><button class="btn2" data-escribir="'+esc(l.id)+'">'+I.pen+'Escribir</button></div><button class="link" data-pastefor="'+esc(l.id)+'">O pegá el mensaje de WhatsApp</button></div>';
   }
   function fichaPanel(l, u){
     if (u.modo==='fase'){
@@ -3761,7 +3836,124 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     var segR=ramas.length>1 ? '<div class="seg marca" role="tablist" aria-label="Rama">'+ramas.map(function(r){ return '<button class="'+(cur===r?'on':'')+(r==='TRANSITO'?' mk-transito':'')+'" data-rtrama="'+r+'" role="tab" aria-selected="'+(cur===r)+'">'+RT_NOM[r]+'</button>'; }).join('')+'</div>' : '';
     return { h1:'Reportes', p:'Ritmo de ingresos de clientes', extra:repModoSeg()+segR, body:equipoBtn()+body };
   }
+  /* ---------- Reporte del turno (intakers): lo que trabajó cada una desde que cerró el turno anterior ----------
+     Pedido de Pri (19/11): armar el reporte de fin de turno sin entrar a la planilla. Sale del HISTORIAL de las tres ramas.
+     Los turnos no se superponen, así que el turno va desde el último "cerrar turno" hasta ahora.
+     Leads nuevos: cómo quedaron (A, B, C u otra fase) o si se les agendó consulta o llamada. De turnos anteriores: solo consultas y llamadas. */
+  function turBA(ms){ return new Date(ms-3*3600000); } // Mendoza: UTC-3 todo el año
+  function turHM(ms){ var d=turBA(ms); return pad2(d.getUTCHours())+':'+pad2(d.getUTCMinutes()); }
+  function turDia(ms){ return diaCorto(turBA(ms).toISOString().slice(0,10)); }
+  function turCuando(ms){ var dc=turDia(ms); return (dc==='Hoy'?'hoy':(dc==='Mañana'?'mañana':dc))+' a las '+turHM(ms); }
+  function turFechaTxt(ms){ var d=turBA(ms); return ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'][d.getUTCDay()]+' '+pad2(d.getUTCDate())+'/'+pad2(d.getUTCMonth()+1); }
+  function turInput(ms){ return turBA(ms).toISOString().slice(0,16); }
+  function turDesdeMs(v){ var m=String(v||'').match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/); return m ? Date.UTC(+m[1], +m[2]-1, +m[3], +m[4]+3, +m[5]) : 0; }
+  function loadTurno(force){
+    var q=state.turQ||{}, k=JSON.stringify(q), T=state.tur;
+    if (!force && T && T.k===k && (T.cargando || (T.d && Date.now()-T.at<60000))) return;
+    var mio=state.tur={k:k, at:Date.now(), cargando:true, d:(T && T.k===k) ? T.d : null};
+    call('reporteTurno', q).then(function(d){ if (state.tur!==mio) return; mio.d=d; mio.at=Date.now(); mio.cargando=false; mio.error=''; if (state.view==='reporte') render(); })
+      .catch(function(e){ if (state.tur!==mio) return; mio.cargando=false; mio.error=(e&&e.message)||'No se pudo armar el reporte.'; if (state.view==='reporte') render(); });
+  }
+  function turCuentas(r){
+    var c={nuevos:0, A:0, B:0, C:0, otra:0, otras:{}, consulta:0, llamada:0, llamadaConsulta:0, consultaAnt:0, llamadaAnt:0, llamadaConsultaAnt:0, consultaNue:0, llamadaNue:0, llamadaConsultaNue:0};
+    (r.items||[]).forEach(function(i){
+      var k=i.cat;
+      if (i.nuevo) c.nuevos++;
+      if (k==='otra'){ c.otra++; var f=faseLbl(i.fase)||i.fase||'Otra'; c.otras[f]=(c.otras[f]||0)+1; return; }
+      c[k]=(c[k]||0)+1;
+      if (k==='consulta' || k==='llamada' || k==='llamadaConsulta') c[k+(i.nuevo?'Nue':'Ant')]++;
+    });
+    return c;
+  }
+  function turOtrasTxt(c){ return Object.keys(c.otras).map(function(f){ return f+' '+c.otras[f]; }).join(', '); }
+  // Texto para pegar en el grupo de WhatsApp
+  function turTexto(d){
+    var hoy=turDia(d.desde)===turDia(d.hasta);
+    var ls=['📋 Reporte de turno – '+(d.yo||''), (hoy ? turFechaTxt(d.hasta)+', de '+turHM(d.desde)+' a '+turHM(d.hasta) : 'Desde el '+turFechaTxt(d.desde)+' '+turHM(d.desde)+' hasta el '+turFechaTxt(d.hasta)+' '+turHM(d.hasta))];
+    (d.ramas||[]).forEach(function(r){
+      var c=turCuentas(r), det=['A '+c.A, 'B '+c.B, 'C '+c.C];
+      if (c.consultaNue) det.push('con consulta '+c.consultaNue);
+      if (c.llamadaNue) det.push('con llamada '+c.llamadaNue);
+      if (c.llamadaConsultaNue) det.push('llamada y consulta '+c.llamadaConsultaNue);
+      if (c.otra) det.push('otras '+c.otra+' ('+turOtrasTxt(c)+')');
+      var ant=function(n){ return n ? ' ('+n+' de turnos anteriores)' : ''; };
+      ls.push('', '*'+ramaLabel(r.rama)+'*');
+      ls.push('• Leads nuevos: '+c.nuevos+(c.nuevos ? ' → '+det.join(' · ') : ''));
+      ls.push('• Consultas agendadas: '+c.consulta+ant(c.consultaAnt));
+      ls.push('• Llamadas agendadas: '+c.llamada+ant(c.llamadaAnt));
+      if (c.llamadaConsulta) ls.push('• Llamada y consulta agendada: '+c.llamadaConsulta+ant(c.llamadaConsultaAnt));
+    });
+    return ls.join('\n');
+  }
+  function turItem(i){
+    return '<li><b>'+esc(i.n)+'</b><span>'+esc((i.camino||[]).map(function(f){ return faseLbl(f)||f; }).join(' → '))+' · '+turHM(i.t)+(i.nuevo?'':' · lead de otro turno')+'</span></li>';
+  }
+  function turRamaCard(r){
+    var c=turCuentas(r), its=r.items||[], ab=state.turAbierto||{};
+    var fila=function(k, n, label, sub, xs){
+      var key=r.rama+'|'+k, on=!!ab[key] && n>0;
+      return '<button class="tu-row'+(n?'':' cero')+(on?' on':'')+'" data-turabrir="'+esc(key)+'"'+(n?' aria-expanded="'+on+'"':' disabled')+'><span class="tu-l">'+label+(sub?'<small>'+sub+'</small>':'')+'</span><b class="num">'+n+'</b><i class="tu-car" aria-hidden="true">'+(n?(on?'▴':'▾'):'')+'</i></button>'+
+        (on ? '<ul class="tu-list">'+xs.map(turItem).join('')+'</ul>' : '');
+    };
+    var ant=function(n){ return n ? plural(n,'es de un lead de otro turno','son de leads de otros turnos') : ''; };
+    var html='<div class="tu-card"><h3><span class="rama r-'+ramaKey(r.rama)+'">'+ramaLabel(r.rama)+'</span></h3>';
+    if (r.error) html+='<div class="warn" style="margin:6px 0">'+esc(r.error)+'</div>';
+    html+=fila('nuevos', c.nuevos, 'Leads nuevos que levantaste', '', its.filter(function(i){ return i.nuevo; }));
+    if (c.nuevos) html+='<div class="tu-abc">'+['A','B','C'].map(function(x){ return '<span><b>'+x+'</b> '+c[x]+'</span>'; }).join('')+
+      (c.consultaNue ? '<span>Con consulta '+c.consultaNue+'</span>' : '')+(c.llamadaNue ? '<span>Con llamada '+c.llamadaNue+'</span>' : '')+
+      (c.llamadaConsultaNue ? '<span>Llamada y consulta '+c.llamadaConsultaNue+'</span>' : '')+
+      (c.otra ? '<span>Otras '+c.otra+' <small>('+esc(turOtrasTxt(c))+')</small></span>' : '')+'</div>';
+    html+=fila('consulta', c.consulta, 'Consultas agendadas', ant(c.consultaAnt), its.filter(function(i){ return i.cat==='consulta'; }));
+    html+=fila('llamada', c.llamada, 'Llamadas agendadas', ant(c.llamadaAnt), its.filter(function(i){ return i.cat==='llamada'; }));
+    html+=fila('llamadaConsulta', c.llamadaConsulta, 'Llamada y consulta agendada', 'Las dos en este turno', its.filter(function(i){ return i.cat==='llamadaConsulta'; }));
+    return html+'</div>';
+  }
+  function repTipoSeg(){ var t=state.repTipo||store('repTipo')||'turno'; return '<div class="seg2" role="tablist" aria-label="Qué reporte"><button data-reptipo="turno" class="'+(t==='turno'?'on':'')+'" role="tab" aria-selected="'+(t==='turno')+'">Mi turno</button><button data-reptipo="semana" class="'+(t==='semana'?'on':'')+'" role="tab" aria-selected="'+(t==='semana')+'">Semana</button></div>'; }
+  function viewTurno(){
+    loadTurno();
+    var T=state.tur||{}, d=T.d, q=state.turQ||{}, pasado=!!q.hasta, body='';
+    if (!d && T.cargando) body='<div class="skel"></div><div class="skel"></div><p class="hint" style="text-align:center">Armando el reporte del turno…</p>';
+    else if (!d) body='<div class="err-box">'+esc(T.error||'No se pudo armar el reporte.')+'<br><button data-turretry>Reintentar</button></div>';
+    else {
+      if (T.error) body+='<div class="warn">'+esc(T.error)+'</div>';
+      if (state.turHecho && !pasado && !q.desde) body+='<div class="ok-box" style="margin-top:12px"><b>✓ Cerraste tu turno a las '+esc(turHM(state.turHecho.cuando))+'.</b><span>El reporte quedó copiado: pegalo en el grupo. El turno que sigue arranca desde acá.</span><button class="link" data-turver="'+esc(state.turHecho.desde+'|'+state.turHecho.cuando)+'">Ver el turno que cerraste</button></div>';
+      var expl = pasado ? 'Turno de '+esc((d.cierres||[]).filter(function(c){ return c.cuando===d.hasta; }).map(function(c){ return c.quien; })[0]||'')+', hasta '+esc(turCuando(d.hasta))+'.'
+        : (q.desde ? 'Elegiste desde cuándo. Hasta ahora.' : (d.base ? 'Desde que '+esc(d.base.quien)+' cerró su turno. Hasta ahora.' : 'Todavía nadie cerró un turno: arranca a las 00:00 de hoy.'));
+      body+='<div class="rp-sem"><b>🕘 Desde '+esc(turCuando(d.desde))+'</b><span>'+expl+'</span><button data-turcambiar aria-expanded="'+!!state.turCambiar+'">'+(state.turCambiar?'Listo':'Cambiar')+'</button></div>';
+      if (state.turCambiar){
+        body+='<div class="tu-pick"><label for="turDesde">Desde cuándo</label><div class="tu-pick-r"><input class="inp" id="turDesde" type="datetime-local" value="'+esc(turInput(d.desde))+'"><button class="btn2" data-turdesdeok>Ver</button></div>'+
+          ((q.desde||q.hasta) ? '<button class="link" data-turactual>Volver al turno de ahora</button>' : '')+
+          ((d.cierres||[]).length ? '<p class="sec-sub" style="margin:12px 0 0">O mirá un turno que ya se cerró:</p><div class="chips" style="margin-top:8px">'+d.cierres.map(function(c){
+            var on=pasado && q.hasta===c.cuando; return '<button class="chip'+(on?' on':'')+'" data-turver="'+esc((c.desde||'')+'|'+c.cuando)+'">'+esc(c.quien)+' · '+esc(turDia(c.cuando))+' '+esc(turHM(c.cuando))+'</button>'; }).join('')+'</div>' : '')+'</div>';
+      }
+      var tot={nuevos:0, consulta:0, llamada:0, llamadaConsulta:0};
+      (d.ramas||[]).forEach(function(r){ var c=turCuentas(r); Object.keys(tot).forEach(function(k){ tot[k]+=c[k]; }); });
+      body+='<div class="tu-tot">'+[['nuevos','Leads nuevos'],['consulta','Consultas agendadas'],['llamada','Llamadas agendadas'],['llamadaConsulta','Llamada y consulta']].map(function(x){
+        return '<div><b class="num">'+tot[x[0]]+'</b><span>'+x[1]+'</span></div>'; }).join('')+'</div>';
+      (d.ramas||[]).forEach(function(r){ body+=turRamaCard(r); });
+      body+='<p class="hint" style="margin:10px 2px 0">Sale del HISTORIAL de las planillas: cuenta los cambios de fase hechos en la app y en la planilla. Tocá cada número para ver quiénes son.</p>';
+      if (pasado) body+='<div class="tu-acts"><button class="save" data-turcopiar>📋 Copiar este reporte</button><button class="link" data-turactual style="display:block;margin:10px auto 0">Volver al turno de ahora</button></div>';
+      else if (state.turConfirmar) body+='<div class="tu-acts tu-conf"><p><b>¿Cerrar tu turno?</b> Se copia el reporte y el turno que sigue arranca desde ahora.</p><button class="save" data-turcerrar'+(state.turCerrando?' disabled':'')+'>'+(state.turCerrando?'Cerrando…':'Sí, copiar y cerrar mi turno')+'</button><button class="link" data-turnoconf style="display:block;margin:10px auto 0">Todavía no</button></div>';
+      else body+='<div class="tu-acts"><button class="save" data-turconf>📋 Copiar el reporte y cerrar mi turno</button><button class="link" data-turcopiar style="display:block;margin:10px auto 0">Solo copiar, sin cerrar el turno</button></div>';
+    }
+    return { h1:'Reporte', p: pasado ? 'Un turno que ya se cerró' : 'Lo que trabajaste en este turno', extra: repTipoSeg(), body: body };
+  }
+  function copiarReporte(t){
+    var ok=function(){ toast('📋 Reporte copiado: pegalo en el grupo.'); };
+    try{ if (navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(t).then(ok, function(){ copiarViejo(t) ? ok() : toast('No se pudo copiar', true); }); return; } }catch(e){}
+    copiarViejo(t) ? ok() : toast('No se pudo copiar', true);
+  }
+  function cerrarTurnoUI(){
+    var T=state.tur, d=T && T.d; if (!d || state.turCerrando) return;
+    var txt=turTexto(d); copiarReporte(txt);
+    state.turCerrando=true; render();
+    call('cerrarTurno', {desde:d.desde, texto:txt}).then(function(r){
+      state.turCerrando=false; state.turConfirmar=false; state.turQ={}; state.turHecho={cuando:r.cuando, desde:d.desde};
+      loadTurno(true); render(); toast('✓ Turno cerrado y reporte copiado: pegalo en el grupo.');
+    }).catch(function(e){ state.turCerrando=false; render(); toast(((e&&e.message)||'No se pudo cerrar el turno.')+' El reporte igual quedó copiado.', true); });
+  }
   function viewReporte(ctrl){
+    if (!ctrl && (state.repTipo||store('repTipo')||'turno')==='turno') return viewTurno();
     if (ctrl && state.repModo==='finanzas'){ if (!(state.data && state.data.finAcceso)) state.repModo='control'; else { var vf=viewFin2(); vf.h1='Reportes'; vf.extra=repModoSeg()+vf.extra; return vf; } }
     if (ctrl && state.repModo==='ritmo') return viewRitmo();
     if (ctrl && state.repModo==='resumen'){ var vr=viewResumen(); vr.h1='Reportes'; vr.extra=repModoSeg()+(vr.extra||''); vr.body=equipoBtn()+vr.body; return vr; }
@@ -3792,7 +3984,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
       } else (d.ramas||[]).forEach(function(r){ body+=repRama(r, ctrl); });
       if (!(d.ramas||[]).length) body+=emptyBox('No hay planillas de leads para este reporte');
     }
-    return { h1: ctrl?'Reportes':'Reporte de la semana', p:(cual?cual+', ':'Semana del ')+semTxt, extra:(ctrl?repModoSeg():'')+nav, body:(ctrl?equipoBtn():'')+(viejo?notaViejo(viejo.t):'')+body };
+    return { h1: ctrl?'Reportes':'Reporte de la semana', p:(cual?cual+', ':'Semana del ')+semTxt, extra:(ctrl?repModoSeg():repTipoSeg())+nav, body:(ctrl?equipoBtn():'')+(viejo?notaViejo(viejo.t):'')+body };
   }
 
   /* ---------- Disponibilidad por persona (cada una elige su modo) ---------- */
@@ -4172,7 +4364,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     if (!ff.length) return '';
     var n=ff.filter(function(l){ return !l.fase; }).length, max=state.ffMas?400:8;
     return '<div id="ffSec"></div><h2 class="sec-t">Falta la fase'+(n?' <span class="cnt num">'+n+'</span>':'')+'</h2>'+
-      '<p class="sec-sub">Ya les escribieron (tienen el nombre de Fran o de Pri) y todavía no tienen fase. Cuando contesten, tocá la fase acá mismo: se guarda al instante y podés deshacer.</p>'+
+      '<p class="sec-sub">Ya les escribieron (tienen el nombre de un intaker) y todavía no tienen fase. Cuando contesten, tocá la fase acá mismo: se guarda al instante y podés deshacer.</p>'+
       '<ul class="cl ff">'+ff.slice(0,max).map(ffRow).join('')+'</ul>'+
       (ff.length>max?'<button class="btn3" data-ffmas>Ver los '+ff.length+'</button>':'');
   }
@@ -4195,47 +4387,69 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
   function segPend(){ return segTodas().filter(function(s){ return s.estado!=='Hecho'; }); }
   function segParaHoy(){ var h=nowBA().date; return segPend().filter(function(s){ return s.para && s.para<=h; }); }
   function segFecha(x){ var m=String(x||'').match(/^(\d{4})-(\d{2})-(\d{2})(?: (\d{2}:\d{2}))?/); return m ? m[3]+'/'+m[2]+(m[4] && m[4]!=='00:00'?' '+m[4]:'') : String(x||''); }
-  function segCuando(s){
-    if (!s.para) return '';
-    var h=nowBA().date;
-    if (s.para<h) return '<span class="seg-tag seg-atr">Atrasada · era '+esc(diaCorto(s.para))+'</span>';
-    return '<span class="seg-tag'+(s.para===h?' seg-hoy':'')+'">'+esc(diaCorto(s.para))+'</span>';
+  /* Vista tipo planilla (pedido de los intakers): varias notas a la vez, una por fila, con el estado y las observaciones a la vista.
+     Columnas como la planilla de guardias: Fecha · Responsable · Número · Origen · Cliente · Estado · Observaciones. En el celular cada fila se apila. */
+  function segDia(x){ var m=String(x||'').match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? m[3]+'/'+m[2] : String(x||''); }
+  function segUrgente(s){ return s.estado!=='Hecho' && s.para && s.para<=nowBA().date; }
+  function segEstado(s){
+    if (s.estado==='Hecho') return '<span class="segt-est ok">Hecho</span>'+(s.hechoPor||s.hechoEl?'<small class="segt-cu">'+esc([s.hechoPor||'', segFecha(s.hechoEl)].filter(Boolean).join(' · '))+'</small>':'');
+    var h=nowBA().date, cu='';
+    if (s.para){
+      if (s.para<h) cu='<small class="segt-cu atr">Atrasada · era '+esc(diaCorto(s.para))+'</small>';
+      else { var dc=diaCorto(s.para); cu='<small class="segt-cu'+(s.para===h?' hoy':'')+'">Para '+esc(dc==='Hoy'?'hoy':(dc==='Mañana'?'mañana':dc))+'</small>'; }
+    }
+    return '<span class="segt-est">Pendiente</span>'+cu+(s.repetir?'<small class="segt-cu">🔁 cada semana</small>':'');
   }
-  function segRow(s){
-    var hecho=s.estado==='Hecho', tel=String(s.tel||'').trim(), ph=phone(tel);
-    var titulo=s.nombre || (ph ? ph : 'Sin nombre');
-    var meta=[s.rama?ramaLabel(s.rama):'', (s.nombre && ph)?ph:'', 'la dejó '+(s.quien||'')+' el '+segFecha(s.creado)].filter(Boolean).join(' · ');
-    var ult=(s.historial||[]).filter(function(x){ return !/Traída de la planilla/.test(x); }).slice(-1)[0];
-    var h='<li class="seg-li'+(hecho?' seg-ok':'')+'"><button class="seg-main" data-segver="'+esc(s.id)+'">'+
-      '<span class="seg-top"><b>'+esc(titulo)+'</b>'+segCuando(s)+(s.repetir?'<span class="seg-tag">🔁 cada semana</span>':'')+'</span>'+
-      '<span class="seg-nota">'+esc(s.nota||'')+'</span>'+
-      (ult?'<span class="seg-ult">💬 '+esc((function(x){ var q=String(x).split(' · '); return q.length>2 ? segFecha(q[0])+' '+q[1]+': '+q.slice(2).join(' · ') : x; })(ult))+'</span>':'')+
-      '<span class="seg-meta">'+esc(meta)+(hecho?' · ✔ '+esc(s.hechoPor||'')+' '+esc(segFecha(s.hechoEl)):'')+'</span></button>'+
-      '<span class="seg-acts">'+(ph.length>=10?'<a class="ib wa" href="'+waHref(tel)+'" target="_blank" rel="noopener" aria-label="WhatsApp a '+esc(titulo)+'">'+I.chat+'</a>':'')+
-      (hecho ? '<button class="seg-b" data-segdeshacer="'+esc(s.id)+'">↩ Pendiente</button>' : '<button class="seg-b seg-hecho" data-seghecho="'+esc(s.id)+'">✔ Hecho</button>')+'</span></li>';
-    return h;
+  function segFila(s){
+    var hecho=s.estado==='Hecho', tel=String(s.tel||'').trim(), ph=phone(tel), num=tel||ph;
+    var cli=s.nombre || 'Sin nombre', rama=s.rama?'<span class="rama r-'+ramaKey(s.rama)+'">'+ramaLabel(s.rama)+'</span>':'<span class="segt-vacio">—</span>';
+    var hist=(s.historial||[]).filter(function(x){ return !/Traída de la planilla/.test(x); }), ult=hist.slice(-1)[0];
+    var ultTx=ult ? (function(x){ var q=String(x).split(' · '); return q.length>2 ? segFecha(q[0])+' '+q[1]+': '+q.slice(2).join(' · ') : x; })(ult) : '';
+    var obs='<span class="segt-nota">'+esc(s.nota||'')+'</span>'+(ult?'<span class="segt-ult">💬 '+esc(ultTx)+(hist.length>1?' <i>('+hist.length+' comentarios)</i>':'')+'</span>':'');
+    var acts=(ph.length>=10?'<a class="ib wa" href="'+waHref(tel)+'" target="_blank" rel="noopener" aria-label="WhatsApp a '+esc(cli)+'">'+I.chat+'</a>':'')+
+      (hecho ? '<button class="seg-b" data-segdeshacer="'+esc(s.id)+'">↩ Pendiente</button>' : '<button class="seg-b seg-hecho" data-seghecho="'+esc(s.id)+'">✔ Hecho</button>');
+    return '<div class="segt-row'+(hecho?' ok':'')+(segUrgente(s)?' urg':'')+'" role="row" data-segver="'+esc(s.id)+'" tabindex="0">'+
+      '<div class="segt-c c-fecha num" role="cell">'+esc(segDia(s.creado))+'</div>'+
+      '<div class="segt-c c-resp" role="cell">'+esc(s.quien||'')+'</div>'+
+      '<div class="segt-c c-num num" role="cell">'+(num?esc(num):'<span class="segt-vacio">—</span>')+'</div>'+
+      '<div class="segt-c c-ori" role="cell">'+rama+'</div>'+
+      '<div class="segt-c c-cli" role="cell"><b>'+esc(cli)+'</b></div>'+
+      '<div class="segt-c c-est" role="cell">'+segEstado(s)+'</div>'+
+      '<div class="segt-c c-obs" role="cell">'+obs+'</div>'+
+      '<div class="segt-c c-meta" aria-hidden="true">'+[segDia(s.creado), s.quien||'', s.rama?ramaLabel(s.rama):'', num].filter(Boolean).map(function(x){ return '<span>'+esc(x)+'</span>'; }).join(' · ')+'</div>'+
+      '<div class="segt-c c-acts" role="cell">'+acts+'</div></div>';
   }
-  function segOrden(a,b){ return String(a.para||'9999').localeCompare(String(b.para||'9999')) || String(a.creado).localeCompare(String(b.creado)); }
-  function segBloque(t, xs, sub){
-    if (!xs.length) return '';
-    return '<h3 class="sc-rama">'+t+' <span class="cnt num">'+xs.length+'</span></h3>'+(sub?'<p class="sec-sub">'+sub+'</p>':'')+'<ul class="todo segl">'+xs.sort(segOrden).map(segRow).join('')+'</ul>';
+  function segTabla(xs){
+    var cab=['Fecha','Responsable','Número','Origen','Cliente','Estado','Observaciones',''];
+    return '<div class="segt" role="table" aria-label="Notas de seguimiento"><div class="segt-row segt-cab" role="row">'+
+      cab.map(function(t, i){ return '<div class="segt-c" role="columnheader">'+t+'</div>'; }).join('')+'</div>'+xs.map(segFila).join('')+'</div>';
   }
   function segHtml(){
-    var xs=segPend(), h=nowBA().date, q=normTxt(state.segQ||'');
-    if (q) xs=xs.filter(function(s){ return normTxt([s.nombre,s.tel,s.nota,s.quien,(s.historial||[]).join(' ')].join(' ')).indexOf(q)!==-1; });
-    var hoy=xs.filter(function(s){ return s.para && s.para<=h; }), prox=xs.filter(function(s){ return s.para && s.para>h; }), sin=xs.filter(function(s){ return !s.para; });
-    var hechas=segTodas().filter(function(s){ return s.estado==='Hecho'; }).sort(function(a,b){ return String(b.hechoEl).localeCompare(String(a.hechoEl)); });
-    var body='<button class="btn3 seg-nueva" data-segnueva>📝 Dejar una nota de seguimiento</button>'+
-      '<input class="inp seg-q" id="segQ" type="search" placeholder="Buscar por nombre, teléfono o nota" value="'+esc(state.segQ||'')+'" autocomplete="off">';
-    if (!xs.length) body+='<p class="done">'+(q?'No hay notas que coincidan.':'✓ No hay nada pendiente')+'</p>';
-    body+=segBloque('Para hoy', hoy, 'Lo que hay que hacer hoy o quedó atrasado. Cuando lo hagas, tocá <b>✔ Hecho</b>.');
-    body+=segBloque('Próximos días', prox, '');
-    body+=segBloque('Sin fecha', sin, 'Para tener presente. Tocá la nota para ponerle fecha o dejar un comentario.');
-    if (hechas.length && !q){
-      var ab=!!state.segHechas;
-      body+='<button class="rs-ctl" data-seghechas aria-expanded="'+ab+'" style="margin-top:16px"><span>Hechas en las últimas 2 semanas ('+hechas.length+')</span><small>'+(ab?'Ocultar ▴':'Ver ▾')+'</small></button>'+
-        (ab?'<ul class="todo segl" style="margin-top:8px">'+hechas.map(segRow).join('')+'</ul>':'');
-    }
+    var todas=segTodas(), q=normTxt(state.segQ||''), f=state.segF||'pend', r=state.segR||'';
+    var pasa=function(s){
+      if (r && ramaKey(s.rama||'')!==ramaKey(r)) return false;
+      if (r && !s.rama) return false;
+      if (q && normTxt([s.nombre,s.tel,s.nota,s.quien,(s.historial||[]).join(' ')].join(' ')).indexOf(q)===-1) return false;
+      return true;
+    };
+    var base=todas.filter(pasa);
+    var cnt={ pend: base.filter(function(s){ return s.estado!=='Hecho'; }).length, hoy: base.filter(segUrgente).length, hechas: base.filter(function(s){ return s.estado==='Hecho'; }).length };
+    var xs=base.filter(function(s){ return f==='pend' ? s.estado!=='Hecho' : (f==='hoy' ? segUrgente(s) : (f==='hechas' ? s.estado==='Hecho' : true)); });
+    // Orden por la columna Fecha (cuándo se dejó la nota). Por defecto como en la planilla: de la más antigua a la más reciente.
+    // Cada uno elige el orden y queda guardado en su celular o compu. En "Todas", las pendientes siguen arriba de las hechas.
+    var o=state.segO||store('segO')||'asc', dir=o==='desc'?-1:1;
+    xs.sort(function(a,b){ return (f==='todas' ? (a.estado==='Hecho')-(b.estado==='Hecho') : 0) || dir*String(a.creado).localeCompare(String(b.creado)); });
+    var chip=function(k, t, n){ return '<button class="chip'+(f===k?' on':'')+'" data-segf="'+k+'">'+t+(n!==undefined?' <b class="num">'+n+'</b>':'')+'</button>'; };
+    var chipR=function(k, t){ return '<button class="chip'+(r===k?' on':'')+'" data-segr="'+k+'">'+t+'</button>'; };
+    var body='<div class="segt-top"><button class="btn3 seg-nueva" data-segnueva>📝 Dejar una nota de seguimiento</button>'+
+      '<input class="inp seg-q" id="segQ" type="search" placeholder="Buscar por nombre, teléfono o nota" value="'+esc(state.segQ||'')+'" autocomplete="off"></div>'+
+      '<div class="chips segt-f" role="group" aria-label="Estado">'+chip('pend','Pendientes',cnt.pend)+chip('hoy','Para hoy',cnt.hoy)+chip('hechas','Hechas',cnt.hechas)+chip('todas','Todas')+'</div>'+
+      '<div class="chips segt-f" role="group" aria-label="Origen">'+chipR('','Todas las ramas')+chipR('ART','ART')+chipR('LABORAL','Laboral')+chipR('TRANSITO','Tránsito')+'</div>'+
+      '<div class="chips segt-f" role="group" aria-label="Orden"><button class="chip'+(o==='asc'?' on':'')+'" data-sego="asc">↑ Más antiguas primero</button><button class="chip'+(o==='desc'?' on':'')+'" data-sego="desc">↓ Más recientes primero</button></div>';
+    if (!xs.length) body+='<p class="done">'+(q||r?'No hay notas que coincidan.':(f==='hechas'?'Todavía no hay notas hechas en las últimas 2 semanas.':(f==='hoy'?'✓ No hay nada para hoy':'✓ No hay nada pendiente')))+'</p>';
+    else body+=segTabla(xs);
+    if (f==='hechas' && xs.length) body+='<p class="sec-sub" style="margin-top:10px">Se ven las hechas de las últimas 2 semanas.</p>';
+    else if (xs.length && f!=='hechas') body+='<p class="sec-sub" style="margin-top:10px">Tocá una fila para ver los comentarios, dejar uno o editar la nota. Resaltadas: las que son para hoy o quedaron atrasadas.</p>';
     return body;
   }
   function viewSeguimiento(){
@@ -4255,7 +4469,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
   }
   function sheetSeg(){
     var d=state.draft||{}, h=nowBA().date, man=addDays(h,1);
-    var html='<div class="grab"></div><div class="sh-head"><div class="sh-who"><h2>'+(d.id?'Editar la nota':'Nota de seguimiento')+'</h2><div class="mt"><span class="cp">La ven Fran, Pri, Sol y administración</span></div></div><button class="close" data-close aria-label="Cerrar">'+I.x+'</button></div>';
+    var html='<div class="grab"></div><div class="sh-head"><div class="sh-who"><h2>'+(d.id?'Editar la nota':'Nota de seguimiento')+'</h2><div class="mt"><span class="cp">La ven los intakers, Sol y administración</span></div></div><button class="close" data-close aria-label="Cerrar">'+I.x+'</button></div>';
     if (d.lead) html+='<p class="hint" style="margin:4px 2px 0">Queda unida a la ficha de <b>'+esc(d.nombre||'este lead')+'</b>.</p>';
     html+='<div class="two"><div class="field"><label for="sgNom">Nombre</label><input class="inp" id="sgNom" autocomplete="off" value="'+esc(d.nombre||'')+'" placeholder="Ej.: Damián"></div>'+
       '<div class="field"><label for="sgTel">Teléfono</label><input class="inp" id="sgTel" inputmode="tel" autocomplete="off" value="'+esc(d.tel||'')+'" placeholder="261 555-1234"></div></div>';
@@ -4325,6 +4539,9 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     call('segComentar', { id:id, texto:tx }).then(function(lista){ segAplicar(lista); state.draft={}; renderSheet(); render(); toast('💬 Comentario guardado'); })
       .catch(function(e){ renderSheet(); toast((e&&e.message)||'No se pudo guardar.', true); });
   }
+  document.addEventListener('keydown', function(ev){ // la fila de la tabla también se abre con Enter
+    if (ev.key==='Enter' && ev.target && ev.target.classList && ev.target.classList.contains('segt-row') && ev.target.getAttribute('data-segver')){ ev.preventDefault(); state.draft={}; openSheet({type:'segver', id:ev.target.getAttribute('data-segver')}); }
+  });
   document.addEventListener('input', function(ev){
     if (ev.target && ev.target.id==='segQ'){ state.segQ=ev.target.value; var pos=ev.target.selectionStart; render(); var q=$('segQ'); if (q){ q.focus(); try { q.setSelectionRange(pos,pos); } catch(x){} } }
   });
@@ -4332,17 +4549,19 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     if (ev.target && ev.target.id==='sgPara' && state.sheet && state.sheet.type==='seg'){ segLeerForm(); state.draft.para=ev.target.value||''; renderSheet(); }
   });
   document.addEventListener('click', function(ev){
-    var t=ev.target.closest && ev.target.closest('[data-segnueva],[data-segver],[data-seghecho],[data-segdeshacer],[data-seghechas],[data-segrama],[data-segpara],[data-segrep],[data-segsave],[data-segcomsave],[data-segeditar],[data-segficha]'); if (!t) return;
+    var t=ev.target.closest && ev.target.closest('[data-segf],[data-segr],[data-sego],[data-segnueva],[data-segver],[data-seghecho],[data-segdeshacer],[data-segrama],[data-segpara],[data-segrep],[data-segsave],[data-segcomsave],[data-segeditar],[data-segficha]'); if (!t) return;
     if (state.verComo && (t.hasAttribute('data-segnueva') || t.hasAttribute('data-seghecho') || t.hasAttribute('data-segdeshacer') || t.hasAttribute('data-segsave') || t.hasAttribute('data-segcomsave'))){ toast('👁 Estás viendo la app como '+state.verComo+': es solo para mirar.'); return; }
     if (t.hasAttribute('data-segnueva')){
       var lid=t.getAttribute('data-segnueva'), l=lid && findLead(lid);
       segAbrir(l ? { nombre:l.nombre||'', tel:l.tel||'', rama:String(l.rama||'').toUpperCase().indexOf('TRANS')===0?'TRANSITO':String(l.rama||'').toUpperCase(), lead:l.id } : {});
       return;
     }
-    if (t.hasAttribute('data-segver')){ state.draft={}; openSheet({type:'segver', id:t.getAttribute('data-segver')}); return; }
+    if (t.hasAttribute('data-segf')){ state.segF=t.getAttribute('data-segf'); render(); return; }
+    if (t.hasAttribute('data-segr')){ state.segR=t.getAttribute('data-segr'); render(); return; }
+    if (t.hasAttribute('data-sego')){ state.segO=t.getAttribute('data-sego'); store('segO', state.segO); render(); return; }
+    if (t.hasAttribute('data-segver')){ if (ev.target.closest('a')) return; state.draft={}; openSheet({type:'segver', id:t.getAttribute('data-segver')}); return; }
     if (t.hasAttribute('data-seghecho')){ segMarcar(t.getAttribute('data-seghecho'), true); return; }
     if (t.hasAttribute('data-segdeshacer')){ var sx=segBuscar(t.getAttribute('data-segdeshacer')); if (state.sheet && state.sheet.type==='segver') closeSheet(); segDeshacer(t.getAttribute('data-segdeshacer'), sx?sx.para:undefined); return; }
-    if (t.hasAttribute('data-seghechas')){ state.segHechas=!state.segHechas; render(); return; }
     if (t.hasAttribute('data-segficha')){ var fid=t.getAttribute('data-segficha'); closeSheet(); setTimeout(function(){ openSheet({type:'ficha', id:fid}); }, 0); return; }
     if (t.hasAttribute('data-segeditar')){ var s=segBuscar(t.getAttribute('data-segeditar')); if (!s) return; segAbrir({ id:s.id, nombre:s.nombre, tel:s.tel, rama:s.rama, lead:s.lead, nota:s.nota, para:s.para, repetir:!!s.repetir }); return; }
     if (t.hasAttribute('data-segcomsave')){ segComentar(); return; }
@@ -4373,11 +4592,11 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     if (otros.length){
       var abierto=!!state.scOtros;
       otrosHtml='<button class="rs-ctl" data-scotros aria-expanded="'+abierto+'" style="margin-top:14px"><span>Ya clasificados o "Falta enviar leads" sin nombre de intaker ('+otros.length+')</span><small>'+(abierto?'Ocultar ▴':'Ver ▾')+'</small></button>'+
-        (abierto?'<p class="hint" style="margin:8px 2px 0">Tienen fase (casi todos C) pero ningún nombre de Fran ni de Pri en la primera columna.</p>'+scHtml(otros):'');
+        (abierto?'<p class="hint" style="margin:8px 2px 0">Tienen fase (casi todos C) pero ningún nombre de intaker en la primera columna.</p>'+scHtml(otros):'');
     }
     body += ffHtml(ffL) + '<div id="scSec"></div>'+secTarea('Sin contactar', sc.length, rol()==='intaker' ?
-      'Leads nuevos: todavía no tienen fase ni el nombre de Fran o de Pri en la planilla. Primero los que hace más que entraron. <b>ART y Laboral:</b> tocá <b>📤 Enviar</b> y queda tu nombre en la planilla solo. <b>Tránsito:</b> tocá 💬 para escribirle; al volver te pregunta si le escribiste. Si lo contactaste por otro lado (llamada), abrí la ficha y tocá <b>Ya lo contacté</b>.' :
-      'Leads nuevos sin clasificar: todavía no tienen fase ni el nombre de Fran o de Pri en la planilla. Primero los que hace más que entraron. Tocá el número para copiarlo. Cuando le mandes el primer mensaje, tocá <b>✓ Contacté</b> y queda tu nombre en la planilla.',
+      'Leads nuevos: todavía no tienen fase ni el nombre de un intaker en la planilla. Primero los que hace más que entraron. <b>ART y Laboral:</b> tocá <b>📤 Enviar</b> y queda tu nombre en la planilla solo. <b>Tránsito:</b> tocá 💬 para escribirle; al volver te pregunta si le escribiste. Si lo contactaste por otro lado (llamada), abrí la ficha y tocá <b>Ya lo contacté</b>.' :
+      'Leads nuevos sin clasificar: todavía no tienen fase ni el nombre de un intaker en la planilla. Primero los que hace más que entraron. Tocá el número para copiarlo. Cuando le mandes el primer mensaje, tocá <b>✓ Contacté</b> y queda tu nombre en la planilla.',
       scHtml(sc)) + otrosHtml;
     if (pa.length) body += '<button class="btn3" data-view="agendar">Ver todos los leads por agendar ('+pa.length+')</button>';
     total += sc.length + comSolPend().length;
@@ -4693,7 +4912,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
 
   /* ---------- eventos ---------- */
   document.addEventListener('click', function(ev){
-    var t = ev.target.closest('[data-intocultar],[data-reptile],[data-repctl],[data-repsemq],[data-pindesbloq],[data-fin],[data-equipo],[data-view],[data-undo],[data-agotra],[data-agbuscartodo],[data-ficha],[data-pinok],[data-pinback],[data-pinreset],[data-salir],[data-fimodo],[data-fase],[data-notasave],[data-datosave],[data-mnfase],[data-mnsin],[data-dupfase],[data-derivar],[data-reagsindia],[data-pasarbc],[data-dvsel],[data-dvhora],[data-dvsave],[data-deon],[data-deque],[data-desem],[data-decopia],[data-deamplio],[data-dedia],[data-dequick],[data-decopy],[data-devolver],[data-definde],[data-demodo],[data-desave],[data-decancel],[data-repweek],[data-deadm],[data-reprow],[data-repmodo],[data-rtrama],[data-rtfresco],[data-repretry],[data-agmode],[data-wgday],[data-agrama],[data-agfase],[data-agmas],[data-agmes],[data-agvista],[data-agclr],[data-agnuevo],[data-mnrama],[data-mnorigen],[data-mnsig],[data-mncrear],[data-open],[data-result],[data-bloq],[data-nuevo],[data-week],[data-day],[data-sum],[data-chip],[data-abog],[data-close],[data-res],[data-motivo],[data-save],[data-bqwho],[data-bqtodo],[data-savebq],[data-delbq],[data-retry],[data-pastefor],[data-pasteall],[data-rvcheck],[data-rvtoggle],[data-rvsave],[data-rvback],[data-yo],[data-yocambiar],[data-vcabrir],[data-vcsalir],[data-vercomo],[data-visto],[data-conf],[data-escribir],[data-agendar],[data-agfirmar],[data-agcorregir],[data-agdia],[data-slot],[data-agcorr],[data-saveag],[data-savecampos]');
+    var t = ev.target.closest('[data-reptipo],[data-turabrir],[data-turcambiar],[data-turdesdeok],[data-turactual],[data-turver],[data-turretry],[data-turcopiar],[data-turconf],[data-turnoconf],[data-turcerrar],[data-intocultar],[data-reptile],[data-repctl],[data-repsemq],[data-pindesbloq],[data-fin],[data-equipo],[data-view],[data-undo],[data-agotra],[data-agbuscartodo],[data-ficha],[data-pinok],[data-pinback],[data-pinreset],[data-salir],[data-fimodo],[data-fase],[data-notasave],[data-datosave],[data-mnfase],[data-mnsin],[data-dupfase],[data-derivar],[data-reagsindia],[data-pasarbc],[data-dvsel],[data-dvhora],[data-dvsave],[data-deon],[data-deque],[data-desem],[data-decopia],[data-deamplio],[data-dedia],[data-dequick],[data-decopy],[data-devolver],[data-definde],[data-demodo],[data-desave],[data-decancel],[data-repweek],[data-deadm],[data-reprow],[data-repmodo],[data-rtrama],[data-rtfresco],[data-repretry],[data-agmode],[data-wgday],[data-agrama],[data-agfase],[data-agmas],[data-agmes],[data-agvista],[data-agclr],[data-agnuevo],[data-mnrama],[data-mnorigen],[data-mnsig],[data-mncrear],[data-open],[data-result],[data-bloq],[data-nuevo],[data-week],[data-day],[data-sum],[data-chip],[data-abog],[data-close],[data-res],[data-motivo],[data-save],[data-bqwho],[data-bqtodo],[data-savebq],[data-delbq],[data-retry],[data-pastefor],[data-pasteall],[data-rvcheck],[data-rvtoggle],[data-rvsave],[data-rvback],[data-yo],[data-yocambiar],[data-vcabrir],[data-vcsalir],[data-vercomo],[data-visto],[data-conf],[data-escribir],[data-agendar],[data-agfirmar],[data-agcorregir],[data-agdia],[data-slot],[data-agcorr],[data-saveag],[data-savecampos]');
     if (!t) return;
     if (t.hasAttribute('data-intocultar')){ var oc=intOcultas(); ((state.data && state.data.paraMi)||[]).forEach(function(l){ intAbiertaMia(l).forEach(function(x){ var k=intOcId(l, x); if (x.tipo!=='control' && oc.indexOf(k)===-1) oc.push(k); }); }); var antes=store(intOcKey())||'[]'; store(intOcKey(), JSON.stringify(oc.slice(-300))); render(); toastUndo('Listo, lo saqué. Si te llega una consulta nueva, vuelve a aparecer.', function(){ store(intOcKey(), antes); render(); }); return; }
     if (t.hasAttribute('data-pindesbloq')){ var nd=t.getAttribute('data-pindesbloq'); t.disabled=true; t.textContent='Desbloqueando…'; call('desbloquearPin', {nombre:nd}).then(function(p){ if (state.data) state.data.pines=p; if (state.sheet) renderSheet(); render(); toast('Listo: '+nd+' ya puede entrar de nuevo.'); }).catch(function(e){ t.disabled=false; toast((e&&e.message)||'No se pudo desbloquear.', true); }); return; }
@@ -4733,6 +4952,17 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     if (t.hasAttribute('data-repctl')){ var rc=t.getAttribute('data-repctl'); state.repCtl=state.repCtl||{}; state.repCtl[rc]=!state.repCtl[rc]; render(); return; }
     if (t.hasAttribute('data-reprow')){ var ro=t.getAttribute('data-reprow'); state.repOpen=state.repOpen||{}; state.repOpen[ro]=!state.repOpen[ro]; render(); return; }
     if (t.hasAttribute('data-repmodo')){ state.repModo=t.getAttribute('data-repmodo'); render(); return; }
+    if (t.hasAttribute('data-reptipo')){ state.repTipo=t.getAttribute('data-reptipo'); store('repTipo', state.repTipo); render(); return; }
+    if (t.hasAttribute('data-turabrir')){ var tk=t.getAttribute('data-turabrir'), TA=state.turAbierto||(state.turAbierto={}); TA[tk]=!TA[tk]; render(); return; }
+    if (t.hasAttribute('data-turcambiar')){ state.turCambiar=!state.turCambiar; render(); return; }
+    if (t.hasAttribute('data-turdesdeok')){ var tin=$('turDesde'), tms=turDesdeMs(tin && tin.value); if (!tms){ toast('Elegí el día y la hora.', true); return; } state.turQ={desde:tms}; state.turCambiar=false; state.turHecho=null; loadTurno(true); render(); return; }
+    if (t.hasAttribute('data-turactual')){ state.turQ={}; state.turCambiar=false; loadTurno(true); render(); return; }
+    if (t.hasAttribute('data-turver')){ var tp=t.getAttribute('data-turver').split('|'); state.turQ={desde:(+tp[0])||0, hasta:+tp[1]}; state.turCambiar=false; loadTurno(true); render(); return; }
+    if (t.hasAttribute('data-turretry')){ loadTurno(true); render(); return; }
+    if (t.hasAttribute('data-turcopiar')){ var td=state.tur && state.tur.d; if (td) copiarReporte(turTexto(td)); return; }
+    if (t.hasAttribute('data-turconf')){ state.turConfirmar=true; render(); return; }
+    if (t.hasAttribute('data-turnoconf')){ state.turConfirmar=false; render(); return; }
+    if (t.hasAttribute('data-turcerrar')){ cerrarTurnoUI(); return; }
     if (t.hasAttribute('data-repsemq')){ var q=t.getAttribute('data-repsemq'), m0q=mondayOf(nowBA().date); store('repSemPref', q); state.repSem = q==='esta' ? m0q : addDays(m0q,-7); state.repOpen={}; render(); return; }
     if (t.hasAttribute('data-rtrama')){ state.rtRama=t.getAttribute('data-rtrama'); render(); return; }
     if (t.hasAttribute('data-rtfresco')){ rtLoad(state.rtRama||'', true); render(); return; }
