@@ -2057,6 +2057,8 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
       '<div class="mt s-'+s+'"><span class="st">'+ST[s].i+' '+ST[s].l+'</span></div>');
     var cabeza=html; html='';
     html += '<div class="big-acts"><a href="'+telHref(l.tel)+'" target="_top">'+I.call+'Llamar</a><a class="wa" href="'+waHref(l.tel)+'" target="_blank" rel="noopener">'+I.chat+'WhatsApp</a></div>';
+    // Consulta con resultado cargado (vino y no firmó, no vino, etc.): mensajes oficiales de esa etapa, igual que en la ficha del lead
+    if (CONRES.indexOf(s)!==-1) html += wspFicha(l);
     // Intakers: lo primero después de Llamar/WhatsApp es marcar qué respondió (y mandar el mensaje oficial desde ahí)
     var confPrimero = puede('confirmar') && isPend(s) && !needsResult(l);
     if (confPrimero) html += confBlock(l, today);
@@ -6070,7 +6072,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
       if (o.vars.indexOf('diaYFecha')!==-1 && !pasada) return l.fecha ? 'Es para después de la consulta.' : 'No tiene cargado el día de la consulta (se carga al agendar desde la app).';
       if (!pasada && !yaVino) return 'Es para después de la consulta.';
     }
-    if (o.tpl==='seguimiento_post_consulta' && !l.abogada) return 'Falta la abogada de la consulta.';
+    if (o.vars.indexOf('abogada')!==-1 && !l.abogada) return 'Falta la abogada de la consulta.';
     return '';
   }
   function wspTexto(o, l, D){
@@ -6082,7 +6084,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
   function wspRecomendados(fase, auto){
     var docs=['seguimiento_estudios_medicos','seguimiento_historia_clinica','recordatorio_semanal_estudios','seguimiento_recuperacion_art'];
     if (fase==='consulta agendada' || fase==='reagenda') return ['confirmacion_consulta','recordatorio_consulta_manana','recordatorio_consulta_hoy','reagendar_consulta'];
-    if (fase==='seguimiento') return ['seguimiento_post_consulta','reactivacion_post_consulta'].concat(docs);
+    if (fase==='seguimiento') return ['seguimiento_post_consulta','decision_post_consulta','reactivacion_post_consulta'].concat(docs);
     if (fase==='no show') return ['no_vino_a_consulta','reagendar_consulta','reactivacion_post_consulta'];
     if (fase==='caso en proceso') return docs;
     if (fase==='c') return ['rechazo_no_es_caso','rechazo_fuera_jurisdiccion','rechazo_abogado_interviniendo','rechazo_prescripcion_art','rechazo_sin_art','rechazo_empleo_publico','rechazo_mas_3_meses','reactivacion_formulario'];
@@ -6117,7 +6119,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     var ult=[3,2,1].filter(function(n){ return envios['seguimiento_sin_respuesta_'+n]; })[0]||0;
     // El primer mensaje ya mandado: el automático o uno alternativo (ej.: cuánto tiempo trabajó)
     var primero=envios[auto] || (D.catalogo||[]).filter(function(o){ return o.alterno && envios[o.tpl]; }).map(function(o){ return envios[o.tpl]; })[0];
-    var porFase=fase==='seguimiento' ? ['seguimiento_post_consulta','reactivacion_post_consulta'] : (fase==='no show' ? ['no_vino_a_consulta','reagendar_consulta'] : []);
+    var porFase=fase==='seguimiento' ? ['seguimiento_post_consulta','decision_post_consulta','reactivacion_post_consulta'] : (fase==='no show' ? ['no_vino_a_consulta','reagendar_consulta'] : []);
     var cat=D.catalogo, de=function(t){ return cat.filter(function(x){ return x.tpl===t; })[0]; };
     var sugFase=porFase.filter(function(t){ var o=de(t); return o && !wspFalta(o,l) && D.textos[t] && !envios[t]; })[0]||'';
     var previo={1:primero, 2:envios.seguimiento_sin_respuesta_1, 3:envios.seguimiento_sin_respuesta_2}, espera={1:20, 2:44, 3:144};
