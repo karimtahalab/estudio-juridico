@@ -35,6 +35,8 @@ Cómo correrlo: `python3 pruebas/correr.py <carpeta con index.html> <carpeta de 
 | mejora/2026-11-16 | Primera apertura del día al instante: lo guardado en el celular (misma persona, hasta 4 días; antes 12 horas) se ve enseguida con aviso arriba "Mostrando lo guardado de ayer a las 19:20. Trayendo lo de hoy…"; mientras tanto lo que cambia algo no sale (avisa que espere, la hoja queda como estaba); si no llega lo de hoy, aviso con Reintentar y se puede guardar. Hasta 12 h igual que antes. Sin motor. | Aplicada (en main desde el 18/11, 80cbdd9) |
 | mejora/2026-11-19 | Deshacer de "pasar a BC" y de cambiar fase en la ficha: manda deshacer:1 y desde; con el motor nuevo vuelve a No show/Reagenda (hoy el motor lo frena y el lead queda en BC); sin el motor, aviso claro de en qué fase quedó. Cargar a alguien nuevo: email revisado en el celular con la regla del motor (aviso rojo debajo del campo y botón apagado) y Corregir datos lo revisa antes de mandar. Confirmar de pasar a BC en rojo. wspDatos de fondo sin promesa sin atender. toUTC que acepta cualquier cosa y lo anota en el registro. Motor: mejora-2026-11-19.json (cambiarFase). | Pendiente |
 | mejora/2026-11-20 | Producción (Fede, Iván): Guiones se pide junto con getData (antes esperaba a que terminara getData); registro de uso con versión "lm"+fecha de la pantalla cuando no hay app instalada. Motor: mejora-2026-11-20.json (getData no lee las planillas de leads para quien no ve agenda, leads ni internas). | Pendiente |
+| mejora/2026-11-20-mensaje-no-firmo, -20-reporte-sol, -20-sol-carga-a-mano | 📤 en la tarjeta de la consulta con resultado y "Preguntar si ya decidió"; reporte de Sol sin pisar apellido ni lesión; Sol (modo carga) carga clientes a mano (ramas armadas en chats con Karim; motor v89-v91) | Aplicadas (en main desde el 20/11, dfb4445) |
+| mejora/2026-11-21 | 📤 de la ficha y de la tarjeta de la consulta: abajo dice el último mensaje oficial ("Último: Vino a consulta y no firmó · ayer 18:05 por Pri") y mientras sale "⏳ Mandando…"; wspDatos se renueva si tiene más de 5 min al pintar el botón (como mucho 1 vez por minuto). Sin motor. | Pendiente |
 
 ## 2026-11-05 (primera noche)
 - Armé el banco (rama pruebas-nocturnas, carpeta pruebas/).
@@ -373,6 +375,28 @@ Cómo correrlo: `python3 pruebas/correr.py <carpeta con index.html> <carpeta de 
 - Ideas grandes:
   - getData en CacheService del motor (sigue pendiente; hoy picos de 26-35 s en Pri).
   - Reporte del turno: renovar solo al entrar a la pantalla o al tocar "Copiar/cerrar", no en cada render (menos pedidos al motor).
+
+
+## 2026-11-20 (noche, corrida de las 22:36)
+- main al día: dfb4445 (entraron en chats con Karim mejora/2026-11-20-mensaje-no-firmo, -20-reporte-sol y -20-sol-carga-a-mano; motor real v91). Copiados al banco index.html, sw.js y manifest. Tabla actualizada.
+- Ramas pendientes antes de esta noche: mejora/2026-11-19 y mejora/2026-11-20 (2). Merge local contra main (sin pushear): las dos entran limpias, también junto con la nueva -21. -05, -06, -06-repetidos/-reportes-claros/-semana-rama/-tareas-reportes y -08-flujo-sin-contactar figuran sin mergear pero su contenido está en main. Hubo lugar para una nueva.
+- Cambios del motor pendientes: mejora-2026-11-19.json y mejora-2026-11-20.json (sin cambios). Bajé el Código.gs y Wsp.gs del motor real (solo lectura) para copiar el catálogo de mensajes.
+- Registro de uso real (USO, filas 6676-7327, 19/11 noche y 20/11; Pri 321 filas, Fran 109, Agus 95, Mica 45, Cele 28, Sol 23, Karim 21, Julián 10; nada de Estefanía, Juan, Fede ni Iván):
+  - Sin filas de error.
+  - Avisos: 6 "Sin conexión" de fin2Calentar (Mica, Cele, Karim; de fondo, con el celular dormido: 13 h, 57 min), 3 de getData (Mica 2 "no respondió a tiempo", Cele 1) y 1 de getCreativos (Cele, celular dormido 23 min). 1 PIN de finanzas mal (Sol). Nada para arreglar en la pantalla: el corte y el reintento funcionan.
+  - getData: 123 lentos, casi todo 4-8 s; picos 20,9 s (Mica), 19,8 s (Pri). getReporte hasta 10,3 s (Julián). Mejor que el 18-19/11.
+  - Sol usó Finanzas (modo carga) por primera vez: getFin2 5-8,5 s y saveFin2 5-8,6 s; cada guardado pide después la planilla de nuevo (getFin2 fresco). Lo guardado ya se ve al instante; no lo toqué.
+  - enviarWsp 28 lentos hasta 19 s (Pri, tareas > lead), 0 errores. reporteTurno 14 lentos hasta 7,1 s.
+  - Aperturas con datos nuevos: Pri 11,4 s y 9,2 s (Windows), Karim 8,3 s, Fran 8,1 s; con lo guardado 0,1-2,3 s.
+- Banco:
+  - datos_falsos.py: catálogo de WhatsApp copiado del CATALOGO de Wsp.gs del motor real (30 mensajes, textos inventados); wspDatos devuelve lo "mandado" (envios) como la hoja de envíos del motor.
+  - Nuevo pruebas/probar_wsp_tarjeta.py: tarjeta de la consulta con resultado (Vino y no firmó, No vino) → 📤 → mensaje sugerido → Enviar. PREVIO=1: ayer Pri ya le mandó a Rubén; LENTO=6: enviarWsp tarda 6 s.
+- Roles probados con correr.py (390 y 360): Mica, Fran, Sol, Juan, Karim (Julián no: en el banco tiene el PIN bloqueado a propósito). 0 errores de JavaScript, 0 pedidos fallidos, sin scroll horizontal. Pestañas: Mica y Juan → Finanzas, Agenda, Guiones, Falta cargar; Fran → Reporte, Agenda, Tareas, Seguimiento, Agendar; Sol → Finanzas, Agenda, Seguimiento, Agendar, Falta cargar; Karim → Reportes, Agenda, Tareas, Agendar, Falta cargar. Permisos OK con datos falsos.
+- 📤 en la tarjeta de la consulta (nuevo del 20/11, Fran): aparece en Vino y no firmó y No vino, sugiere el mensaje correcto (Vino a consulta y no firmó / No vino a la consulta), manda 1 solo enviarWsp. Mica no lo ve. Problema: el botón no dice si ya se le mandó (ni mientras sale): con 3 intakers, para saber si Pri ya le escribió ayer hay que abrir la lista. → mejora/2026-11-21.
+- Resultado de la rama (probar_wsp_tarjeta.py, Fran, 390 y 360): main → el botón dice siempre "📤 Mandar mensaje por WhatsApp"; rama → al abrir: "Último: Vino a consulta y no firmó · ayer 18:05 por Pri", mientras sale "⏳ Mandando el mensaje por WhatsApp…", después "Último: … hoy 11:20 por Fran". correr.py en la rama igual que main (130 pantallas auditadas idénticas, 0 errores, mismas pestañas). probar_wsp.py, probar_tel_wsp.py y probar_wsp_cancelar.py: misma salida en main y en la rama.
+- Ideas grandes:
+  - saveFin2 que devuelva la planilla ya actualizada (motor), así no hace falta el getFin2 de después de cada guardado (hoy 2 pedidos de 5-8 s por cliente que carga Sol).
+  - getData en CacheService del motor (sigue pendiente; hoy picos de 20 s).
 
 ## Flujos rediseñados (tarea semanal de los domingos)
 | Fecha | Flujo | Para quién | Toques antes → después | Rama | Motor |

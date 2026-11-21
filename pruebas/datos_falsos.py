@@ -113,15 +113,38 @@ OTRAS = {
 }
 
 # WhatsApp oficial FALSO: catálogo y textos inventados para el banco (no se manda nada)
+# Copiado del CATALOGO de Wsp.gs del motor real (20/11): solo la forma; los textos son inventados
 WSP_CATALOGO = [
-    {"tpl": "inicio_accidente_art", "label": "Primer mensaje (accidente ART)", "grupo": "Primer contacto", "vars": ["nombre", "firma"], "req": "", "ramas": ["ART"]},
-    {"tpl": "inicio_enfermedad_art", "label": "Primer mensaje (enfermedad ART)", "grupo": "Primer contacto", "vars": ["nombre", "firma"], "req": "", "ramas": ["ART"]},
-    {"tpl": "inicio_laboral", "label": "Primer mensaje (Laboral)", "grupo": "Primer contacto", "vars": ["nombre", "firma"], "req": "", "ramas": ["LABORAL"]},
-    {"tpl": "consulta_tiempo_trabajado", "label": "Cuánto tiempo trabajó", "grupo": "Primer contacto", "vars": ["nombre"], "req": "", "ramas": ["LABORAL"], "alterno": True},
-    {"tpl": "seguimiento_sin_respuesta_1", "label": "Sin respuesta 1", "grupo": "Seguimiento", "vars": ["nombre"], "req": "", "serie": 1},
-    {"tpl": "confirmacion_consulta", "label": "Confirmación de la consulta", "grupo": "Consulta", "vars": ["nombre", "diaYFecha", "hora"], "req": "turno"},
-    {"tpl": "recordatorio_consulta_manana", "label": "Recordatorio: mañana", "grupo": "Consulta", "vars": ["nombre", "hora"], "req": "manana"},
-    {"tpl": "recordatorio_consulta_hoy", "label": "Recordatorio: hoy", "grupo": "Consulta", "vars": ["nombre", "hora"], "req": "hoy"},
+    {'tpl': 'inicio_laboral', 'label': 'Primer mensaje', 'grupo': 'Primer contacto', 'ramas': ['LABORAL'], 'vars': ['nombre', 'firma']},
+    {'tpl': 'consulta_tiempo_trabajado', 'label': 'Primer mensaje (ya dijo el rubro): cuánto tiempo trabajó', 'grupo': 'Primer contacto', 'alterno': True, 'ramas': ['LABORAL'], 'vars': ['nombre', 'firma']},
+    {'tpl': 'inicio_accidente_art', 'label': 'Primer mensaje (accidente)', 'grupo': 'Primer contacto', 'ramas': ['ART'], 'vars': ['nombre', 'firma']},
+    {'tpl': 'inicio_enfermedad_art', 'label': 'Primer mensaje (enfermedad profesional)', 'grupo': 'Primer contacto', 'ramas': ['ART'], 'vars': ['nombre', 'firma']},
+    {'tpl': 'confirmacion_consulta', 'alt': 'confirmacion_consulta_v2', 'label': 'Confirmar el turno', 'grupo': 'Consulta', 'vars': ['nombre', 'diaYFecha', 'hora'], 'req': 'turno'},
+    {'tpl': 'recordatorio_consulta_manana', 'label': 'Recordatorio: la consulta es mañana', 'grupo': 'Consulta', 'vars': ['nombre', 'firma', 'ddmm', 'hora'], 'req': 'manana'},
+    {'tpl': 'recordatorio_consulta_hoy', 'label': 'Recordatorio: la consulta es hoy', 'grupo': 'Consulta', 'vars': ['nombre', 'firma', 'hora'], 'req': 'hoy'},
+    {'tpl': 'seguimiento_sin_respuesta_1', 'label': 'Sin respuesta · 1er aviso', 'grupo': 'Seguimiento', 'vars': ['nombre', 'firma'], 'serie': 1},
+    {'tpl': 'seguimiento_sin_respuesta_2', 'alt': 'seguimiento_sin_respuesta_2_v2', 'label': 'Sin respuesta · 2do aviso (a los 2 días)', 'grupo': 'Seguimiento', 'vars': ['nombre', 'firma'], 'serie': 2},
+    {'tpl': 'seguimiento_sin_respuesta_3', 'label': 'Sin respuesta · último aviso', 'grupo': 'Seguimiento', 'vars': ['nombre', 'firma'], 'serie': 3},
+    {'tpl': 'retomar_consulta', 'label': 'Retomar la consulta', 'grupo': 'Seguimiento', 'vars': ['nombre', 'firma']},
+    {'tpl': 'inicio_jurisdiccion', 'label': 'Preguntar si vive y trabaja en Mendoza', 'grupo': 'Seguimiento', 'vars': ['nombre', 'firma']},
+    {'tpl': 'seguimiento_estudios_medicos', 'alt': 'seguimiento_estudios_medicos_v2', 'label': 'Estudios médicos', 'grupo': 'Documentación', 'ramas': ['ART'], 'vars': ['nombre', 'firma']},
+    {'tpl': 'seguimiento_historia_clinica', 'alt': 'seguimiento_historia_clinica_v2', 'label': 'Historia clínica / estudios a la ART', 'grupo': 'Documentación', 'ramas': ['ART'], 'vars': ['nombre', 'firma']},
+    {'tpl': 'recordatorio_semanal_estudios', 'alt': 'recordatorio_semanal_estudios_v2', 'label': 'Recordatorio semanal de estudios', 'grupo': 'Documentación', 'ramas': ['ART'], 'vars': ['nombre', 'firma']},
+    {'tpl': 'seguimiento_recuperacion_art', 'label': 'Cómo va la recuperación', 'grupo': 'Documentación', 'ramas': ['ART'], 'vars': ['nombre', 'firma']},
+    {'tpl': 'seguimiento_post_consulta', 'label': 'Vino a consulta y no firmó', 'grupo': 'Después de la consulta', 'vars': ['nombre', 'firma', 'diaYFecha', 'abogada'], 'req': 'paso'},
+    {'tpl': 'decision_post_consulta', 'label': 'Preguntar si ya decidió', 'grupo': 'Después de la consulta', 'vars': ['nombre', 'abogada'], 'req': 'paso'},
+    {'tpl': 'no_vino_a_consulta', 'label': 'No vino a la consulta', 'grupo': 'Después de la consulta', 'vars': ['nombre', 'firma', 'diaYFecha'], 'req': 'paso'},
+    {'tpl': 'reagendar_consulta', 'label': 'Ofrecer reagendar', 'grupo': 'Después de la consulta', 'vars': ['nombre', 'firma']},
+    {'tpl': 'reactivacion_formulario', 'label': 'Reactivar: completó el formulario hace meses', 'grupo': 'Reactivación', 'vars': ['nombre', 'firma']},
+    {'tpl': 'reactivacion_post_consulta', 'label': 'Reactivar: vino a consulta hace tiempo', 'grupo': 'Reactivación', 'vars': ['nombre', 'firma'], 'req': 'paso'},
+    {'tpl': 'rechazo_prescripcion_art', 'label': 'Rechazo: pasaron más de 2 años', 'grupo': 'Rechazo', 'ramas': ['ART'], 'vars': ['nombre', 'firma']},
+    {'tpl': 'rechazo_sin_art', 'label': 'Rechazo: no tiene ART', 'grupo': 'Rechazo', 'ramas': ['ART'], 'vars': ['nombre', 'firma']},
+    {'tpl': 'rechazo_empleo_publico', 'label': 'Rechazo: empleo público', 'grupo': 'Rechazo', 'ramas': ['LABORAL'], 'vars': ['nombre', 'firma']},
+    {'tpl': 'rechazo_rubro_laboral', 'label': 'Rechazo: rubro que no tomamos', 'grupo': 'Rechazo', 'ramas': ['LABORAL'], 'vars': ['nombre', 'firma']},
+    {'tpl': 'rechazo_mas_3_meses', 'label': 'Rechazo: terminó hace más de 3 meses', 'grupo': 'Rechazo', 'ramas': ['LABORAL'], 'vars': ['nombre', 'firma']},
+    {'tpl': 'rechazo_no_es_caso', 'label': 'Rechazo: no es caso', 'grupo': 'Rechazo', 'vars': ['nombre', 'firma']},
+    {'tpl': 'rechazo_fuera_jurisdiccion', 'label': 'Rechazo: fuera del Gran Mendoza / Zona Este', 'grupo': 'Rechazo', 'vars': ['nombre', 'firma']},
+    {'tpl': 'rechazo_abogado_interviniendo', 'label': 'Rechazo: ya tiene otro abogado', 'grupo': 'Rechazo', 'vars': ['nombre', 'firma']},
 ]
 WSP_TEXTOS = {o["tpl"]: "[PRUEBA] Hola {{1}}, " + o["label"].lower() + " ({{2}} {{3}}). Texto inventado del banco." for o in WSP_CATALOGO}
 
@@ -152,6 +175,7 @@ class FakeApi:
         ]
         self.wsp_enviados = []  # WhatsApp que se "habrían" mandado (todo falso)
         self.wsp_rechazados = []  # los que el motor falso frenó (teléfono o nombre)
+        self.wsp_log = {}  # como la hoja de envíos del motor real: {id: {tpl: {t: ms, quien}}} (lo devuelve wspDatos)
 
     def _quien(self, arg):
         t = (arg or {}).get("tok", "")
@@ -308,7 +332,7 @@ class FakeApi:
             if fn == "desbloquearPin": self.pin_bloq.pop(arg.get("nombre"), None)
             return True, {"pines": self.get_data(who).get("pines", [])}
         if fn == "wspDatos":
-            return True, wsp_datos(who)
+            d = wsp_datos(who); d["envios"] = copy.deepcopy(self.wsp_log); return True, d
         if fn in ("wspVista", "wspOpciones"):
             return False, "(prueba) %s no tiene respuesta falsa: la pantalla arma todo con wspDatos." % fn
         if fn == "enviarWsp":
@@ -326,6 +350,8 @@ class FakeApi:
                 self.wsp_rechazados.append(l["id"]); return False, "Este lead no tiene nombre cargado."
             tpl = arg.get("tpl") or ("inicio_laboral" if l["rama"] == "LABORAL" else "inicio_accidente_art")
             self.wsp_enviados.append({"id": l["id"], "tel": l.get("tel"), "tpl": tpl, "quien": who})
+            # Hora del reloj fijo del banco (jueves 05/11/2026 11:20 de Mendoza)
+            self.wsp_log.setdefault(l["id"], {})[tpl] = {"t": 1793888400000, "quien": who}
             print("[harness] WhatsApp FALSO (no sale nada): a %s (%s) plantilla %s, por %s" % (l.get("nombre"), l.get("tel"), tpl, who), flush=True)
             levanto = False
             if l in self.sc and who in ("Fran", "Pri", "Karim", "Julián"):
