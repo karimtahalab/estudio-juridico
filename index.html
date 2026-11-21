@@ -1122,6 +1122,9 @@ a.save.wa-go svg{width:20px;height:20px}
 /* Mensaje oficial de WhatsApp en "¿Confirmó que viene?" y marca de "mandado" en Tareas */
 .cbs.wsp{grid-template-columns:1fr 1fr 46px}.cbs .wsp-b{height:42px;padding:0;display:inline-flex;align-items:center;justify-content:center;font-size:18px;border-radius:12px}
 .cp.wsp-ya{color:#0a7a3e;background:#e7f8ee}
+.btn3.wsp-menu.con-ult{height:auto;min-height:60px;flex-direction:column;gap:2px;padding:8px 14px;line-height:1.25;text-align:center}
+.btn3.wsp-menu.con-ult small{font-size:14px;font-weight:500;color:var(--ink-2)}
+.btn3.wsp-menu[aria-busy]{color:var(--ink-2)}
 /* Entorno de prueba: la barra de abajo crece para que el cartel rojo no tape los nombres de las pestañas */
 body:has(#entorno-prueba) .nav{padding-bottom:calc(26px + env(safe-area-inset-bottom))}body:has(#entorno-prueba){padding-bottom:calc(106px + env(safe-area-inset-bottom))}body:has(#entorno-prueba) .toast{bottom:calc(114px + env(safe-area-inset-bottom))}
 .cl.sc li.sc-of .sc-env{grid-column:3/5;grid-row:1;height:40px;padding:0 12px;font-size:15px;font-weight:800;white-space:nowrap}
@@ -6028,14 +6031,39 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
    * El servidor vuelve a validar todo al mandar. */
   function wspRol(){ var r=rol(); return r==='intaker'||r==='admin'; }
   function wspPuede(l){ var r=rol(); return (r==='intaker'||r==='admin') && !!l && (l.rama==='ART'||l.rama==='LABORAL') && !!phone(l.tel); }
-  function wspPrecargar(){ if (!wspD && !wspDP) setTimeout(function(){ wspDatos().then(function(){ if (!state.sheet && !escribiendo()) render(); }).catch(function(){}); }, 0); }
+  // También renueva lo guardado de hace más de 5 minutos (así "Último:" muestra lo que mandaron los otros intakers)
+  var wspPreT=0;
+  function wspPrecargar(){ if (wspDP || (wspD && Date.now()-wspDT < 5*60000) || (wspD && Date.now()-wspPreT < 60000)) return; wspPreT=Date.now(); setTimeout(function(){ if (wspDP || (wspD && Date.now()-wspDT < 5*60000)) return; var p0=wspDatos(), p=wspDP||p0; p.then(function(){ if (!state.sheet && !escribiendo()) render(); else wspFichaRefrescar(); }).catch(function(){}); if (p!==p0) p0.catch(function(){}); }, 0); }
   function wspBtn(l, momento, txt){
     if (!momento || !wspPuede(l)) return '';
     wspPrecargar();
     if (wspEnv[l.id]) return '<button class="wsp-b wsp-va" disabled aria-label="Mandando el mensaje a '+esc(l.nombre||'')+'">⏳'+(txt?' Enviando…':'')+'</button>';
     return '<button class="wsp-b" data-wsp="'+esc(l.id)+'" data-wsp-m="'+momento+'" title="Mandar por el WhatsApp oficial" aria-label="Mandar por WhatsApp oficial a '+esc(l.nombre||'')+'">📤'+(txt?' '+esc(txt):'')+'</button>';
   }
-  function wspFicha(l){ if (!wspPuede(l)) return ''; wspPrecargar(); return '<button class="btn3 wsp-menu" data-wspmenu="'+esc(l.id)+'">📤 Mandar mensaje por WhatsApp</button>'; }
+  // Botón de la ficha y de la tarjeta de la consulta: abajo dice cuál fue el último mensaje oficial (de cualquiera de los intakers),
+  // así no hace falta abrir la lista para saber si ya se le mandó el de después de la consulta; mientras sale, "Mandando…"
+  function wspUltimo(l){
+    if (!wspD || !wspD.envios || !l) return null;
+    var e=wspD.envios[l.id]||{}, u=null;
+    Object.keys(e).forEach(function(t){ var x=e[t]; if (x && +x.t && (!u || x.t>u.t)) u={tpl:t, t:+x.t, quien:x.quien||''}; });
+    if (!u) return null;
+    var o=(wspD.catalogo||[]).filter(function(x){ return x.tpl===u.tpl; })[0];
+    u.label=o ? o.label : String(u.tpl).replace(/_/g,' ');
+    return u;
+  }
+  function wspFicha(l){
+    if (!wspPuede(l)) return ''; wspPrecargar();
+    if (wspEnv[l.id]) return '<button class="btn3 wsp-menu" data-wspmenu="'+esc(l.id)+'" aria-busy="true">⏳ Mandando el mensaje por WhatsApp…</button>';
+    var u=null; try{ u=wspUltimo(l); }catch(e){}
+    return '<button class="btn3 wsp-menu'+(u?' con-ult':'')+'" data-wspmenu="'+esc(l.id)+'"><span>📤 Mandar mensaje por WhatsApp</span>'+
+      (u?'<small>Último: '+esc(u.label)+' · '+esc(wspCorto(u.t))+(u.quien?' por '+esc(u.quien):'')+'</small>':'')+'</button>';
+  }
+  // Con la ficha o la tarjeta abierta: se cambia solo ese botón (sin volver a pintar la hoja ni mover el scroll)
+  function wspFichaRefrescar(id){
+    try{ var sh=$('sheet'); if (!sh) return; var l=null;
+      sh.querySelectorAll('.wsp-menu[data-wspmenu]').forEach(function(b){ if (id && b.getAttribute('data-wspmenu')!==id) return; l=findLead(b.getAttribute('data-wspmenu')); if (!l) return; var h=wspFicha(l); if (h){ var t=document.createElement('div'); t.innerHTML=h; b.replaceWith(t.firstChild); } });
+    }catch(e){}
+  }
   function wspMenuBtn(l){ if (!wspPuede(l)) return ''; wspPrecargar(); return '<button class="wsp-b wsp-sq" data-wspmenu="'+esc(l.id)+'" title="Mandar mensaje por WhatsApp" aria-label="Mandar mensaje por WhatsApp a '+esc(l.nombre||'')+'">📤</button>'; }
   function wspTrasAgendar(l){ if (wspPuede(l) && l.fecha && l.hora) toastAccion('Consulta agendada', '📤 Confirmar por WhatsApp', function(){ wspVer(l.id, {momento:'turno'}); }, 12000); }
   /** Qué mensaje oficial va con cada confirmación: previo = confirmación (si falta más de un día) o recordatorio de mañana; del día = recordatorio de hoy */
@@ -6207,7 +6235,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     var l=findLead(s.id), nom=wspNombre(l&&l.nombre)||'';
     wspEnv[s.id]={t:Date.now()}; wspSt={}; wspCerrar();
     toast('📤 Mandando'+(nom?' a '+nom:'')+'… Podés seguir con otro.');
-    var pintar=function(){ if (!escribiendo()) render(); };
+    var pintar=function(){ if (!escribiendo()) render(); wspFichaRefrescar(s.id); };
     pintar();
     call('enviarWsp', Object.assign({id:s.id, forzar:!!v.aviso}, s.q)).then(function(r){
       delete wspEnv[s.id]; delete wspFallo[s.id];
