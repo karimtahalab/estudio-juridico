@@ -1130,6 +1130,21 @@ body:has(#entorno-prueba) .nav{padding-bottom:calc(26px + env(safe-area-inset-bo
 .sc-preg p{margin:0 2px 10px;font-size:16px}.sc-preg div{display:grid;grid-template-columns:2fr 1fr;gap:8px}
 .sc-preg button{min-height:48px;border:0;border-radius:12px;font:inherit;font-weight:800;font-size:16px;cursor:pointer}.sc-preg .sp-si{background:var(--blue);color:#fff}.sc-preg .sp-no{background:var(--paper-2);color:var(--ink-2)}
 body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-bottom))}
+/* Confirmaciones (flujo semanal 22/11): barra arriba de Tareas, "Mandar los que faltan" y lista para mandar varios juntos */
+.cf-bar{display:flex;align-items:stretch;gap:8px;margin-top:8px;padding:6px 6px 6px 14px;border-radius:14px;background:var(--paper);box-shadow:0 0 0 1px var(--line) inset}
+.cf-bar .cf-ir{flex:1;min-width:0;min-height:44px;display:flex;align-items:center;justify-content:space-between;gap:8px;border:0;background:none;padding:0;font:inherit;font-weight:700;font-size:14.5px;text-align:left;color:var(--ink);cursor:pointer}
+.cf-bar .cf-ir span{line-height:1.3}.cf-bar .cf-ir b{white-space:nowrap}
+.cf-bar .wsp-b,.cf-sec{min-height:44px;font-size:15px;font-weight:800;padding:0 12px;border-radius:12px}
+.cf-sec{display:flex;width:100%;align-items:center;justify-content:center;margin:2px 0 10px}
+.cf-est{margin:-4px 2px 10px;font-size:14px;color:var(--ink-2)}
+.wsp-b.cf-ya{background:#f1f3f2;color:#5b6660}
+.cf-it{display:grid;grid-template-columns:28px 1fr;gap:4px 8px;align-items:start;padding:10px 0;border-top:1px solid #eee;cursor:pointer}
+.cf-it input{width:22px;height:22px;margin:2px 0 0;accent-color:#25d366}
+.cf-it b{font-size:15px}.cf-it small{display:block;color:#666;font-size:13px;font-weight:500}
+.cf-it .wsp-msg{grid-column:2;font-size:14px;padding:9px 10px}
+.cf-it.off .wsp-msg{opacity:.45}
+.cf-no{font-size:13.5px;color:#9A3D0B;background:#FDEBDD;border-radius:10px;padding:8px 10px;margin:10px 0 0}
+.wsp-box .wsp-acts.cf-pie{position:sticky;bottom:-16px;background:#fff;margin:10px -16px -16px;padding:12px 16px 16px;box-shadow:0 -1px 0 #eee}
 </style>
 </head>
 <body>
@@ -4217,8 +4232,8 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     var today=nowBA().date;
     return '<li class="it tk">'+
       '<button class="it-main" data-open="'+esc(l.id)+'" aria-label="Abrir ficha de '+esc(l.nombre)+'"><span class="tm num">'+(l.fecha!==today?'<small>'+diaCorto(l.fecha)+'</small>':'')+esc(l.hora||'--:--')+'</span>'+
-        '<span class="tx"><span class="nm">'+esc(l.nombre)+'</span><span class="mt">'+tkNum(l, campo)+'<span class="rama r-'+ramaKey(l.rama)+'">'+ramaLabel(l.rama)+'</span>'+(l.abogada?'<span class="cp">Con '+esc(l.abogada)+'</span>':'')+wspYa(l, wspMomento(l, campo))+'</span></span></button>'+
-      '<span class="it-acts">'+wspBtn(l, wspMomento(l, campo), '')+'<a class="ib wa" href="'+waHref(l.tel)+'" target="_blank" rel="noopener" aria-label="WhatsApp a '+esc(l.nombre)+'">'+I.chat+'</a></span>'+
+        '<span class="tx"><span class="nm">'+esc(l.nombre)+'</span><span class="mt">'+tkNum(l, campo)+'<span class="rama r-'+ramaKey(l.rama)+'">'+ramaLabel(l.rama)+'</span>'+(l.abogada?'<span class="cp">Con '+esc(l.abogada)+'</span>':'')+cfYa(l, wspMomento(l, campo))+'</span></span></button>'+
+      '<span class="it-acts">'+cfBtnFila(l, wspMomento(l, campo))+'<a class="ib wa" href="'+waHref(l.tel)+'" target="_blank" rel="noopener" aria-label="WhatsApp a '+esc(l.nombre)+'">'+I.chat+'</a></span>'+
       '<div class="tk-acts">'+confBtns(l,campo)+'</div></li>';
   }
   function paRow(l){
@@ -4579,11 +4594,12 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     var total=t.hoy.length+t.previa.length+t.sinRes.length;
     var body='';
     var scN=scLista().filter(function(l){ return !(!!l.fase || /^falta enviar/i.test(String(l.levanto||''))); }).length, ffL=ffLista(), ffN=ffL.filter(function(l){ return !l.fase; }).length;
+    body += cfBarra(t);
     if (rol()==='intaker' && (scN || ffN)) body += '<button class="next-bar sc-ir" data-scir="'+(ffL.length?'ffSec':'scSec')+'"><span>📨 '+[scN?plural(scN,'lead sin contactar','leads sin contactar'):'', ffN?ffN+' sin fase':''].filter(Boolean).join(' · ')+'</span><b>Ver ›</b></button>';
     body += segBarTareas() + trSecTareas() + repSecTareas();
     var dw=dow(nowBA().date); if (dw===6 || dw===0 || dw===1) body+='<button class="btn3" data-view="reporte" style="margin-top:12px">📊 Armar el reporte de la semana para CARGA SEMANAL</button>';
-    body += secTarea('Mensaje del día', t.hoy.length, 'Último recordatorio (el 3º), para las consultas de hoy. Tocá lo que respondió.', '<ol class="dk">'+t.hoy.map(function(l){ return tkRow(l,'confDia'); }).join('')+'</ol>');
-    body += secTarea('Recordatorios', t.previa.length, '<b>1º recordatorio:</b> consultas de pasado mañana. <b>2º recordatorio:</b> las de mañana que todavía no confirmaron. El 3º es el mensaje del día. Tocá lo que respondió.', '<ol class="dk">'+t.previa.map(function(l){ return tkRow(l,'confPrev'); }).join('')+'</ol>');
+    body += '<div id="cfSec"></div>'+secTarea('Mensaje del día', t.hoy.length, 'Último recordatorio (el 3º), para las consultas de hoy. Tocá lo que respondió.', cfSecHtml(t, 'hoy')+'<ol class="dk">'+t.hoy.map(function(l){ return tkRow(l,'confDia'); }).join('')+'</ol>');
+    body += secTarea('Recordatorios', t.previa.length, '<b>1º recordatorio:</b> consultas de pasado mañana. <b>2º recordatorio:</b> las de mañana que todavía no confirmaron. El 3º es el mensaje del día. Tocá lo que respondió.', cfSecHtml(t, 'previa')+'<ol class="dk">'+t.previa.map(function(l){ return tkRow(l,'confPrev'); }).join('')+'</ol>');
     body += comSolHtml();
     body += respuestasHtml();
     body += secTarea('Sin resumen', t.sinRes.length, 'Escribí el resumen para que la abogada lo tenga antes de la consulta.', '<ul class="todo">'+t.sinRes.map(srRow).join('')+'</ul>');
@@ -6251,6 +6267,137 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     if (!l) return porServidor();
     wspDatos().then(function(D){ if (D && D.activo) wspPintarLista(id, wspListaLocal(l, D)); else porServidor(); }).catch(porServidor);
   }
+  /* ===== Confirmaciones (flujo semanal 22/11) =====
+   * Antes: para cada consulta de hoy y de mañana había que tocar 📤, revisar y Enviar (2 toques por persona), y después de mandar
+   * la fila quedaba igual (el 📤 verde seguía ahí): no se sabía de un vistazo a quién faltaba mandarle y quién solo faltaba que responda.
+   * Ahora: arriba de Tareas "✅ Confirmaciones: N por mandar · M esperan respuesta" con 📤 Mandar N; en cada sección, "Mandar los que faltan".
+   * La lista muestra cada mensaje completo (como la vista previa de siempre) y se puede destildar a alguien. Salen de a 2 por vez
+   * con el mismo enviarWsp de siempre (mismo momento: hoy, previo o turno), así que el motor no cambia. */
+  function cfItems(t, que){
+    var xs=[]; t=t||tareasDe();
+    if (que!=='previa') t.hoy.forEach(function(l){ xs.push({l:l, campo:'confDia', m:wspMomento(l,'confDia')}); });
+    if (que!=='hoy') t.previa.forEach(function(l){ xs.push({l:l, campo:'confPrev', m:wspMomento(l,'confPrev')}); });
+    return xs;
+  }
+  function cfMandado(l, m){
+    if (!m || !wspD || !wspPuede(l)) return null;
+    var e=((wspD.envios||{})[l.id]||{})[wspTplDe(l, m)];
+    return e && Date.now()-e.t < (wspD.horas||20)*3600000 ? e : null;
+  }
+  /** Estado de cada consulta de Tareas: 'mandar' (oficial, falta mandarle), 'va' (saliendo), 'espera' (ya se le mandó), 'mano' (Tránsito o sin oficial). */
+  function cfEstado(x){
+    if (!x.m || !wspPuede(x.l) || !wspD || wspD.activo===false) return 'mano';
+    if (wspEnv[x.l.id]) return 'va';
+    if (cfMandado(x.l, x.m)) return 'espera';
+    if (wspFallo[x.l.id]==='corte') return 'revisar'; // se cortó mientras salía: puede haber llegado, no va en "Mandar todos"
+    return 'mandar';
+  }
+  function cfCuenta(xs){ var c={mandar:0, va:0, espera:0, mano:0, revisar:0}; xs.forEach(function(x){ c[cfEstado(x)]++; }); return c; }
+  function cfBarra(t){
+    if (!puede('confirmar') || !wspRol()) return '';
+    var xs=cfItems(t); if (!xs.length) return '';
+    if (!wspD){ wspPrecargar(); return '<div class="cf-bar"><button class="cf-ir" data-cfir><span>✅ Confirmaciones: '+esc(plural(xs.length,'consulta','consultas'))+' de hoy y mañana</span><b>Ver ›</b></button></div>'; }
+    var c=cfCuenta(xs), partes=[];
+    if (c.mandar) partes.push(c.mandar+' por mandar');
+    if (c.va) partes.push(c.va+' saliendo');
+    if (c.espera) partes.push(c.espera+(c.espera===1?' espera':' esperan')+' respuesta');
+    if (c.revisar) partes.push(c.revisar+' a revisar en uChat');
+    if (c.mano) partes.push(c.mano+' por 💬');
+    return '<div class="cf-bar"><button class="cf-ir" data-cfir><span>✅ Confirmaciones: '+esc(partes.join(' · '))+'</span><b>Ver ›</b></button>'+
+      (c.mandar ? '<button class="wsp-b" data-cftodos="todo" aria-label="Mandar los '+c.mandar+' recordatorios que faltan por WhatsApp oficial">📤 Mandar '+c.mandar+'</button>' : '')+'</div>';
+  }
+  function cfSecHtml(t, que){
+    if (!wspRol()) return '';
+    var xs=cfItems(t, que); if (!xs.length) return '';
+    var c=cfCuenta(xs), est=[];
+    if (c.espera) est.push('📤 '+c.espera+(c.espera===1?' ya tiene el mensaje: falta que responda.':' ya tienen el mensaje: falta que respondan.'));
+    if (c.va) est.push('⏳ '+c.va+' saliendo.');
+    if (c.revisar) est.push('⚠️ '+c.revisar+' se cortó mientras salía: fijate en uChat si le llegó antes de tocar su 📤.');
+    return (c.mandar>1 ? '<button class="wsp-b cf-sec" data-cftodos="'+que+'">📤 Mandar '+(que==='hoy'?'el mensaje del día':'el recordatorio')+' a los '+c.mandar+' que faltan</button>' : '')+
+      (est.length ? '<p class="cf-est">'+est.join(' ')+'</p>' : '');
+  }
+  function cfYa(l, m){
+    var e=cfMandado(l, m); if (!e) return '';
+    return '<i class="cp wsp-ya" title="Mensaje oficial mandado '+esc(wspCuando(e.t))+(e.quien?' por '+esc(e.quien):'')+'">📤 '+esc(wspCorto(e.t))+(e.quien && wspD && e.quien!==wspD.yo?' '+esc(e.quien):'')+' · espera respuesta</i>';
+  }
+  function cfBtnFila(l, m){
+    var h=wspBtn(l, m, ''); if (!h || !cfMandado(l, m)) return h;
+    return h.replace('class="wsp-b"', 'class="wsp-b cf-ya"').replace('title="Mandar por el WhatsApp oficial"', 'title="Ya se mandó: tocá para mandarlo de nuevo"');
+  }
+  var cfSt={};
+  function cfVer(que){
+    if (!wspD){ wspDlg('<p class="wsp-load">Armando los mensajes…</p>'); wspDatos().then(function(){ cfVer(que); }).catch(function(e){ wspFalla(e, 'No se pudieron armar los mensajes.'); }); return; }
+    var D=wspD, ok=[], no=[];
+    cfItems(null, que==='todo'?'':que).forEach(function(x){
+      var es=cfEstado(x);
+      if (es==='revisar') no.push(esc(x.l.nombre||'Sin nombre')+': se cortó la conexión la vez anterior. Fijate en uChat y, si no le llegó, mandalo desde su 📤.');
+      if (es!=='mandar') return;
+      var l=x.l, mal=wspDatoMal(l), nom=l.nombre||'Sin nombre';
+      if (mal){ no.push(esc(nom)+': '+(mal==='tel'?'el teléfono no tiene 10 números':'no tiene nombre cargado')); return; }
+      var tpl=wspTplDe(l, x.m), o=(D.catalogo||[]).filter(function(y){ return y.tpl===tpl; })[0];
+      if (!o){ no.push(esc(nom)+': ese mensaje no está aprobado'); return; }
+      var falta=wspFalta(o, l); if (falta){ no.push(esc(nom)+': '+esc(falta)); return; }
+      var texto=wspTexto(o, l, D); if (!texto){ no.push(esc(nom)+': no se pudo armar el mensaje'); return; }
+      ok.push({id:l.id, m:x.m, nombre:nom, label:o.label, texto:texto, fecha:l.fecha, hora:l.hora||'', dest:wspDestino(l, D)});
+    });
+    cfSt={que:que, ok:ok};
+    if (!ok.length){ wspDlg('<h3>No hay recordatorios para mandar</h3>'+(no.length?'<p class="cf-no">'+no.join('<br>')+'</p>':'<p class="wsp-hint">Ya se les mandó a todos.</p>')+'<div class="wsp-acts"><button class="wsp-no" data-wspx>Cerrar</button></div>'); return; }
+    var grupos=[], por={};
+    ok.forEach(function(x, i){ x.i=i; if (!por[x.label]){ por[x.label]=[]; grupos.push(x.label); } por[x.label].push(x); });
+    var h='<h3>Mandar '+(ok.length===1?'1 recordatorio':ok.length+' recordatorios')+' por WhatsApp</h3>'+
+      '<p class="wsp-to'+(D.prueba?' prueba':'')+'">'+(D.prueba?'Para: '+esc(D.destinoPrueba||'MODO PRUEBA'):'Desde el WhatsApp oficial')+'</p>'+
+      '<p class="wsp-hint">Así le va a llegar a cada uno. Destildá a quien no quieras mandarle.</p>';
+    grupos.forEach(function(g){
+      h+='<div class="wsp-g">'+esc(g)+'</div>'+por[g].map(function(x){
+        return '<label class="cf-it" data-cfit="'+x.i+'"><input type="checkbox" checked data-cfchk="'+x.i+'"><span><b>'+esc(x.nombre)+'</b><small>'+esc(diaCorto(x.fecha)+(x.hora?' '+x.hora:''))+' · '+esc(x.dest)+'</small></span>'+
+          '<div class="wsp-msg">'+esc(x.texto).replace(/\n/g,'<br>')+'</div></label>';
+      }).join('');
+    });
+    if (no.length) h+='<p class="cf-no">No se pueden mandar desde acá:<br>'+no.join('<br>')+'</p>';
+    wspDlg(h+'<div class="wsp-acts cf-pie"><button class="wsp-no" data-wspx>Cancelar</button><button class="wsp-si" data-cflote>'+cfTxtEnviar(ok.length)+'</button></div>');
+  }
+  function cfTxtEnviar(n){ return n ? 'Enviar '+(n===1?'1':n) : 'Elegí a quién'; }
+  function cfMarcados(){ var d=document.getElementById('wspDlg'); if (!d) return []; return [].slice.call(d.querySelectorAll('[data-cfchk]')).filter(function(c){ return c.checked; }).map(function(c){ return cfSt.ok[+c.getAttribute('data-cfchk')]; }).filter(Boolean); }
+  function cfMandarLote(){
+    var xs=cfMarcados().filter(function(x){ return !wspEnv[x.id]; }); if (!xs.length) return;
+    cfSt={}; wspCerrar();
+    xs.forEach(function(x){ wspEnv[x.id]={t:Date.now()}; });
+    toast('📤 Mandando '+(xs.length===1?'1 recordatorio':xs.length+' recordatorios')+'… Podés seguir con otra cosa.');
+    var pintar=function(){ if (!escribiendo()) render(); };
+    pintar();
+    var cola=xs.slice(), okN=0, malos=[], cortes=[];
+    var uno=function(){
+      var x=cola.shift(); if (!x) return Promise.resolve();
+      return call('enviarWsp', {id:x.id, forzar:false, momento:x.m}).then(function(r){
+        delete wspEnv[x.id]; delete wspFallo[x.id]; okN++;
+        if (wspD){ var e=(wspD.envios=wspD.envios||{}); (e[x.id]=e[x.id]||{})[(r&&r.tpl)||wspTplDe(findLead(x.id)||{}, x.m)]={t:Date.now(), quien:wspD.yo}; }
+        if (r && r.lead && r.lead.id && findLead(r.lead.id)) { try { replaceLead(r.lead); } catch(e){} }
+      }, function(e){
+        delete wspEnv[x.id];
+        wspFallo[x.id]=esCorte(e) ? 'corte' : 'error';
+        (esCorte(e) ? cortes : malos).push(wspNombre(x.nombre)+(esCorte(e)?'':': '+((e&&e.message)||'no se pudo')));
+      }).then(function(){ pintar(); return uno(); });
+    };
+    // De a 2 por vez: cada envío tarda 4-13 s en el motor (registro de uso)
+    Promise.all([uno(), uno()]).then(function(){
+      if (!malos.length && !cortes.length){ toast('✓ '+(okN===1?'Mandado 1 recordatorio':'Mandados '+okN+' recordatorios')+'. Cuando respondan, tocá ✅ o 🔴 en cada uno.'); return; }
+      var msg=(okN?'Se mandaron '+okN+' de '+xs.length+'. ':'')+(cortes.length?'No sé si '+(cortes.length===1?'le':'les')+' llegó a '+cortes.join(', ')+' (se cortó la conexión): fijate en uChat antes de mandar de nuevo. ':'')+(malos.length?'No salió: '+malos.join(' · '):'');
+      toastAccion(msg.trim(), 'Ver', function(){ cfIr(); }, 15000);
+    });
+  }
+  function cfIr(){ if (state.view!=='tareas'){ state.view='tareas'; render(); } var a=$('cfSec'); if (a){ var tp=document.querySelector('.top'), h=tp?tp.getBoundingClientRect().bottom:0; window.scrollTo(0, window.scrollY+a.getBoundingClientRect().top-Math.max(0,h)-6); } }
+  document.addEventListener('click', function(ev){
+    var t=ev.target.closest && ev.target.closest('[data-cfir],[data-cftodos],[data-cflote]'); if (!t) return;
+    ev.preventDefault(); ev.stopPropagation();
+    if (t.hasAttribute('data-cfir')){ cfIr(); return; }
+    if (t.hasAttribute('data-cftodos')){ cfVer(t.getAttribute('data-cftodos')); return; }
+    if (t.hasAttribute('data-cflote')){ cfMandarLote(); return; }
+  }, true);
+  document.addEventListener('change', function(ev){
+    var c=ev.target.closest && ev.target.closest('[data-cfchk]'); if (!c) return;
+    var it=c.closest('.cf-it'); if (it) it.classList.toggle('off', !c.checked);
+    var b=document.querySelector('#wspDlg [data-cflote]'), n=cfMarcados().length; if (b){ b.textContent=cfTxtEnviar(n); b.disabled=!n; }
+  }, true);
   document.addEventListener('click', function(ev){
     var t;
     if ((t=ev.target.closest('[data-wsp]'))){ ev.preventDefault(); ev.stopPropagation(); wspVer(t.getAttribute('data-wsp'), {momento:t.getAttribute('data-wsp-m')}); return; }
