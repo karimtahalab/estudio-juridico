@@ -348,7 +348,8 @@ class FakeApi:
                 return False, "El teléfono de %s no tiene 10 números. Revisalo antes de mandar." % (l.get("nombre") or "este lead")
             if not str(l.get("nombre") or "").strip():
                 self.wsp_rechazados.append(l["id"]); return False, "Este lead no tiene nombre cargado."
-            tpl = arg.get("tpl") or ("inicio_laboral" if l["rama"] == "LABORAL" else "inicio_accidente_art")
+            # Como Wsp.gs: tpl directo, o por momento (turno/previo/hoy, igual que porMomento de la pantalla), o el primer mensaje
+            tpl = arg.get("tpl") or {"turno": "confirmacion_consulta", "previo": "recordatorio_consulta_manana", "hoy": "recordatorio_consulta_hoy"}.get(arg.get("momento") or "") or ("inicio_laboral" if l["rama"] == "LABORAL" else "inicio_accidente_art")
             self.wsp_enviados.append({"id": l["id"], "tel": l.get("tel"), "tpl": tpl, "quien": who})
             # Hora del reloj fijo del banco (jueves 05/11/2026 11:20 de Mendoza)
             self.wsp_log.setdefault(l["id"], {})[tpl] = {"t": 1793888400000, "quien": who}
