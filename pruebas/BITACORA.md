@@ -398,6 +398,22 @@ Cómo correrlo: `python3 pruebas/correr.py <carpeta con index.html> <carpeta de 
   - saveFin2 que devuelva la planilla ya actualizada (motor), así no hace falta el getFin2 de después de cada guardado (hoy 2 pedidos de 5-8 s por cliente que carga Sol).
   - getData en CacheService del motor (sigue pendiente; hoy picos de 20 s).
 
+## 2026-11-21 (sábado noche, corrida de las 22:37)
+- main sin cambios desde dfb4445 (20/11). El banco ya tenía index.html, sw.js y manifest iguales a main.
+- Ramas pendientes: mejora/2026-11-19, -20 y -21 (3). Merge local contra main (sin pushear): las tres entran limpias, también juntas. Con 3 pendientes, esta noche NO se armó rama nueva. -05, -06, -06-repetidos/-reportes-claros/-semana-rama/-tareas-reportes y -08-flujo-sin-contactar figuran sin mergear pero su contenido está en main.
+- Cambios del motor pendientes: mejora-2026-11-19.json y mejora-2026-11-20.json (sin cambios). No se bajó el Código.gs (sin rama nueva).
+- Registro de uso real (USO, filas 7320-7517, 20/11 noche y sábado 21/11; casi todo Fran en Windows instalada, algo de Karim en navegador el 20/11):
+  - Sin filas de error.
+  - 1 aviso "El servidor no respondió a tiempo": getReporte de Fran (35,3 s, reporte). El corte y el reintento funcionan.
+  - reporteTurno: ~15 lentos de 4-7 s en un solo día de Fran (se pide de nuevo en cada render de la pantalla Reporte). Es la idea ya anotada el 19/11.
+  - getData lentos casi todos 4-10 s; pico 18,6 s (apertura con datos nuevos de Fran 18,9 s; con lo guardado 0,3-0,5 s). enviarWsp 4-6,7 s, 0 errores. derivar 7,5 s, subirEstudio 7,8 s.
+  - Karim en navegador sin versión en el registro (lo arregla mejora/2026-11-20, pendiente). fin2Calentar 39,6 s de fondo.
+- Roles probados con correr.py (390 y 360): Cele, Agus, Estefanía, Juan. 0 errores de JavaScript, 0 pedidos fallidos. Pestañas: Cele y Juan → Finanzas, Agenda, Guiones, Falta cargar; Agus → Reporte, Agenda, Tareas, Seguimiento, Agendar; Estefanía → Agenda, Falta cargar. Permisos OK con datos falsos.
+- Las 3 pendientes juntas sobre main (solo local): correr.py con los mismos roles igual que main (0 errores, mismas pestañas); probar_wsp_tarjeta.py (Agus, 390) OK, con "Último: No vino a la consulta · 11:20 por Agus" en la rama; probar_pasar_bc.py OK (Mica no ve el botón).
+- Nota del banco: el nombre va con acento en correr.py ("Estefanía").
+- Sin problemas nuevos. No se mandó informe (sin novedades).
+- Ideas grandes (siguen): Reporte del turno que no se renueve en cada render; getData en CacheService del motor.
+
 ## Flujos rediseñados (tarea semanal de los domingos)
 | Fecha | Flujo | Para quién | Toques antes → después | Rama | Motor |
 |---|---|---|---|---|---|
