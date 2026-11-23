@@ -415,6 +415,15 @@ Cómo correrlo: `python3 pruebas/correr.py <carpeta con index.html> <carpeta de 
 - Sin problemas nuevos. No se mandó informe (sin novedades).
 - Ideas grandes (siguen): Reporte del turno que no se renueve en cada render; getData en CacheService del motor.
 
+## 2026-11-22 (domingo noche, corrida de las 22:36)
+- main sin cambios desde dfb4445 (20/11). El banco ya tenía index.html, sw.js y manifest iguales a main.
+- Ramas pendientes: mejora/2026-11-19, -20, -21 y -22-flujo-confirmaciones (4). Merge local contra main (sin pushear): las cuatro entran limpias, también juntas. Con 4 pendientes, esta noche NO se armó rama nueva.
+- Cambios del motor pendientes: sin cambios (no se bajó el Código.gs, sin rama nueva).
+- Registro de uso real: sin filas nuevas desde la noche del 21/11 (última fila 7517, Fran, sábado; planilla sin cambios desde el 21/11 14:03). Nada nuevo para mirar.
+- Roles probados con correr.py (390 y 360): Mica, Pri, Sol, Karim. 0 errores de JavaScript, 0 pedidos fallidos, sin scroll horizontal. Pestañas: Mica → Finanzas, Agenda, Guiones, Falta cargar; Pri → Reporte, Agenda, Tareas, Seguimiento, Agendar; Sol → Finanzas, Agenda, Seguimiento, Agendar, Falta cargar; Karim → Reportes, Agenda, Tareas, Agendar, Falta cargar. Permisos OK con datos falsos.
+- Las 4 pendientes juntas sobre main (solo local): correr.py con los mismos roles igual que main (0 errores, mismas pestañas; el audit cambia solo en Tareas/inicio de Pri y Karim, por la barra de confirmaciones). probar_confirmaciones.py OK (el único ERR_FAILED de consola es un pedido externo que el banco bloquea).
+- Sin problemas nuevos. No se mandó informe (sin novedades).
+
 ## Flujos rediseñados (tarea semanal de los domingos)
 | Fecha | Flujo | Para quién | Toques antes → después | Rama | Motor |
 |---|---|---|---|---|---|
