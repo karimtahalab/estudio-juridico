@@ -162,6 +162,7 @@ class FakeApi:
         self.sc = sin_contactar()
         self.bloqueos = [{"id": "B1", "fecha": D(0), "abogada": "Cele", "desde": "13:00", "hasta": "14:00", "todoDia": False, "aclaracion": "Trámite en tribunales (prueba)"}]
         self.disp = {"modos": {}, "fijo": {}, "fechas": {}}
+        self.motor_horarios = True  # motor real desde el 24/11: manda permisos.horarios a los intakers (False = motor anterior)
         self.pin_bloq = {"Julián": True}
         self.sin_fake = set()
         self.calls = []
@@ -204,7 +205,7 @@ class FakeApi:
         eq = copy.deepcopy(EQUIPO)
         d = {
             "__prueba": True, "modoPrueba": False, "user": {"name": who},
-            "permisos": PERMISOS.get(who, {}),
+            "permisos": dict(PERMISOS.get(who, {}), **({"horarios": True} if self.motor_horarios and next((e["rol"] for e in EQUIPO if e["nombre"] == who), "") == "intaker" else {})),
             "equipo": eq, "abogadas": self._abogadas(who), "ramasPorPersona": RAMAS_POR_PERSONA,
             "leads": [l for l in self.leads if self._ve(who, l)],
             "porAgendar": [l for l in self.pa + [x for x in self.sc if x["fase"] in ("", "A", "B", "Llamada pendiente")] if l["rama"] in PERMISOS.get(who, {}).get("leads", [])],
@@ -308,7 +309,18 @@ class FakeApi:
             self.bloqueos.append(b); return True, self.bloqueos
         if fn == "deleteBloqueo":
             self.bloqueos = [b for b in self.bloqueos if b["id"] != arg.get("id")]; return True, self.bloqueos
-        if fn == "saveDisponibilidad": return True, self.disp
+        if fn == "saveDisponibilidad":  # como saveDisponibilidad del motor real (24/11): los intakers cambian solo semanas puntuales
+            a = arg.get("abogada"); rol = next((e["rol"] for e in EQUIPO if e["nombre"] == who), "")
+            itk = rol == "intaker" and who != a and a in self._abogadas(who)
+            if rol != "admin" and who != a and not itk: return False, "Solo %s, los intakers o administración pueden cambiar su disponibilidad." % a
+            if itk and (arg.get("modo") or arg.get("fijo")): return False, "El horario de todas las semanas lo cambia %s o administración. Vos podés abrir o cerrar horarios de una semana puntual." % a
+            if arg.get("modo"): self.disp.setdefault("modos", {})[a] = arg["modo"]
+            for k, v in (arg.get("fijo") or {}).items(): self.disp.setdefault("fijo", {}).setdefault(a, {})[k] = v
+            for k, v in (arg.get("fechas") or {}).items():
+                if v is None: self.disp.setdefault("fechas", {}).get(a, {}).pop(k, None)
+                else: self.disp.setdefault("fechas", {}).setdefault(a, {})[k] = v
+            self.disp_log = getattr(self, "disp_log", []) + [(who, copy.deepcopy(arg))]
+            return True, copy.deepcopy(self.disp)
         if fn == "agendarNuevo":
             em = str(arg.get("email") or "").strip().lower()
             if em and not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", em): return False, "Revisá el email."  # como agendarNuevo del motor real
