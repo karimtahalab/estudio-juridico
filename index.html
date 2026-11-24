@@ -3263,10 +3263,11 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     }
     if (u.modo==='datos'){
       var nm=u.nombre!==undefined?u.nombre:(l.nombre||''), tl=u.tel!==undefined?u.tel:(l.tel||''), em=u.email!==undefined?u.email:(l.email||'');
-      return '<div class="fi-panel"><div class="field" style="margin-top:0"><label for="fdNombre">Nombre</label><input class="inp" id="fdNombre" autocomplete="off" value="'+esc(nm)+'"></div>'+
-        '<div class="field"><label for="fdTel">Teléfono</label><input class="inp" id="fdTel" type="tel" inputmode="tel" autocomplete="off" value="'+esc(tl)+'"></div>'+
-        '<div class="field"><label for="fdEmail">Email</label><input class="inp" id="fdEmail" type="email" inputmode="email" autocomplete="off" value="'+esc(em)+'" placeholder="'+(l.email?'':'No tiene: agregalo si lo pasó')+'"></div>'+
-        '<button class="save" data-datosave>Guardar cambios</button><p class="hint" style="margin:6px 2px 0">Si agregás o cambiás el email, la app también lo actualiza en el HISTORIAL de esta persona, así los KPIs la siguen contando como una sola.</p></div>';
+      var dh=datosHints(l, {nombre:nm, tel:tl, email:em});
+      return '<div class="fi-panel"><div class="field" style="margin-top:0"><label for="fdNombre">Nombre</label><input class="inp" id="fdNombre" autocomplete="off" aria-describedby="fdNombreH" value="'+esc(nm)+'"><p class="hint mail-h" id="fdNombreH" role="status">'+esc(dh.nombre)+'</p></div>'+
+        '<div class="field"><label for="fdTel">Teléfono</label><input class="inp" id="fdTel" type="tel" inputmode="tel" autocomplete="off" aria-describedby="fdTelH" value="'+esc(tl)+'"><p class="hint mail-h" id="fdTelH" role="status">'+esc(dh.tel)+'</p></div>'+
+        '<div class="field"><label for="fdEmail">Email</label><input class="inp" id="fdEmail" type="email" inputmode="email" autocomplete="off" aria-describedby="fdEmailH" value="'+esc(em)+'" placeholder="'+(l.email?'':'No tiene: agregalo si lo pasó')+'"><p class="hint mail-h" id="fdEmailH" role="status">'+esc(dh.email)+'</p></div>'+
+        '<button class="save" data-datosave'+(dh.alguno?' disabled':'')+'>Guardar cambios</button><p class="hint" style="margin:6px 2px 0">Si agregás o cambiás el email, la app también lo actualiza en el HISTORIAL de esta persona, así los KPIs la siguen contando como una sola.</p></div>';
     }
     return '';
   }
@@ -3297,11 +3298,33 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
   }
   // Si el motor todavía no acepta volver a una fase que no se elige a mano (No show, Reagenda, Consulta agendada), se dice claro en qué quedó
   function msgDeshacerFase(e, f, antes){ var m=(e&&e.message)||''; return /no se cambia desde/i.test(m) ? 'No se pudo deshacer: quedó en '+faseLbl(f)+'. La app todavía no deja volver a '+faseLbl(antes)+'.' : (m||'No se pudo deshacer.'); }
+  // Cambiar fase y Corregir datos se abren debajo de los botones: en 360x640 o en una compu con pantalla baja quedaban fuera de la vista
+  // (se tocaba y "no pasaba nada"). Se baja lo justo para ver el panel entero (o desde arriba si no entra), sin abrir el teclado.
+  function panelALaVista(){
+    var p=document.querySelector('#sheet.on .fi-panel'); if (!p) return; var r=p.getBoundingClientRect(), vh=window.innerHeight||document.documentElement.clientHeight;
+    if (r.top>=0 && r.bottom<=vh-8) return;
+    try{ p.scrollIntoView({block: r.height>vh-80 ? 'start' : 'end', behavior:'smooth'}); }catch(e){ try{ p.scrollIntoView(); }catch(x){} }
+  }
   function guardarNota(){
     var id=state.sheet.id, u=state.fichaUI||{}, t=String(u.nota||'').trim(); if (!t) return;
     state.fichaUI={}; renderSheet(); toast('Guardando la nota…');
     call('agregarNota', {id:id, texto:t}).then(function(nl){ replaceAny(nl); if (state.sheet && state.sheet.id===id) renderSheet(); render(); toast('✔ Nota guardada.'); })
       .catch(function(e){ if (state.sheet && state.sheet.id===id){ state.fichaUI={modo:'nota', nota:t}; renderSheet(); } toast((e&&e.message)||'No se pudo guardar la nota.', true); });
+  }
+  // Corregir datos: lo mismo que revisa editarDatos del motor (nombre de 2 letras o más, teléfono de 8 números o más, email con @ y punto),
+  // solo en lo que se cambió (el motor solo revisa lo que se manda). Antes el aviso llegaba del motor 3-4 s después de tocar Guardar.
+  function datosHints(l, v){
+    var h={nombre:'', tel:'', email:''};
+    if (v.nombre!==undefined && v.nombre.trim()!==String(l.nombre||'').trim() && v.nombre.replace(/\s+/g,' ').trim().length<2) h.nombre='⚠ Escribí el nombre (2 letras o más).';
+    if (v.tel!==undefined && v.tel.trim()!==String(l.tel||'').trim() && phone(v.tel).length<8) h.tel='⚠ Al teléfono le faltan números (ej.: 2615551234).';
+    if (v.email!==undefined && v.email.trim().toLowerCase()!==String(l.email||'').toLowerCase()) h.email=emailHint(v.email);
+    h.alguno=!!(h.nombre||h.tel||h.email); return h;
+  }
+  function datosRevisar(){
+    var l=state.sheet && findLead(state.sheet.id); if (!l) return null; var u=state.fichaUI||{};
+    var h=datosHints(l, {nombre:u.nombre, tel:u.tel, email:u.email});
+    [['fdNombreH','nombre'],['fdTelH','tel'],['fdEmailH','email']].forEach(function(x){ var e=$(x[0]); if (e && e.textContent!==h[x[1]]) e.textContent=h[x[1]]; });
+    var b=document.querySelector('[data-datosave]'); if (b) b.disabled=h.alguno; return h;
   }
   function guardarDatos(){
     var id=state.sheet.id, l=findLead(id), u=state.fichaUI||{}, arg={id:id}; if (!l) return;
@@ -3310,6 +3333,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     if (u.email!==undefined && u.email.trim().toLowerCase()!==String(l.email||'').toLowerCase()) arg.email=u.email;
     if (arg.nombre===undefined && arg.tel===undefined && arg.email===undefined){ toast('No hay cambios para guardar: escribí el dato nuevo en el campo.', true); return; }
     if (arg.email!==undefined && !emailOk(arg.email)){ toast('Revisá el email (ej.: nombre@gmail.com).', true); var fe=$('fdEmail'); if (fe) try{ fe.focus(); }catch(x){} return; }
+    var dh=datosHints(l, {nombre:arg.nombre, tel:arg.tel}); if (dh.alguno){ datosRevisar(); var fx=$(dh.nombre?'fdNombre':'fdTel'); if (fx) try{ fx.focus(); }catch(x){} return; }
     busySheet(true, 'Guardando…');
     call('editarDatos', arg).then(function(nl){ replaceAny(nl); state.fichaUI={}; renderSheet(); render(); toast('Datos corregidos.'); })
       .catch(function(e){ renderSheet(); toast((e&&e.message)||'No se pudo guardar.', true); });
@@ -5026,7 +5050,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     if (t.hasAttribute('data-pinback')){ state.login={}; renderSheet(); return; }
     if (t.hasAttribute('data-pinreset')){ resetPinUI(t.getAttribute('data-pinreset')); return; }
     if (t.hasAttribute('data-salir')){ salir(); return; }
-    if (t.hasAttribute('data-fimodo')){ var md=t.getAttribute('data-fimodo'), fu=state.fichaUI||{}; state.fichaUI = fu.modo===md ? {} : {modo:md}; renderSheet(); if (md==='nota') setTimeout(function(){ var x=$('notaTxt'); if (x) x.focus(); }, 60); return; }
+    if (t.hasAttribute('data-fimodo')){ var md=t.getAttribute('data-fimodo'), fu=state.fichaUI||{}; state.fichaUI = fu.modo===md ? {} : {modo:md}; renderSheet(); if (md==='nota') setTimeout(function(){ var x=$('notaTxt'); if (x) x.focus(); }, 60); else if (state.fichaUI.modo) setTimeout(panelALaVista, 60); return; }
     if (t.hasAttribute('data-fase')){ cambiarFaseUI(state.sheet.id, t.getAttribute('data-fase')); return; }
     if (t.hasAttribute('data-notasave')){ guardarNota(); return; }
     if (t.hasAttribute('data-datosave')){ guardarDatos(); return; }
@@ -5095,7 +5119,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     var id=ev.target.id;
     if (id==='pin') return; // el PIN sigue solo con el listener de "Ingreso con PIN" (antes se mandaba dos veces y al crear el PIN aparecía "Son 4 números." en el paso de repetirlo)
     if (id==='notaTxt'){ var fu=state.fichaUI||(state.fichaUI={}); fu.nota=ev.target.value; var nb=document.querySelector('[data-notasave]'); if (nb) nb.disabled=!fu.nota.trim(); return; }
-    if (id==='fdNombre' || id==='fdTel' || id==='fdEmail'){ var fu2=state.fichaUI||(state.fichaUI={}); fu2[({fdNombre:'nombre', fdTel:'tel', fdEmail:'email'})[id]]=ev.target.value; return; }
+    if (id==='fdNombre' || id==='fdTel' || id==='fdEmail'){ var fu2=state.fichaUI||(state.fichaUI={}); fu2[({fdNombre:'nombre', fdTel:'tel', fdEmail:'email'})[id]]=ev.target.value; datosRevisar(); return; }
     if (id==='mnNombre' || id==='mnTel' || id==='mnNota' || id==='mnEmail'){
       var mn=state.manual||(state.manual={}); mn[({mnNombre:'nombre', mnTel:'tel', mnNota:'nota', mnEmail:'email'})[id]]=ev.target.value;
       var bs=document.querySelector('[data-mnsig]'); if (bs) bs.disabled=!manualOk(); var bsn=document.querySelector('[data-mnsin]'); if (bsn) bsn.disabled=!(manualOk() && (state.manual||{}).fase);
