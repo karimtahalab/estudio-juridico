@@ -268,6 +268,9 @@ class FakeApi:
                 # Como anotarIntaker_ del motor: el primer cambio de fase de un intaker deja su nombre
                 if who in ("Fran", "Pri") and l in self.sc: self.sc.remove(l); l["intaker"] = who; self.pa.insert(0, l)
             elif fn == "editarDatos":
+                # misma regla que editarDatos del motor real (nombre de 2 letras o más; teléfono limpio de 8 números o más)
+                if arg.get("nombre") is not None and len(re.sub(r"\s+", " ", str(arg["nombre"])).strip()) < 2: return False, "Escribí el nombre."
+                if arg.get("tel") is not None and len(re.sub(r"\D", "", str(arg["tel"]))) < 8: return False, "Revisá el teléfono."
                 if arg.get("email") is not None and not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", str(arg["email"]).strip().lower()): return False, "Revisá el email."
                 l.update({k: arg[k] for k in ("nombre", "tel", "email") if arg.get(k) is not None})
             elif fn == "agregarNota": l["comentarios"] = l["comentarios"] + [{"label": "%s · hoy" % who, "text": arg.get("texto", "")}]
