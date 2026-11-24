@@ -1119,9 +1119,14 @@ a.save.wa-go svg{width:20px;height:20px}
 @media (min-width:1100px){.top-row,.head-extra,main,.search-top,.search-body{max-width:1080px;margin-left:auto;margin-right:auto}.nav{padding-left:calc((100% - 1080px)/2);padding-right:calc((100% - 1080px)/2)}.toast{max-width:1048px;margin:0 auto}}
 /* Ficha: acciones secundarias en dos columnas (ocupan la mitad de alto) */
 .fi-sec{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.fi-sec .btn3{margin-top:0;height:auto;min-height:44px;font-size:14px;line-height:1.2;padding:6px 8px;text-align:center}.fi-sec .btn3:last-child:nth-child(odd){grid-column:1/-1}.fi-sec .btn3.on{box-shadow:0 0 0 2px var(--blue) inset;background:var(--blue-bg)}
+.btn3.bc-conf{height:auto;min-height:46px;padding:6px 14px;line-height:1.25;text-align:center;color:var(--red);background:var(--red-bg);box-shadow:0 0 0 2px var(--red) inset}
+.mail-h{margin:4px 2px 0;color:var(--red);font-size:14px}.mail-h:empty{display:none}
 /* Mensaje oficial de WhatsApp en "¿Confirmó que viene?" y marca de "mandado" en Tareas */
 .cbs.wsp{grid-template-columns:1fr 1fr 46px}.cbs .wsp-b{height:42px;padding:0;display:inline-flex;align-items:center;justify-content:center;font-size:18px;border-radius:12px}
 .cp.wsp-ya{color:#0a7a3e;background:#e7f8ee}
+.btn3.wsp-menu.con-ult{height:auto;min-height:60px;flex-direction:column;gap:2px;padding:8px 14px;line-height:1.25;text-align:center}
+.btn3.wsp-menu.con-ult small{font-size:14px;font-weight:500;color:var(--ink-2)}
+.btn3.wsp-menu[aria-busy]{color:var(--ink-2)}
 /* Entorno de prueba: la barra de abajo crece para que el cartel rojo no tape los nombres de las pestañas */
 body:has(#entorno-prueba) .nav{padding-bottom:calc(26px + env(safe-area-inset-bottom))}body:has(#entorno-prueba){padding-bottom:calc(106px + env(safe-area-inset-bottom))}body:has(#entorno-prueba) .toast{bottom:calc(114px + env(safe-area-inset-bottom))}
 .cl.sc li.sc-of .sc-env{grid-column:3/5;grid-row:1;height:40px;padding:0 12px;font-size:15px;font-weight:800;white-space:nowrap}
@@ -1130,6 +1135,21 @@ body:has(#entorno-prueba) .nav{padding-bottom:calc(26px + env(safe-area-inset-bo
 .sc-preg p{margin:0 2px 10px;font-size:16px}.sc-preg div{display:grid;grid-template-columns:2fr 1fr;gap:8px}
 .sc-preg button{min-height:48px;border:0;border-radius:12px;font:inherit;font-weight:800;font-size:16px;cursor:pointer}.sc-preg .sp-si{background:var(--blue);color:#fff}.sc-preg .sp-no{background:var(--paper-2);color:var(--ink-2)}
 body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-bottom))}
+/* Confirmaciones (flujo semanal 22/11): barra arriba de Tareas, "Mandar los que faltan" y lista para mandar varios juntos */
+.cf-bar{display:flex;align-items:stretch;gap:8px;margin-top:8px;padding:6px 6px 6px 14px;border-radius:14px;background:var(--paper);box-shadow:0 0 0 1px var(--line) inset}
+.cf-bar .cf-ir{flex:1;min-width:0;min-height:44px;display:flex;align-items:center;justify-content:space-between;gap:8px;border:0;background:none;padding:0;font:inherit;font-weight:700;font-size:14.5px;text-align:left;color:var(--ink);cursor:pointer}
+.cf-bar .cf-ir span{line-height:1.3}.cf-bar .cf-ir b{white-space:nowrap}
+.cf-bar .wsp-b,.cf-sec{min-height:44px;font-size:15px;font-weight:800;padding:0 12px;border-radius:12px}
+.cf-sec{display:flex;width:100%;align-items:center;justify-content:center;margin:2px 0 10px}
+.cf-est{margin:-4px 2px 10px;font-size:14px;color:var(--ink-2)}
+.wsp-b.cf-ya{background:#f1f3f2;color:#5b6660}
+.cf-it{display:grid;grid-template-columns:28px 1fr;gap:4px 8px;align-items:start;padding:10px 0;border-top:1px solid #eee;cursor:pointer}
+.cf-it input{width:22px;height:22px;margin:2px 0 0;accent-color:#25d366}
+.cf-it b{font-size:15px}.cf-it small{display:block;color:#666;font-size:13px;font-weight:500}
+.cf-it .wsp-msg{grid-column:2;font-size:14px;padding:9px 10px}
+.cf-it.off .wsp-msg{opacity:.45}
+.cf-no{font-size:13.5px;color:#9A3D0B;background:#FDEBDD;border-radius:10px;padding:8px 10px;margin:10px 0 0}
+.wsp-box .wsp-acts.cf-pie{position:sticky;bottom:-16px;background:#fff;margin:10px -16px -16px;padding:12px 16px 16px;box-shadow:0 -1px 0 #eee}
 </style>
 </head>
 <body>
@@ -1235,7 +1255,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     var h = parseInt(g('hour'),10)%24, m = parseInt(g('minute'),10);
     return { date: g('year')+'-'+g('month')+'-'+g('day'), min: h*60+m, hm: ('0'+h).slice(-2)+':'+('0'+m).slice(-2) };
   }
-  function toUTC(s){ var a=s.split('-'); return new Date(Date.UTC(+a[0],+a[1]-1,+a[2])); }
+  function toUTC(s){ if (typeof s!=='string'){ try{ usoError('toUTC recibió '+(s===null?'null':typeof s)+': '+String(s).slice(0,40), 'pantalla (fecha)'); }catch(x){} s=String(s==null?'':s); } var a=s.split('-'); return new Date(Date.UTC(+a[0],+a[1]-1,+a[2])); }
   function fmt(d){ return d.toISOString().slice(0,10); }
   function addDays(s,n){ var d=toUTC(s); d.setUTCDate(d.getUTCDate()+n); return fmt(d); }
   function diffDays(a,b){ return Math.round((toUTC(a)-toUTC(b))/86400000); }
@@ -1409,6 +1429,8 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     if (fresh){ state.otras={}; state.busq=null; state.otrasPre=false; } // Actualizar: las otras fases se vuelven a pedir
     state.busy = true; $('btnRefresh').classList.add('spin');
     var seq0=state.wSeq||0, vc0=state.verComo||'';
+    // Producción (filmación y edición) solo usa Guiones: se piden junto con getData, sin esperar a que llegue
+    if (!state.crePre && !state.verComo){ var yoP=state.me || (state.equipo||[]).filter(function(x){ return x.nombre===store('yo'); })[0]; if (yoP && yoP.rol==='produccion'){ state.crePre=true; try{ loadCre(false); }catch(e){} } }
     call('getData', {fresh: !!fresh, revalidar: !!revalidar, swr: 1, who: store('yo') || ''}).then(recibir = function(d){
       if (!d.__snap && (state.verComo||'')!==vc0){ setTimeout(function(){ load(false, true); }, 300); return; } // se entró o salió de "Ver como" mientras llegaba
       // Si mientras llegaba se guardó algo (o sigue guardándose), esta lectura puede ser de antes: no se usa y se pide otra al terminar
@@ -1443,6 +1465,8 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
   }
   /* ---------- Registro de uso: errores y tiempos de carga reales (se manda agrupado cada 10 minutos) ---------- */
   var APP_V='';
+  // Sin la versión guardada (navegador sin la app instalada o primera vez), va la fecha de la pantalla que bajó: "lm" + AAAAMMDDhhmm (UTC)
+  try{ var lm=new Date(document.lastModified); if (!isNaN(lm)) APP_V='lm'+lm.toISOString().replace(/\D/g,'').slice(0,12); }catch(e){}
   try{ if (window.caches && caches.keys) caches.keys().then(function(ks){ var k=(ks||[]).filter(function(x){ return /^consultas-/.test(x); })[0]; if (k) APP_V=k.slice(10); }).catch(function(){}); }catch(e){}
   var USO={fns:{}, lentos:[], errs:{}, carga:[], enviando:false};
   var USO_NO={logUso:1};
@@ -2067,7 +2091,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     if (puede('agendar') && s==='nofirmo') html += '<button class="btn3" data-agfirmar="'+esc(l.id)+'">'+I.cal+'Viene a firmar: agendar</button>';
     if (segPuede() && !l.parcial) html += '<button class="btn3" data-segnueva="'+esc(l.id)+'">📝 Nota de seguimiento</button>';
     // Vino y no firmó / no vino / pidió reagendar, y después de 3 mensajes no responde más: pasa a BC desde acá (pide confirmar con un segundo toque)
-    if (puedeBC(l)){ var bq=state.bcConf===l.id; html += '<button class="btn3'+(bq?' on':'')+'" data-pasarbc="'+esc(l.id)+'">'+(bq?'Tocá de nuevo para confirmar: pasa a BC y sale de la agenda':'🚫 No responde más: pasar a BC')+'</button>'; }
+    if (puedeBC(l)){ var bq=state.bcConf===l.id; html += '<button class="btn3'+(bq?' on bc-conf':'')+'" data-pasarbc="'+esc(l.id)+'">'+(bq?'Tocá de nuevo para confirmar: pasa a BC y sale de la agenda':'🚫 No responde más: pasar a BC')+'</button>'; }
     var sec='';
     if (puede('agendar') && puedeCorregir(l)) sec += '<button class="btn3" data-agcorregir="'+esc(l.id)+'" title="Me equivoqué al cargar el horario: lo corrijo y no cuenta como reagenda">✏️ Corregir el horario</button>';
     if (puedeDerivar(l)) sec += '<button class="btn3" data-derivar="'+esc(l.id)+'">'+I.swap+'Derivar a otra abogada</button>';
@@ -3264,13 +3288,15 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     var p=call('cambiarFase', {id:id, fase:f});
     toastUndo('Fase: '+faseLbl(antes)+' → '+faseLbl(f), function(){
       p.then(function(){
-        call('cambiarFase', {id:id, fase:antes}).then(function(n2){ replaceAny(n2); if (state.sheet) renderSheet(); render(); toast('Volvió a '+faseLbl(n2.fase)+'.'); })
-          .catch(function(e){ toast((e&&e.message)||'No se pudo deshacer.', true); });
+        call('cambiarFase', {id:id, fase:antes, deshacer:1, desde:f}).then(function(n2){ replaceAny(n2); if (state.sheet) renderSheet(); render(); toast('Volvió a '+faseLbl(n2.fase)+'.'); })
+          .catch(function(e){ toast(msgDeshacerFase(e, f, antes), true); });
       }, function(){});
     });
     p.then(function(nl){ replaceAny(nl); if (state.sheet) renderSheet(); render(); })
      .catch(function(e){ replaceAny(copia); if (state.sheet) renderSheet(); render(); toast((e&&e.message)||'No se pudo cambiar la fase.', true); });
   }
+  // Si el motor todavía no acepta volver a una fase que no se elige a mano (No show, Reagenda, Consulta agendada), se dice claro en qué quedó
+  function msgDeshacerFase(e, f, antes){ var m=(e&&e.message)||''; return /no se cambia desde/i.test(m) ? 'No se pudo deshacer: quedó en '+faseLbl(f)+'. La app todavía no deja volver a '+faseLbl(antes)+'.' : (m||'No se pudo deshacer.'); }
   function guardarNota(){
     var id=state.sheet.id, u=state.fichaUI||{}, t=String(u.nota||'').trim(); if (!t) return;
     state.fichaUI={}; renderSheet(); toast('Guardando la nota…');
@@ -3283,6 +3309,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     if (u.tel!==undefined && u.tel.trim()!==String(l.tel||'').trim()) arg.tel=u.tel; // también si solo se limpia el formato (54, 9, 15, espacios)
     if (u.email!==undefined && u.email.trim().toLowerCase()!==String(l.email||'').toLowerCase()) arg.email=u.email;
     if (arg.nombre===undefined && arg.tel===undefined && arg.email===undefined){ toast('No hay cambios para guardar: escribí el dato nuevo en el campo.', true); return; }
+    if (arg.email!==undefined && !emailOk(arg.email)){ toast('Revisá el email (ej.: nombre@gmail.com).', true); var fe=$('fdEmail'); if (fe) try{ fe.focus(); }catch(x){} return; }
     busySheet(true, 'Guardando…');
     call('editarDatos', arg).then(function(nl){ replaceAny(nl); state.fichaUI={}; renderSheet(); render(); toast('Datos corregidos.'); })
       .catch(function(e){ renderSheet(); toast((e&&e.message)||'No se pudo guardar.', true); });
@@ -3354,7 +3381,9 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     state.manual={ nombre: dig.length>=6 ? '' : q, tel: dig.length>=6 ? q : '', rama: r0, origen:'', nota:'' };
     state.nuevoLead=null; closeSearch(); openSheet({type:'manual'});
   }
-  function manualOk(){ var m=state.manual||{}; return String(m.nombre||'').trim().length>=2 && phone(m.tel).length>=8 && !!m.rama && !!m.origen; }
+  function emailOk(v){ v=String(v||'').trim(); return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v); } // misma regla que el motor ("Revisá el email.")
+  function emailHint(v){ v=String(v||'').trim(); return (v && !emailOk(v)) ? '⚠ Le falta algo al email (ej.: nombre@gmail.com). Si no lo tenés, dejalo vacío.' : ''; }
+  function manualOk(){ var m=state.manual||{}; return String(m.nombre||'').trim().length>=2 && phone(m.tel).length>=8 && !!m.rama && !!m.origen && !emailHint(m.email); }
   function dupLocal(tel){ var p=phone(tel); if (p.length<8) return null; var all=(state.data.leads||[]).concat(state.data.porAgendar||[]); for (var i=0;i<all.length;i++){ if (phone(all[i].tel)===p) return all[i]; } return null; }
   function dupHtml(){
     var d=dupLocal((state.manual||{}).tel); if (!d) return '';
@@ -3366,7 +3395,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     return '<div class="grab"></div><div class="sh-head"><div class="sh-who"><h2>Cargar a alguien nuevo</h2><p class="hint" style="margin:4px 0 0">Para quien no está en la lista (por ejemplo, llegó por chat o es referido). Se agrega una fila en la planilla de la rama.</p></div><button class="close" data-close aria-label="Cerrar">'+I.x+'</button></div>'+
       '<div class="field"><label for="mnNombre">Nombre y apellido</label><input class="inp" id="mnNombre" autocomplete="off" value="'+esc(m.nombre||'')+'"></div>'+
       '<div class="field"><label for="mnTel">Teléfono</label><input class="inp" id="mnTel" type="tel" inputmode="tel" autocomplete="off" value="'+esc(m.tel||'')+'"></div>'+
-        '<div class="field"><label for="mnEmail">Email (opcional)</label><input class="inp" id="mnEmail" type="email" inputmode="email" autocomplete="off" value="'+esc(m.email||'')+'"></div>'+
+        '<div class="field"><label for="mnEmail">Email (opcional)</label><input class="inp" id="mnEmail" type="email" inputmode="email" autocomplete="off" aria-describedby="mnEmailH" value="'+esc(m.email||'')+'"><p class="hint mail-h" id="mnEmailH" role="status">'+esc(emailHint(m.email))+'</p></div>'+
       '<div id="mnDup">'+dupHtml()+'</div>'+
       '<div class="field"><span class="lbl">Rama</span><div class="pick">'+[['ART','ART'],['LABORAL','Laboral'],['TRANSITO','Tránsito']].filter(function(x){ return leadsRamas().indexOf(x[0])!==-1; }).map(function(x){ return pick('data-mnrama',x[0],x[1],m.rama===x[0]); }).join('')+'</div></div>'+
       '<div class="field"><span class="lbl">¿De dónde viene?</span><div class="pick">'+(state.data.origenes||[]).map(function(o){ return pick('data-mnorigen',o,o,m.origen===o); }).join('')+'</div></div>'+
@@ -4217,8 +4246,8 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     var today=nowBA().date;
     return '<li class="it tk">'+
       '<button class="it-main" data-open="'+esc(l.id)+'" aria-label="Abrir ficha de '+esc(l.nombre)+'"><span class="tm num">'+(l.fecha!==today?'<small>'+diaCorto(l.fecha)+'</small>':'')+esc(l.hora||'--:--')+'</span>'+
-        '<span class="tx"><span class="nm">'+esc(l.nombre)+'</span><span class="mt">'+tkNum(l, campo)+'<span class="rama r-'+ramaKey(l.rama)+'">'+ramaLabel(l.rama)+'</span>'+(l.abogada?'<span class="cp">Con '+esc(l.abogada)+'</span>':'')+wspYa(l, wspMomento(l, campo))+'</span></span></button>'+
-      '<span class="it-acts">'+wspBtn(l, wspMomento(l, campo), '')+'<a class="ib wa" href="'+waHref(l.tel)+'" target="_blank" rel="noopener" aria-label="WhatsApp a '+esc(l.nombre)+'">'+I.chat+'</a></span>'+
+        '<span class="tx"><span class="nm">'+esc(l.nombre)+'</span><span class="mt">'+tkNum(l, campo)+'<span class="rama r-'+ramaKey(l.rama)+'">'+ramaLabel(l.rama)+'</span>'+(l.abogada?'<span class="cp">Con '+esc(l.abogada)+'</span>':'')+cfYa(l, wspMomento(l, campo))+'</span></span></button>'+
+      '<span class="it-acts">'+cfBtnFila(l, wspMomento(l, campo))+'<a class="ib wa" href="'+waHref(l.tel)+'" target="_blank" rel="noopener" aria-label="WhatsApp a '+esc(l.nombre)+'">'+I.chat+'</a></span>'+
       '<div class="tk-acts">'+confBtns(l,campo)+'</div></li>';
   }
   function paRow(l){
@@ -4579,11 +4608,12 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     var total=t.hoy.length+t.previa.length+t.sinRes.length;
     var body='';
     var scN=scLista().filter(function(l){ return !(!!l.fase || /^falta enviar/i.test(String(l.levanto||''))); }).length, ffL=ffLista(), ffN=ffL.filter(function(l){ return !l.fase; }).length;
+    body += cfBarra(t);
     if (rol()==='intaker' && (scN || ffN)) body += '<button class="next-bar sc-ir" data-scir="'+(ffL.length?'ffSec':'scSec')+'"><span>📨 '+[scN?plural(scN,'lead sin contactar','leads sin contactar'):'', ffN?ffN+' sin fase':''].filter(Boolean).join(' · ')+'</span><b>Ver ›</b></button>';
     body += segBarTareas() + trSecTareas() + repSecTareas();
     var dw=dow(nowBA().date); if (dw===6 || dw===0 || dw===1) body+='<button class="btn3" data-view="reporte" style="margin-top:12px">📊 Armar el reporte de la semana para CARGA SEMANAL</button>';
-    body += secTarea('Mensaje del día', t.hoy.length, 'Último recordatorio (el 3º), para las consultas de hoy. Tocá lo que respondió.', '<ol class="dk">'+t.hoy.map(function(l){ return tkRow(l,'confDia'); }).join('')+'</ol>');
-    body += secTarea('Recordatorios', t.previa.length, '<b>1º recordatorio:</b> consultas de pasado mañana. <b>2º recordatorio:</b> las de mañana que todavía no confirmaron. El 3º es el mensaje del día. Tocá lo que respondió.', '<ol class="dk">'+t.previa.map(function(l){ return tkRow(l,'confPrev'); }).join('')+'</ol>');
+    body += '<div id="cfSec"></div>'+secTarea('Mensaje del día', t.hoy.length, 'Último recordatorio (el 3º), para las consultas de hoy. Tocá lo que respondió.', cfSecHtml(t, 'hoy')+'<ol class="dk">'+t.hoy.map(function(l){ return tkRow(l,'confDia'); }).join('')+'</ol>');
+    body += secTarea('Recordatorios', t.previa.length, '<b>1º recordatorio:</b> consultas de pasado mañana. <b>2º recordatorio:</b> las de mañana que todavía no confirmaron. El 3º es el mensaje del día. Tocá lo que respondió.', cfSecHtml(t, 'previa')+'<ol class="dk">'+t.previa.map(function(l){ return tkRow(l,'confPrev'); }).join('')+'</ol>');
     body += comSolHtml();
     body += respuestasHtml();
     body += secTarea('Sin resumen', t.sinRes.length, 'Escribí el resumen para que la abogada lo tenga antes de la consulta.', '<ul class="todo">'+t.sinRes.map(srRow).join('')+'</ul>');
@@ -4809,8 +4839,8 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     toastUndo('🚫 '+nom+': pasó a BC y salió de la agenda.', function(){
       deshecho=true; volver(); render();
       p.then(function(){
-        call('cambiarFase', {id:id, fase:antes}).then(function(n2){ if (n2) otrasMover(n2); render(); toast('Volvió a '+faseLbl(antes)+'.'); })
-          .catch(function(e){ sacar(); render(); toast((e&&e.message)||'No se pudo deshacer.', true); });
+        call('cambiarFase', {id:id, fase:antes, deshacer:1, desde:'BC'}).then(function(n2){ if (n2) otrasMover(n2); render(); toast('Volvió a '+faseLbl(antes)+'.'); })
+          .catch(function(e){ sacar(); render(); toast(msgDeshacerFase(e, 'BC', antes), true); });
       }, function(){});
     });
     p.then(function(nl){ if (nl && !deshecho) otrasMover(nl); render(); })
@@ -5070,6 +5100,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
       var mn=state.manual||(state.manual={}); mn[({mnNombre:'nombre', mnTel:'tel', mnNota:'nota', mnEmail:'email'})[id]]=ev.target.value;
       var bs=document.querySelector('[data-mnsig]'); if (bs) bs.disabled=!manualOk(); var bsn=document.querySelector('[data-mnsin]'); if (bsn) bsn.disabled=!(manualOk() && (state.manual||{}).fase);
       if (id==='mnTel' && $('mnDup')) $('mnDup').innerHTML=dupHtml();
+      if (id==='mnEmail' && $('mnEmailH')) $('mnEmailH').textContent=emailHint(ev.target.value);
     }
     if (id==='detalle' && state.draft){ state.draft.detalle=ev.target.value; var l=findLead(state.sheet.id), btn=$('sheet').querySelector('[data-save]'); if (btn && l) btn.disabled=!canSave(l); }
     if (id==='q') renderSearch();
@@ -6028,14 +6059,39 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
    * El servidor vuelve a validar todo al mandar. */
   function wspRol(){ var r=rol(); return r==='intaker'||r==='admin'; }
   function wspPuede(l){ var r=rol(); return (r==='intaker'||r==='admin') && !!l && (l.rama==='ART'||l.rama==='LABORAL') && !!phone(l.tel); }
-  function wspPrecargar(){ if (!wspD && !wspDP) setTimeout(function(){ wspDatos().then(function(){ if (!state.sheet && !escribiendo()) render(); }).catch(function(){}); }, 0); }
+  // También renueva lo guardado de hace más de 5 minutos (así "Último:" muestra lo que mandaron los otros intakers)
+  var wspPreT=0;
+  function wspPrecargar(){ if (wspDP || (wspD && Date.now()-wspDT < 5*60000) || (wspD && Date.now()-wspPreT < 60000)) return; wspPreT=Date.now(); setTimeout(function(){ if (wspDP || (wspD && Date.now()-wspDT < 5*60000)) return; var p0=wspDatos(), p=wspDP||p0; p.then(function(){ if (!state.sheet && !escribiendo()) render(); else wspFichaRefrescar(); }).catch(function(){}); if (p!==p0) p0.catch(function(){}); }, 0); }
   function wspBtn(l, momento, txt){
     if (!momento || !wspPuede(l)) return '';
     wspPrecargar();
     if (wspEnv[l.id]) return '<button class="wsp-b wsp-va" disabled aria-label="Mandando el mensaje a '+esc(l.nombre||'')+'">⏳'+(txt?' Enviando…':'')+'</button>';
     return '<button class="wsp-b" data-wsp="'+esc(l.id)+'" data-wsp-m="'+momento+'" title="Mandar por el WhatsApp oficial" aria-label="Mandar por WhatsApp oficial a '+esc(l.nombre||'')+'">📤'+(txt?' '+esc(txt):'')+'</button>';
   }
-  function wspFicha(l){ if (!wspPuede(l)) return ''; wspPrecargar(); return '<button class="btn3 wsp-menu" data-wspmenu="'+esc(l.id)+'">📤 Mandar mensaje por WhatsApp</button>'; }
+  // Botón de la ficha y de la tarjeta de la consulta: abajo dice cuál fue el último mensaje oficial (de cualquiera de los intakers),
+  // así no hace falta abrir la lista para saber si ya se le mandó el de después de la consulta; mientras sale, "Mandando…"
+  function wspUltimo(l){
+    if (!wspD || !wspD.envios || !l) return null;
+    var e=wspD.envios[l.id]||{}, u=null;
+    Object.keys(e).forEach(function(t){ var x=e[t]; if (x && +x.t && (!u || x.t>u.t)) u={tpl:t, t:+x.t, quien:x.quien||''}; });
+    if (!u) return null;
+    var o=(wspD.catalogo||[]).filter(function(x){ return x.tpl===u.tpl; })[0];
+    u.label=o ? o.label : String(u.tpl).replace(/_/g,' ');
+    return u;
+  }
+  function wspFicha(l){
+    if (!wspPuede(l)) return ''; wspPrecargar();
+    if (wspEnv[l.id]) return '<button class="btn3 wsp-menu" data-wspmenu="'+esc(l.id)+'" aria-busy="true">⏳ Mandando el mensaje por WhatsApp…</button>';
+    var u=null; try{ u=wspUltimo(l); }catch(e){}
+    return '<button class="btn3 wsp-menu'+(u?' con-ult':'')+'" data-wspmenu="'+esc(l.id)+'"><span>📤 Mandar mensaje por WhatsApp</span>'+
+      (u?'<small>Último: '+esc(u.label)+' · '+esc(wspCorto(u.t))+(u.quien?' por '+esc(u.quien):'')+'</small>':'')+'</button>';
+  }
+  // Con la ficha o la tarjeta abierta: se cambia solo ese botón (sin volver a pintar la hoja ni mover el scroll)
+  function wspFichaRefrescar(id){
+    try{ var sh=$('sheet'); if (!sh) return; var l=null;
+      sh.querySelectorAll('.wsp-menu[data-wspmenu]').forEach(function(b){ if (id && b.getAttribute('data-wspmenu')!==id) return; l=findLead(b.getAttribute('data-wspmenu')); if (!l) return; var h=wspFicha(l); if (h){ var t=document.createElement('div'); t.innerHTML=h; b.replaceWith(t.firstChild); } });
+    }catch(e){}
+  }
   function wspMenuBtn(l){ if (!wspPuede(l)) return ''; wspPrecargar(); return '<button class="wsp-b wsp-sq" data-wspmenu="'+esc(l.id)+'" title="Mandar mensaje por WhatsApp" aria-label="Mandar mensaje por WhatsApp a '+esc(l.nombre||'')+'">📤</button>'; }
   function wspTrasAgendar(l){ if (wspPuede(l) && l.fecha && l.hora) toastAccion('Consulta agendada', '📤 Confirmar por WhatsApp', function(){ wspVer(l.id, {momento:'turno'}); }, 12000); }
   /** Qué mensaje oficial va con cada confirmación: previo = confirmación (si falta más de un día) o recordatorio de mañana; del día = recordatorio de hoy */
@@ -6050,7 +6106,8 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
   function wspDatos(){
     if (wspD && Date.now()-wspDT < 5*60000) return Promise.resolve(wspD);
     if (!wspDP) wspDP=call('wspDatos', {}).then(function(d){ wspD=d; wspDT=Date.now(); wspDP=null; return d; }, function(e){ wspDP=null; throw e; });
-    return wspD ? Promise.resolve(wspD) : wspDP;
+    if (wspD){ wspDP.catch(function(){}); return Promise.resolve(wspD); } // se renueva atrás; si falla, se sigue con lo que había
+    return wspDP;
   }
   var WSP_DIAS=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
   function wspHoy(){ return nowBA().date; }
@@ -6207,7 +6264,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     var l=findLead(s.id), nom=wspNombre(l&&l.nombre)||'';
     wspEnv[s.id]={t:Date.now()}; wspSt={}; wspCerrar();
     toast('📤 Mandando'+(nom?' a '+nom:'')+'… Podés seguir con otro.');
-    var pintar=function(){ if (!escribiendo()) render(); };
+    var pintar=function(){ if (!escribiendo()) render(); wspFichaRefrescar(s.id); };
     pintar();
     call('enviarWsp', Object.assign({id:s.id, forzar:!!v.aviso}, s.q)).then(function(r){
       delete wspEnv[s.id]; delete wspFallo[s.id];
@@ -6251,6 +6308,137 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     if (!l) return porServidor();
     wspDatos().then(function(D){ if (D && D.activo) wspPintarLista(id, wspListaLocal(l, D)); else porServidor(); }).catch(porServidor);
   }
+  /* ===== Confirmaciones (flujo semanal 22/11) =====
+   * Antes: para cada consulta de hoy y de mañana había que tocar 📤, revisar y Enviar (2 toques por persona), y después de mandar
+   * la fila quedaba igual (el 📤 verde seguía ahí): no se sabía de un vistazo a quién faltaba mandarle y quién solo faltaba que responda.
+   * Ahora: arriba de Tareas "✅ Confirmaciones: N por mandar · M esperan respuesta" con 📤 Mandar N; en cada sección, "Mandar los que faltan".
+   * La lista muestra cada mensaje completo (como la vista previa de siempre) y se puede destildar a alguien. Salen de a 2 por vez
+   * con el mismo enviarWsp de siempre (mismo momento: hoy, previo o turno), así que el motor no cambia. */
+  function cfItems(t, que){
+    var xs=[]; t=t||tareasDe();
+    if (que!=='previa') t.hoy.forEach(function(l){ xs.push({l:l, campo:'confDia', m:wspMomento(l,'confDia')}); });
+    if (que!=='hoy') t.previa.forEach(function(l){ xs.push({l:l, campo:'confPrev', m:wspMomento(l,'confPrev')}); });
+    return xs;
+  }
+  function cfMandado(l, m){
+    if (!m || !wspD || !wspPuede(l)) return null;
+    var e=((wspD.envios||{})[l.id]||{})[wspTplDe(l, m)];
+    return e && Date.now()-e.t < (wspD.horas||20)*3600000 ? e : null;
+  }
+  /** Estado de cada consulta de Tareas: 'mandar' (oficial, falta mandarle), 'va' (saliendo), 'espera' (ya se le mandó), 'mano' (Tránsito o sin oficial). */
+  function cfEstado(x){
+    if (!x.m || !wspPuede(x.l) || !wspD || wspD.activo===false) return 'mano';
+    if (wspEnv[x.l.id]) return 'va';
+    if (cfMandado(x.l, x.m)) return 'espera';
+    if (wspFallo[x.l.id]==='corte') return 'revisar'; // se cortó mientras salía: puede haber llegado, no va en "Mandar todos"
+    return 'mandar';
+  }
+  function cfCuenta(xs){ var c={mandar:0, va:0, espera:0, mano:0, revisar:0}; xs.forEach(function(x){ c[cfEstado(x)]++; }); return c; }
+  function cfBarra(t){
+    if (!puede('confirmar') || !wspRol()) return '';
+    var xs=cfItems(t); if (!xs.length) return '';
+    if (!wspD){ wspPrecargar(); return '<div class="cf-bar"><button class="cf-ir" data-cfir><span>✅ Confirmaciones: '+esc(plural(xs.length,'consulta','consultas'))+' de hoy y mañana</span><b>Ver ›</b></button></div>'; }
+    var c=cfCuenta(xs), partes=[];
+    if (c.mandar) partes.push(c.mandar+' por mandar');
+    if (c.va) partes.push(c.va+' saliendo');
+    if (c.espera) partes.push(c.espera+(c.espera===1?' espera':' esperan')+' respuesta');
+    if (c.revisar) partes.push(c.revisar+' a revisar en uChat');
+    if (c.mano) partes.push(c.mano+' por 💬');
+    return '<div class="cf-bar"><button class="cf-ir" data-cfir><span>✅ Confirmaciones: '+esc(partes.join(' · '))+'</span><b>Ver ›</b></button>'+
+      (c.mandar ? '<button class="wsp-b" data-cftodos="todo" aria-label="Mandar los '+c.mandar+' recordatorios que faltan por WhatsApp oficial">📤 Mandar '+c.mandar+'</button>' : '')+'</div>';
+  }
+  function cfSecHtml(t, que){
+    if (!wspRol()) return '';
+    var xs=cfItems(t, que); if (!xs.length) return '';
+    var c=cfCuenta(xs), est=[];
+    if (c.espera) est.push('📤 '+c.espera+(c.espera===1?' ya tiene el mensaje: falta que responda.':' ya tienen el mensaje: falta que respondan.'));
+    if (c.va) est.push('⏳ '+c.va+' saliendo.');
+    if (c.revisar) est.push('⚠️ '+c.revisar+' se cortó mientras salía: fijate en uChat si le llegó antes de tocar su 📤.');
+    return (c.mandar>1 ? '<button class="wsp-b cf-sec" data-cftodos="'+que+'">📤 Mandar '+(que==='hoy'?'el mensaje del día':'el recordatorio')+' a los '+c.mandar+' que faltan</button>' : '')+
+      (est.length ? '<p class="cf-est">'+est.join(' ')+'</p>' : '');
+  }
+  function cfYa(l, m){
+    var e=cfMandado(l, m); if (!e) return '';
+    return '<i class="cp wsp-ya" title="Mensaje oficial mandado '+esc(wspCuando(e.t))+(e.quien?' por '+esc(e.quien):'')+'">📤 '+esc(wspCorto(e.t))+(e.quien && wspD && e.quien!==wspD.yo?' '+esc(e.quien):'')+' · espera respuesta</i>';
+  }
+  function cfBtnFila(l, m){
+    var h=wspBtn(l, m, ''); if (!h || !cfMandado(l, m)) return h;
+    return h.replace('class="wsp-b"', 'class="wsp-b cf-ya"').replace('title="Mandar por el WhatsApp oficial"', 'title="Ya se mandó: tocá para mandarlo de nuevo"');
+  }
+  var cfSt={};
+  function cfVer(que){
+    if (!wspD){ wspDlg('<p class="wsp-load">Armando los mensajes…</p>'); wspDatos().then(function(){ cfVer(que); }).catch(function(e){ wspFalla(e, 'No se pudieron armar los mensajes.'); }); return; }
+    var D=wspD, ok=[], no=[];
+    cfItems(null, que==='todo'?'':que).forEach(function(x){
+      var es=cfEstado(x);
+      if (es==='revisar') no.push(esc(x.l.nombre||'Sin nombre')+': se cortó la conexión la vez anterior. Fijate en uChat y, si no le llegó, mandalo desde su 📤.');
+      if (es!=='mandar') return;
+      var l=x.l, mal=wspDatoMal(l), nom=l.nombre||'Sin nombre';
+      if (mal){ no.push(esc(nom)+': '+(mal==='tel'?'el teléfono no tiene 10 números':'no tiene nombre cargado')); return; }
+      var tpl=wspTplDe(l, x.m), o=(D.catalogo||[]).filter(function(y){ return y.tpl===tpl; })[0];
+      if (!o){ no.push(esc(nom)+': ese mensaje no está aprobado'); return; }
+      var falta=wspFalta(o, l); if (falta){ no.push(esc(nom)+': '+esc(falta)); return; }
+      var texto=wspTexto(o, l, D); if (!texto){ no.push(esc(nom)+': no se pudo armar el mensaje'); return; }
+      ok.push({id:l.id, m:x.m, nombre:nom, label:o.label, texto:texto, fecha:l.fecha, hora:l.hora||'', dest:wspDestino(l, D)});
+    });
+    cfSt={que:que, ok:ok};
+    if (!ok.length){ wspDlg('<h3>No hay recordatorios para mandar</h3>'+(no.length?'<p class="cf-no">'+no.join('<br>')+'</p>':'<p class="wsp-hint">Ya se les mandó a todos.</p>')+'<div class="wsp-acts"><button class="wsp-no" data-wspx>Cerrar</button></div>'); return; }
+    var grupos=[], por={};
+    ok.forEach(function(x, i){ x.i=i; if (!por[x.label]){ por[x.label]=[]; grupos.push(x.label); } por[x.label].push(x); });
+    var h='<h3>Mandar '+(ok.length===1?'1 recordatorio':ok.length+' recordatorios')+' por WhatsApp</h3>'+
+      '<p class="wsp-to'+(D.prueba?' prueba':'')+'">'+(D.prueba?'Para: '+esc(D.destinoPrueba||'MODO PRUEBA'):'Desde el WhatsApp oficial')+'</p>'+
+      '<p class="wsp-hint">Así le va a llegar a cada uno. Destildá a quien no quieras mandarle.</p>';
+    grupos.forEach(function(g){
+      h+='<div class="wsp-g">'+esc(g)+'</div>'+por[g].map(function(x){
+        return '<label class="cf-it" data-cfit="'+x.i+'"><input type="checkbox" checked data-cfchk="'+x.i+'"><span><b>'+esc(x.nombre)+'</b><small>'+esc(diaCorto(x.fecha)+(x.hora?' '+x.hora:''))+' · '+esc(x.dest)+'</small></span>'+
+          '<div class="wsp-msg">'+esc(x.texto).replace(/\n/g,'<br>')+'</div></label>';
+      }).join('');
+    });
+    if (no.length) h+='<p class="cf-no">No se pueden mandar desde acá:<br>'+no.join('<br>')+'</p>';
+    wspDlg(h+'<div class="wsp-acts cf-pie"><button class="wsp-no" data-wspx>Cancelar</button><button class="wsp-si" data-cflote>'+cfTxtEnviar(ok.length)+'</button></div>');
+  }
+  function cfTxtEnviar(n){ return n ? 'Enviar '+(n===1?'1':n) : 'Elegí a quién'; }
+  function cfMarcados(){ var d=document.getElementById('wspDlg'); if (!d) return []; return [].slice.call(d.querySelectorAll('[data-cfchk]')).filter(function(c){ return c.checked; }).map(function(c){ return cfSt.ok[+c.getAttribute('data-cfchk')]; }).filter(Boolean); }
+  function cfMandarLote(){
+    var xs=cfMarcados().filter(function(x){ return !wspEnv[x.id]; }); if (!xs.length) return;
+    cfSt={}; wspCerrar();
+    xs.forEach(function(x){ wspEnv[x.id]={t:Date.now()}; });
+    toast('📤 Mandando '+(xs.length===1?'1 recordatorio':xs.length+' recordatorios')+'… Podés seguir con otra cosa.');
+    var pintar=function(){ if (!escribiendo()) render(); };
+    pintar();
+    var cola=xs.slice(), okN=0, malos=[], cortes=[];
+    var uno=function(){
+      var x=cola.shift(); if (!x) return Promise.resolve();
+      return call('enviarWsp', {id:x.id, forzar:false, momento:x.m}).then(function(r){
+        delete wspEnv[x.id]; delete wspFallo[x.id]; okN++;
+        if (wspD){ var e=(wspD.envios=wspD.envios||{}); (e[x.id]=e[x.id]||{})[(r&&r.tpl)||wspTplDe(findLead(x.id)||{}, x.m)]={t:Date.now(), quien:wspD.yo}; }
+        if (r && r.lead && r.lead.id && findLead(r.lead.id)) { try { replaceLead(r.lead); } catch(e){} }
+      }, function(e){
+        delete wspEnv[x.id];
+        wspFallo[x.id]=esCorte(e) ? 'corte' : 'error';
+        (esCorte(e) ? cortes : malos).push(wspNombre(x.nombre)+(esCorte(e)?'':': '+((e&&e.message)||'no se pudo')));
+      }).then(function(){ pintar(); return uno(); });
+    };
+    // De a 2 por vez: cada envío tarda 4-13 s en el motor (registro de uso)
+    Promise.all([uno(), uno()]).then(function(){
+      if (!malos.length && !cortes.length){ toast('✓ '+(okN===1?'Mandado 1 recordatorio':'Mandados '+okN+' recordatorios')+'. Cuando respondan, tocá ✅ o 🔴 en cada uno.'); return; }
+      var msg=(okN?'Se mandaron '+okN+' de '+xs.length+'. ':'')+(cortes.length?'No sé si '+(cortes.length===1?'le':'les')+' llegó a '+cortes.join(', ')+' (se cortó la conexión): fijate en uChat antes de mandar de nuevo. ':'')+(malos.length?'No salió: '+malos.join(' · '):'');
+      toastAccion(msg.trim(), 'Ver', function(){ cfIr(); }, 15000);
+    });
+  }
+  function cfIr(){ if (state.view!=='tareas'){ state.view='tareas'; render(); } var a=$('cfSec'); if (a){ var tp=document.querySelector('.top'), h=tp?tp.getBoundingClientRect().bottom:0; window.scrollTo(0, window.scrollY+a.getBoundingClientRect().top-Math.max(0,h)-6); } }
+  document.addEventListener('click', function(ev){
+    var t=ev.target.closest && ev.target.closest('[data-cfir],[data-cftodos],[data-cflote]'); if (!t) return;
+    ev.preventDefault(); ev.stopPropagation();
+    if (t.hasAttribute('data-cfir')){ cfIr(); return; }
+    if (t.hasAttribute('data-cftodos')){ cfVer(t.getAttribute('data-cftodos')); return; }
+    if (t.hasAttribute('data-cflote')){ cfMandarLote(); return; }
+  }, true);
+  document.addEventListener('change', function(ev){
+    var c=ev.target.closest && ev.target.closest('[data-cfchk]'); if (!c) return;
+    var it=c.closest('.cf-it'); if (it) it.classList.toggle('off', !c.checked);
+    var b=document.querySelector('#wspDlg [data-cflote]'), n=cfMarcados().length; if (b){ b.textContent=cfTxtEnviar(n); b.disabled=!n; }
+  }, true);
   document.addEventListener('click', function(ev){
     var t;
     if ((t=ev.target.closest('[data-wsp]'))){ ev.preventDefault(); ev.stopPropagation(); wspVer(t.getAttribute('data-wsp'), {momento:t.getAttribute('data-wsp-m')}); return; }
