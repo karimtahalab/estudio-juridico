@@ -38,6 +38,7 @@ Cómo correrlo: `python3 pruebas/correr.py <carpeta con index.html> <carpeta de 
 | mejora/2026-11-20-mensaje-no-firmo, -20-reporte-sol, -20-sol-carga-a-mano | 📤 en la tarjeta de la consulta con resultado y "Preguntar si ya decidió"; reporte de Sol sin pisar apellido ni lesión; Sol (modo carga) carga clientes a mano (ramas armadas en chats con Karim; motor v89-v91) | Aplicadas (en main desde el 20/11, dfb4445) |
 | mejora/2026-11-21 | 📤 de la ficha y de la tarjeta de la consulta: abajo dice el último mensaje oficial ("Último: Vino a consulta y no firmó · ayer 18:05 por Pri") y mientras sale "⏳ Mandando…"; wspDatos se renueva si tiene más de 5 min al pintar el botón (como mucho 1 vez por minuto). Sin motor. | Aplicada 23/11 |
 | mejora/2026-11-22-flujo-confirmaciones | Flujo semanal: confirmaciones del día y mensaje previo. Barra arriba de Tareas "✅ Confirmaciones: N por mandar · M esperan respuesta" con 📤 Mandar N; "Mandar … a los N que faltan" en Mensaje del día y Recordatorios; lista con cada mensaje completo y casillas para destildar; salen de a 2 con el mismo enviarWsp (momento); fila mandada con 📤 gris y "espera respuesta"; corte → "a revisar en uChat" y no entra en el próximo lote. Sin motor. | Aplicada 23/11 |
+| mejora/2026-11-23 | Ficha: Corregir datos revisa nombre (2 letras o más), teléfono (8 números o más) y email en el celular con la regla de editarDatos, solo en lo que cambió (aviso rojo debajo del campo y Guardar apagado); Cambiar fase y Corregir datos bajan la hoja para quedar a la vista (360x640 y compu de 1163x587). Sin motor. | Pendiente |
 
 ## 2026-11-05 (primera noche)
 - Armé el banco (rama pruebas-nocturnas, carpeta pruebas/).
@@ -423,6 +424,25 @@ Cómo correrlo: `python3 pruebas/correr.py <carpeta con index.html> <carpeta de 
 - Roles probados con correr.py (390 y 360): Mica, Pri, Sol, Karim. 0 errores de JavaScript, 0 pedidos fallidos, sin scroll horizontal. Pestañas: Mica → Finanzas, Agenda, Guiones, Falta cargar; Pri → Reporte, Agenda, Tareas, Seguimiento, Agendar; Sol → Finanzas, Agenda, Seguimiento, Agendar, Falta cargar; Karim → Reportes, Agenda, Tareas, Agendar, Falta cargar. Permisos OK con datos falsos.
 - Las 4 pendientes juntas sobre main (solo local): correr.py con los mismos roles igual que main (0 errores, mismas pestañas; el audit cambia solo en Tareas/inicio de Pri y Karim, por la barra de confirmaciones). probar_confirmaciones.py OK (el único ERR_FAILED de consola es un pedido externo que el banco bloquea).
 - Sin problemas nuevos. No se mandó informe (sin novedades).
+
+## 2026-11-23 (lunes noche, corrida de las 22:36)
+- main al día: 5b6d0bf (publicadas -19, -20, -21 y -22 con el ok de Karim; motor v92). Copiados al banco index.html, sw.js y manifest (la rama del banco no comparte historia con main: se copian, no se mergean).
+- Ramas pendientes antes de esta noche: ninguna real. -05, -06, -06-repetidos y -08-flujo-sin-contactar figuran con commits fuera de main pero su contenido ya está en main. Hubo lugar para una nueva.
+- Cambios del motor pendientes: ninguno nuevo. Bajé el Código.gs del motor real (solo lectura) para copiar la regla de editarDatos.
+- Registro de uso real (USO, filas 7518-8386, lunes 23/11; Pri ~620 filas en Windows 1163x587 instalada, Fran ~200, Karim ~40, algo de Juan y Mica; nada de Cele, Sol, Estefanía, Agus, Julián):
+  - Sin filas de error.
+  - 3 avisos: getData "Sin conexión" (Karim, Windows navegador), getData "El servidor no respondió a tiempo" (Pri, 13,3 s) y editarDatos "Escribí el nombre." (Pri, agendar > ficha: el motor rechazó el nombre vacío después de 3-4 s). → mejora/2026-11-23.
+  - Pri hizo Sin contactar en serie: lote de 38 pedidos con pares enviarWsp + cambiarFase (4-6 s cada uno, 0 errores; pico enviarWsp 27,7 s).
+  - getData casi todo 2-8 s; picos 22,7 s y 20,3 s (Pri), 18 s (apertura de Pri 18,3 s). Muchas filas de resumen con 1 solo getData (se renueva al volver a la app; con lo guardado abre en 0,4-2 s).
+  - reporteTurno sigue pidiéndose varias veces por sesión (4-7 s, Pri y Fran). Idea ya anotada.
+  - Karim: fin2Calentar 36-40 s de fondo; getFin2Panel 16,4 s y apertura con datos nuevos 17,2 s (Finanzas).
+- Banco: datos_falsos.py → editarDatos falso rechaza nombre de menos de 2 letras y teléfono de menos de 8 números como el motor real. Nuevo pruebas/probar_datos.py (Pri en 1163x587, 360x640 y 390x844: Cambiar fase y Corregir datos a la vista; nombre vacío, teléfono corto y teléfono bien).
+- Roles probados con correr.py (390 y 360): Juan, Pri, Estefanía, Karim. 0 errores de JavaScript, 0 pedidos fallidos, sin scroll horizontal. Pestañas: Juan → Finanzas, Agenda, Guiones, Falta cargar; Pri → Reporte, Agenda, Tareas, Seguimiento, Agendar; Estefanía → Agenda, Falta cargar; Karim → Reportes, Agenda, Tareas, Agendar, Falta cargar. Permisos OK con datos falsos.
+- Problemas encontrados (probar_datos.py en main):
+  - Corregir datos con el nombre vacío o el teléfono corto: el botón deja mandar, sale 1 editarDatos y el motor contesta "Escribí el nombre." / "Revisá el teléfono." (en el uso real 3-4 s).
+  - Cambiar fase y Corregir datos se abren fuera de la vista en 360x640 y en 1163x587 (panel a 555-650 px; Guardar cambios a 883-977 px): se toca y parece que no pasa nada. En 390x844 "Guardar cambios" queda abajo de todo.
+- Resultado de la rama (probar_datos.py): en los 3 tamaños el panel y el botón quedan a la vista; nombre vacío → "⚠ Escribí el nombre (2 letras o más)." y botón apagado, 0 pedidos; teléfono "26155" → "⚠ Al teléfono le faltan números (ej.: 2615551234)." y 0 pedidos; teléfono bien → "Datos corregidos." con 1 editarDatos. correr.py en la rama igual que main (110 pantallas auditadas idénticas, 0 errores, mismas pestañas). probar_wsp.py, probar_tel_wsp.py y probar_email.py: misma salida en main y en la rama.
+- Ideas grandes (siguen): Reporte del turno que no se renueve en cada render; getData en CacheService del motor (hoy picos de 20-23 s en Pri).
 
 ## Flujos rediseñados (tarea semanal de los domingos)
 | Fecha | Flujo | Para quién | Toques antes → después | Rama | Motor |
