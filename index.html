@@ -4033,7 +4033,11 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
   function dispOk(a, d, hora){ var av=dispArr(a, d), s=Math.floor(hmin(hora)/SLOT), n=Math.ceil((state.data.duracion||30)/SLOT); for (var i=0;i<n;i++) if (!av[s+i]) return false; return true; }
   // Si en la marca hay una sola persona (Tránsito: Juan) no hay botones para elegirla: igual se muestra su disponibilidad
   function dispQuien(){ var a=state.abog; if (!a || a==='Todas'){ var ps=personas(); if (ps.length===1) a=ps[0]; } return (a && a!=='Todas' && (state.data.abogadas||[]).indexOf(a)!==-1) ? a : null; }
-  function puedeDisp(a){ return rol()==='admin' || !!(state.me && state.me.nombre===a); }
+  // Los intakers (Fran, Pri, Agus) también: abren o cierran horarios cuando un abogado les avisa de palabra que puede o no puede
+  // (se activa cuando el motor manda permisos.horarios: con un motor anterior no aparece nada nuevo)
+  function puedeDisp(a){ return rol()==='admin' || !!(state.me && state.me.nombre===a) || (rol()==='intaker' && !!P().horarios && (state.data.abogadas||[]).indexOf(a)!==-1); }
+  // Un intaker cambia solo semanas puntuales: el horario de todas las semanas y cómo se dan los turnos los decide cada abogado o administración
+  function deSoloSemana(a){ return rol()==='intaker' && !(state.me && state.me.nombre===a); }
   function fueraDisp(l){ return !!(l.fecha && l.hora && l.abogada && l.fecha>=nowBA().date && (l.fase==='Consulta agendada' || l.fase==='Reagenda') && (state.data.abogadas||[]).indexOf(l.abogada)!==-1 && !dispOk(l.abogada, l.fecha, l.hora)); }
 
   /* ---------- Editor de disponibilidad ----------
@@ -4053,14 +4057,15 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     var de=state.dispEdit; Object.keys(de.dias).forEach(function(d){ if (!deEsF(d) && !de.tocados[d] && !hasOverride(de.a,d)) de.dias[d]=frToArr(deBase(d)); });
   }
   function deTocar(k){ var de=state.dispEdit; de.tocados[k]=1; de.dirty=true; if (deEsF(k)) deRefrescar(); }
-  function deStart(a){
+  function deStart(a, fecha){
     a = a || dispQuien(); if (!a || !puedeDisp(a)) return;
     var modo=modoDe(a), hoy=nowBA().date, w=weekRange(state.week>0 ? state.week : ((dow(hoy)===6 || dow(hoy)===0) ? 1 : 0)); // fin de semana: arranca en la que viene
-    state.dispEdit={a:a, modo:modo, modoOrig:modo, que:'semana', dias:{}, tocados:{}, dia:{semana:(hoy>=w.mon ? hoy : w.mon), habitual:'F'+diaSem(hoy>=w.mon && hoy<=w.sun ? hoy : w.mon)}, amplio:false, finde:false, dirty:false};
+    if (fecha && fecha>=hoy) w={mon:mondayOf(fecha), sun:addDays(mondayOf(fecha),6)}; else fecha=null; // desde Agendar: la semana y el día que se estaba mirando
+    state.dispEdit={a:a, modo:modo, modoOrig:modo, que:'semana', dias:{}, tocados:{}, dia:{semana:fecha||(hoy>=w.mon ? hoy : w.mon), habitual:'F'+diaSem(hoy>=w.mon && hoy<=w.sun ? hoy : w.mon)}, amplio:false, finde:false, dirty:false, soloSemana:deSoloSemana(a)};
     var de=state.dispEdit;
     DE_K.forEach(function(k){ de.dias['F'+k]=frToArr(fijoDeModo(a, k, modo)); });
     deCargarSemana(w.mon);
-    de.finde = ['F6','F7'].some(function(k){ return de.dias[k].some(Boolean); }) || de.dias7.some(function(d){ var x=dow(d); return (x===0||x===6) && de.dias[d].some(Boolean); });
+    de.finde = ['F6','F7'].some(function(k){ return de.dias[k].some(Boolean); }) || de.dias7.some(function(d){ var x=dow(d); return (x===0||x===6) && de.dias[d].some(Boolean); }) || (!!fecha && (dow(fecha)===0 || dow(fecha)===6));
     if (state.agMode!=='semana'){ state.agMode='semana'; store('agmode','semana'); }
     render(); window.scrollTo(0,0);
   }
@@ -4068,17 +4073,19 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
   function deBoton(){
     var me=state.me && state.me.nombre, abs=state.data.abogadas||[];
     var a = me && abs.indexOf(me)!==-1 ? me : (dispQuien() && puedeDisp(dispQuien()) ? dispQuien() : '');
-    // Administración con "Todas": un botón por persona para cargarle la disponibilidad directo
-    if (!a && rol()==='admin'){
+    var itk=rol()==='intaker' && !!P().horarios;
+    // Administración e intakers con "Todas": un botón por persona para cargarle la disponibilidad directo
+    if (!a && (rol()==='admin' || itk)){
       var ps=personas().filter(function(x){ return x!=='Todas' && abs.indexOf(x)!==-1; });
       if (!ps.length) return '';
       // Plegado a una línea: es para de vez en cuando y abierto empujaba las consultas del día fuera de la pantalla (en 360x640 casi no se veía ninguna)
       var ab=!!state.deAdmAb;
-      return '<div class="de-adm'+(ab?' on':'')+'"><button class="de-adm-t" data-deadm aria-expanded="'+ab+'"><span>🗓</span><span><b>Cargar disponibilidad de…</b>'+(ab?'<small>Elegí a quién. Se guarda como si la cargara esa persona.</small>':'')+'</span><span class="de-mia-go">'+(ab?'▴':'›')+'</span></button>'+
+      return '<div class="de-adm'+(ab?' on':'')+'"><button class="de-adm-t" data-deadm aria-expanded="'+ab+'"><span>🗓</span><span><b>'+(itk?'Abrir o cerrar horarios de…':'Cargar disponibilidad de…')+'</b>'+(ab?'<small>'+(itk?'Elegí de quién. Sirve cuando un abogado te avisa que puede o no puede en algún horario.':'Elegí a quién. Se guarda como si la cargara esa persona.')+'</small>':'')+'</span><span class="de-mia-go">'+(ab?'▴':'›')+'</span></button>'+
         (ab?'<div class="de-adm-ps">'+ps.map(function(x){ return '<button data-deon="'+esc(x)+'">'+esc(x)+'</button>'; }).join('')+'</div>':'')+'</div>';
     }
     if (!a) return '';
     var m=modoDe(a);
+    if (itk && a!==me) return '<button class="de-mia" data-deon="'+esc(a)+'"><span>🗓</span><span><b>Abrir o cerrar horarios de '+esc(a)+'</b><small>Cuando te avisa que puede o no puede en algún horario</small></span><span class="de-mia-go">›</span></button>';
     return '<button class="de-mia" data-deon="'+esc(a)+'"><span>🗓</span><span><b>'+(a===me?'Marcar mi disponibilidad':'Disponibilidad de '+esc(a))+'</b><small>'+(m==='disponibilidad'?'Se dan turnos solo en lo que marca':'Se dan turnos siempre, salvo lo que saca')+'</small></span><span class="de-mia-go">›</span></button>';
   }
   function deCols(){
@@ -4114,18 +4121,24 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
   function deSave(){
     var de=state.dispEdit; if (!de || !de.dirty) return;
     var p={abogada:de.a, fechas:{}}, fi=dispData().fijo[de.a]||{}, hay=false;
-    if (de.modo!==de.modoOrig){ p.modo=de.modo; hay=true; }
-    DE_K.forEach(function(k){ if (!de.tocados['F'+k]) return; var fr=arrToFr(de.dias['F'+k]); if (!fi.hasOwnProperty(k) || fi[k]!==fr){ (p.fijo=p.fijo||{})[k]=fr; hay=true; } });
+    if (!de.soloSemana && de.modo!==de.modoOrig){ p.modo=de.modo; hay=true; }
+    DE_K.forEach(function(k){ if (de.soloSemana || !de.tocados['F'+k]) return; var fr=arrToFr(de.dias['F'+k]); if (!fi.hasOwnProperty(k) || fi[k]!==fr){ (p.fijo=p.fijo||{})[k]=fr; hay=true; } });
     Object.keys(de.tocados).forEach(function(d){
       if (deEsF(d)) return;
       var fr=arrToFr(de.dias[d]);
       if (fr===deBase(d)){ if (hasOverride(de.a,d)){ p.fechas[d]=null; hay=true; } } // igual que todas las semanas: no hace falta guardarlo aparte
       else { p.fechas[d]=fr; hay=true; }
     });
-    if (!hay){ state.dispEdit=null; render(); toast('No había nada distinto para guardar.'); return; }
+    if (!hay){ deSalir(); toast('No había nada distinto para guardar.'); return; }
     state.deGuardando=true; render();
-    call('saveDisponibilidad', p).then(function(disp){ state.deGuardando=false; state.data.disponibilidad=disp; state.dispEdit=null; render(); toast('✅ Disponibilidad de '+p.abogada+' guardada'); })
+    call('saveDisponibilidad', p).then(function(disp){ state.deGuardando=false; state.data.disponibilidad=disp; deSalir(); toast('✅ Horarios de '+p.abogada+' guardados'); })
       .catch(function(e){ state.deGuardando=false; render(); toast(e.message||'No se pudo guardar.', true); });
+  }
+  function deSalir(){
+    var vv=state.deVolver; state.deVolver=null; state.dispEdit=null;
+    if (vv && vv.view) state.view=vv.view;
+    render();
+    if (vv && findLead(vv.id)){ openSheet({type:'agendar', id:vv.id}); if (state.sheet && state.sheet.type==='agendar'){ state.draft=vv.draft; renderSheet(); } }
   }
   function deRango(){
     var de=state.dispEdit, H=state.data.horario||{desde:'09:00',hasta:'19:00'}, R=state.data.dispRango||{desde:'08:00',hasta:'21:00'};
@@ -4136,6 +4149,10 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
   function deView(){
     var de=state.dispEdit, H=state.data.horario||{desde:'09:00',hasta:'19:00'}, s0=addDays(de.mon,6), hoyMon=mondayOf(nowBA().date);
     var b='';
+    if (de.soloSemana){
+      b+='<p class="hint" style="margin:6px 2px 0">Abrí o cerrá horarios de '+esc(de.a)+' cuando te avisa que puede o no puede atender. Cambia solo la semana que elijas. El horario de todas las semanas lo cambia '+esc(de.a)+' o administración.</p>';
+      b+='<div class="de-sem"><button class="de-nav" data-desem="-1" aria-label="Semana anterior" '+(de.mon<=hoyMon?'disabled':'')+'>‹</button><b>Semana del '+dnum(de.mon)+'/'+(mnum(de.mon)+1)+' al '+dnum(s0)+'/'+(mnum(s0)+1)+'</b><button class="de-nav" data-desem="1" aria-label="Semana siguiente">›</button></div>';
+    } else {
     // 1. Cómo se dan los turnos
     b+='<h2 class="sec-t" style="margin-top:6px">1. ¿Cómo se dan los turnos de '+esc(de.a)+'?</h2><div class="de-modos">'+
       '<button class="dv-op'+(de.modo==='disponibilidad'?' on':'')+'" data-demodo="disponibilidad"><b>✋ Solo cuando marco que atiendo</b><span class="dv-st">Los turnos se dan únicamente en lo verde. Lo que no marques queda cerrado.</span></button>'+
@@ -4146,6 +4163,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     if (de.que==='semana') b+='<div class="de-sem"><button class="de-nav" data-desem="-1" aria-label="Semana anterior" '+(de.mon<=hoyMon?'disabled':'')+'>‹</button><b>Semana del '+dnum(de.mon)+'/'+(mnum(de.mon)+1)+' al '+dnum(s0)+'/'+(mnum(s0)+1)+'</b><button class="de-nav" data-desem="1" aria-label="Semana siguiente">›</button></div>'+
       '<p class="hint" style="margin:6px 2px 0">Solo cambia esta semana. Los días que no toques quedan como el horario de todas las semanas.</p>';
     else b+='<p class="hint" style="margin:8px 2px 0">Esto se repite cada semana. Si una semana es distinta, cambiala en <b>Una semana puntual</b>.</p>';
+    }
     b+='<div class="de-ley"><span><i class="de-sw on"></i>Atiende</span><span><i class="de-sw"></i>Cerrado</span><span class="de-ley-t">Tocá un horario para abrirlo o cerrarlo. Para varios seguidos, mantené apretado y deslizá (en la compu, arrastrá).</span></div>';
     b+=deGrid();
     // Resumen: así queda
@@ -4779,6 +4797,9 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
       if (notas.length) html += '<p class="ag-note">'+esc(notas.join('. '))+'</p>';
       html += '</div>';
     });
+    var abrir=ab.filter(function(a){ return puedeDisp(a) && !(state.me && state.me.nombre===a); });
+    if ((rol()==='intaker' || rol()==='admin') && abrir.length) html += '<div class="ag-abrir"><p class="hint" style="margin:10px 2px 6px">¿Te avisaron que puede en otro horario o que no puede? Abrí o cerrá horarios de:</p><div class="chips" style="margin:0">'+
+      abrir.map(function(a){ return '<button class="chip" data-agabrir="'+esc(a)+'">🗓 '+esc(a)+'</button>'; }).join('')+'</div></div>';
     html += '</div>';
     var dvz=!corr && esDerivacion(l,d);
     var lab = d.hora ? (corr?'Corregir':(dvz?'Derivar':(d.firmar?'Agendar para firmar':(reag?'Reagendar':'Agendar'))))+': '+diaCorto(d.fecha).toLowerCase()+' '+d.hora+' con '+d.abogada : 'Elegí un horario';
@@ -4944,7 +4965,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
 
   /* ---------- eventos ---------- */
   document.addEventListener('click', function(ev){
-    var t = ev.target.closest('[data-reptipo],[data-turabrir],[data-turcambiar],[data-turdesdeok],[data-turactual],[data-turver],[data-turretry],[data-turcopiar],[data-turconf],[data-turnoconf],[data-turcerrar],[data-intocultar],[data-reptile],[data-repctl],[data-repsemq],[data-pindesbloq],[data-fin],[data-equipo],[data-view],[data-undo],[data-agotra],[data-agbuscartodo],[data-ficha],[data-pinok],[data-pinback],[data-pinreset],[data-salir],[data-fimodo],[data-fase],[data-notasave],[data-datosave],[data-mnfase],[data-mnsin],[data-dupfase],[data-derivar],[data-reagsindia],[data-pasarbc],[data-dvsel],[data-dvhora],[data-dvsave],[data-deon],[data-deque],[data-desem],[data-decopia],[data-deamplio],[data-dedia],[data-dequick],[data-decopy],[data-devolver],[data-definde],[data-demodo],[data-desave],[data-decancel],[data-repweek],[data-deadm],[data-reprow],[data-repmodo],[data-rtrama],[data-rtfresco],[data-repretry],[data-agmode],[data-wgday],[data-agrama],[data-agfase],[data-agmas],[data-agmes],[data-agvista],[data-agclr],[data-agnuevo],[data-mnrama],[data-mnorigen],[data-mnsig],[data-mncrear],[data-open],[data-result],[data-bloq],[data-nuevo],[data-week],[data-day],[data-sum],[data-chip],[data-abog],[data-close],[data-res],[data-motivo],[data-save],[data-bqwho],[data-bqtodo],[data-savebq],[data-delbq],[data-retry],[data-pastefor],[data-pasteall],[data-rvcheck],[data-rvtoggle],[data-rvsave],[data-rvback],[data-yo],[data-yocambiar],[data-vcabrir],[data-vcsalir],[data-vercomo],[data-visto],[data-conf],[data-escribir],[data-agendar],[data-agfirmar],[data-agcorregir],[data-agdia],[data-slot],[data-agcorr],[data-saveag],[data-savecampos]');
+    var t = ev.target.closest('[data-reptipo],[data-turabrir],[data-turcambiar],[data-turdesdeok],[data-turactual],[data-turver],[data-turretry],[data-turcopiar],[data-turconf],[data-turnoconf],[data-turcerrar],[data-intocultar],[data-reptile],[data-repctl],[data-repsemq],[data-pindesbloq],[data-fin],[data-equipo],[data-view],[data-undo],[data-agotra],[data-agbuscartodo],[data-ficha],[data-pinok],[data-pinback],[data-pinreset],[data-salir],[data-fimodo],[data-fase],[data-notasave],[data-datosave],[data-mnfase],[data-mnsin],[data-dupfase],[data-derivar],[data-reagsindia],[data-pasarbc],[data-dvsel],[data-dvhora],[data-dvsave],[data-deon],[data-deque],[data-desem],[data-decopia],[data-deamplio],[data-dedia],[data-dequick],[data-decopy],[data-devolver],[data-definde],[data-demodo],[data-desave],[data-decancel],[data-repweek],[data-deadm],[data-reprow],[data-repmodo],[data-rtrama],[data-rtfresco],[data-repretry],[data-agmode],[data-wgday],[data-agrama],[data-agfase],[data-agmas],[data-agmes],[data-agvista],[data-agclr],[data-agnuevo],[data-mnrama],[data-mnorigen],[data-mnsig],[data-mncrear],[data-open],[data-result],[data-bloq],[data-nuevo],[data-week],[data-day],[data-sum],[data-chip],[data-abog],[data-close],[data-res],[data-motivo],[data-save],[data-bqwho],[data-bqtodo],[data-agabrir],[data-savebq],[data-delbq],[data-retry],[data-pastefor],[data-pasteall],[data-rvcheck],[data-rvtoggle],[data-rvsave],[data-rvback],[data-yo],[data-yocambiar],[data-vcabrir],[data-vcsalir],[data-vercomo],[data-visto],[data-conf],[data-escribir],[data-agendar],[data-agfirmar],[data-agcorregir],[data-agdia],[data-slot],[data-agcorr],[data-saveag],[data-savecampos]');
     if (!t) return;
     if (t.hasAttribute('data-intocultar')){ var oc=intOcultas(); ((state.data && state.data.paraMi)||[]).forEach(function(l){ intAbiertaMia(l).forEach(function(x){ var k=intOcId(l, x); if (x.tipo!=='control' && oc.indexOf(k)===-1) oc.push(k); }); }); var antes=store(intOcKey())||'[]'; store(intOcKey(), JSON.stringify(oc.slice(-300))); render(); toastUndo('Listo, lo saqué. Si te llega una consulta nueva, vuelve a aparecer.', function(){ store(intOcKey(), antes); render(); }); return; }
     if (t.hasAttribute('data-pindesbloq')){ var nd=t.getAttribute('data-pindesbloq'); t.disabled=true; t.textContent='Desbloqueando…'; call('desbloquearPin', {nombre:nd}).then(function(p){ if (state.data) state.data.pines=p; if (state.sheet) renderSheet(); render(); toast('Listo: '+nd+' ya puede entrar de nuevo.'); }).catch(function(e){ t.disabled=false; toast((e&&e.message)||'No se pudo desbloquear.', true); }); return; }
@@ -4960,11 +4981,12 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     if (t.hasAttribute('data-agmes')){ var sm=agState(); sm.mes=t.getAttribute('data-agmes'); sm.n=40; renderAg(); return; }
     if (t.hasAttribute('data-agvista')){ var sv=agState(); sv.vista=t.getAttribute('data-agvista'); store('agvista', sv.vista); sv.n=40; renderAg(); return; }
     if (t.hasAttribute('data-agnuevo')){ abrirManual(); return; }
-    if (t.hasAttribute('data-deon')){ deStart(t.getAttribute('data-deon')||''); return; }
+    if (t.hasAttribute('data-deon')){ state.deVolver=null; deStart(t.getAttribute('data-deon')||''); return; }
     if (t.hasAttribute('data-deadm')){ state.deAdmAb=!state.deAdmAb; render(); return; }
     if (state.dispEdit){
       var de=state.dispEdit;
       if (t.hasAttribute('data-dedia')){ de.dia[de.que]=t.getAttribute('data-dedia'); render(); return; }
+      if (t.hasAttribute('data-deque') && de.soloSemana) return;
       if (t.hasAttribute('data-deque')){ de.que=t.getAttribute('data-deque'); if (de.que==='semana') deRefrescar(); render(); return; }
       if (t.hasAttribute('data-desem')){ deCargarSemana(addDays(de.mon, 7*(+t.getAttribute('data-desem')))); render(); return; }
       if (t.hasAttribute('data-decopia')){ var sel=deDiaSel(), dst=t.getAttribute('data-decopia'), src=de.dias[sel].slice();
@@ -4975,9 +4997,9 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
       if (t.hasAttribute('data-decopy')){ de.dias7.filter(function(d){ return d>=nowBA().date; }).forEach(function(d){ var prev=addDays(d,-7); de.dias[d]= de.dias[prev] ? de.dias[prev].slice() : dispArr(de.a, prev); deTocar(d); }); render(); toast('Copiada la semana anterior. Revisá y guardá.'); return; }
       if (t.hasAttribute('data-devolver')){ de.dias7.filter(function(d){ return d>=nowBA().date; }).forEach(function(d){ de.dias[d]=frToArr(deBase(d)); deTocar(d); }); render(); return; }
       if (t.hasAttribute('data-definde')){ de.finde=!de.finde; render(); return; }
-      if (t.hasAttribute('data-demodo')){ deModo(t.getAttribute('data-demodo')); return; }
+      if (t.hasAttribute('data-demodo')){ if (!de.soloSemana) deModo(t.getAttribute('data-demodo')); return; }
       if (t.hasAttribute('data-desave')){ deSave(); return; }
-      if (t.hasAttribute('data-decancel')){ state.dispEdit=null; render(); return; }
+      if (t.hasAttribute('data-decancel')){ deSalir(); return; }
     }
     if (t.hasAttribute('data-repweek')){ state.repSem=addDays(state.repSem||repDefault(), 7*(+t.getAttribute('data-repweek'))); state.repOpen={}; render(); window.scrollTo(0,0); return; }
     if (t.hasAttribute('data-reptile')){ var pt=t.getAttribute('data-reptile').split('|'); state.repOpen=state.repOpen||{}; state.repOpen[pt[0]+':tile']=state.repOpen[pt[0]+':tile']===pt[1]?null:pt[1]; render(); return; }
@@ -5062,6 +5084,12 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
       if (t.hasAttribute('data-slot')){ var sp=t.getAttribute('data-slot').split('|'); ad.abogada=sp[0]; ad.hora=sp[1]; renderSheet(); return; }
       if (t.hasAttribute('data-agcorr')){ ad.corregir=t.getAttribute('data-agcorr')==='1'; if (!ad.corregir && ad.fecha===nowBA().date && ad.hora && hmin(ad.hora)<=nowBA().min){ ad.hora=null; ad.abogada=null; } renderSheet(); return; }
       if (t.hasAttribute('data-saveag')){ saveAgenda(); return; }
+      if (t.hasAttribute('data-agabrir')){
+        var vv={id:state.sheet.id, draft:JSON.parse(JSON.stringify(ad)), view:state.view};
+        vv.draft.hora=null; vv.draft.abogada=null;
+        closeSheet(); state.view='agenda'; deStart(t.getAttribute('data-agabrir'), ad.fecha);
+        if (state.dispEdit) state.deVolver=vv; return;
+      }
       return;
     }
     if (state.sheet.type==='escribir'){ if (t.hasAttribute('data-savecampos')) saveCampos(); return; }
