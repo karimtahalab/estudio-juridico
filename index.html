@@ -1391,6 +1391,8 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
       google.script.run.withSuccessHandler(res).withFailureHandler(rej)[fn](arg);
     });
   }
+  // Para la actualización de la pantalla (al final del archivo): no recargar mientras se guarda algo, hay una hoja abierta, hay algo escrito en el campo donde está el cursor o hay un Deshacer a mano
+  window.__appOcupado=function(){ var ae=document.activeElement; return !!(state.wPend || state.sheet || state.undo || state.scPreg || (ae && /^(INPUT|TEXTAREA)$/.test(ae.tagName) && ae.value)); };
   function call(fn, arg){
     // Cada llamada lleva la sesión (token del PIN). Si venció, se vuelve a pedir el PIN.
     if (Array.isArray(arg)) arg = {items:arg};
@@ -6478,7 +6480,42 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
 })();
 </script>
 <script>
-if ('serviceWorker' in navigator) { var swHabia=!!navigator.serviceWorker.controller, swRec=false; navigator.serviceWorker.addEventListener('controllerchange', function(){ if (!swHabia || swRec) return; swRec=true; location.reload(); }); window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').then(function(r){ document.addEventListener('visibilitychange', function(){ if (!document.hidden) r.update().catch(function(){}); }); }).catch(function(){}); }); }
+/* Actualización de la pantalla (service worker).
+   Registro de uso 24/11: una compu con la app abierta todo el día seguía con la pantalla del 20/11 (solo se buscaba versión nueva al volver a la app,
+   y una ventana que nunca se esconde no "vuelve"). Ahora también se busca cada 30 min y al volver a la ventana (foco). Si llega una versión nueva:
+   - al volver a la app y sin nada a medio hacer: recarga sola, como antes;
+   - con la app en uso (una hoja abierta, algo guardándose, escribiendo): aviso arriba "Hay una versión nueva" con Actualizar, y recarga sola la próxima vez que vuelva a la app.
+   Si la página se abrió sin service worker (recarga forzada) pero ya había uno instalado, la próxima versión también recarga (antes quedaba la vieja). */
+if ('serviceWorker' in navigator) {
+  var swHabia=!!navigator.serviceWorker.controller, swRec=false, swPend=false, swVis=Date.now(), swReg=null, swUlt=0;
+  var swOcupado=function(){ try{ return !!(window.__appOcupado && window.__appOcupado()); }catch(e){ return false; } };
+  var swRecargar=function(){ if (swRec) return; swRec=true; location.reload(); };
+  var swBuscar=function(){ if (!swReg) return; swUlt=Date.now(); swReg.update().catch(function(){}); };
+  var swAviso=function(){
+    if (document.getElementById('sw-nueva')) return;
+    var d=document.createElement('div'); d.id='sw-nueva'; d.setAttribute('role','status');
+    d.style.cssText='position:fixed;left:12px;right:12px;top:calc(10px + env(safe-area-inset-top));z-index:70;display:flex;align-items:center;gap:10px;max-width:560px;margin:0 auto;padding:8px 8px 8px 14px;border-radius:14px;background:var(--ink,#1a1a1a);color:var(--paper,#fff);font-size:15px;font-weight:700;box-shadow:0 4px 16px rgba(0,0,0,.25)';
+    d.innerHTML='<span style="flex:1">🔄 Hay una versión nueva de la app.</span><button type="button" style="flex:none;min-height:44px;padding:0 16px;border-radius:10px;border:0;background:rgba(127,127,127,.35);color:inherit;font:inherit;font-weight:800">Actualizar</button>';
+    d.querySelector('button').addEventListener('click', swRecargar);
+    document.body.appendChild(d);
+  };
+  var swLista=function(){ // la versión nueva ya está en el celular
+    if (swRec) return;
+    if (!document.hidden && Date.now()-swVis<20000 && !swOcupado()){ swRecargar(); return; }
+    swPend=true; if (!document.hidden) swAviso();
+  };
+  navigator.serviceWorker.addEventListener('controllerchange', function(){ if (!swHabia){ swHabia=true; return; } swLista(); });
+  document.addEventListener('visibilitychange', function(){
+    if (document.hidden) return;
+    swVis=Date.now();
+    if (swPend && !swOcupado()){ swRecargar(); return; }
+    if (swPend) swAviso();
+    swBuscar();
+  });
+  window.addEventListener('focus', function(){ if (Date.now()-swUlt>5*60000){ swVis=Date.now(); swBuscar(); } });
+  setInterval(function(){ if (!document.hidden) swBuscar(); }, 30*60000);
+  window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').then(function(r){ swReg=r; if (r.active) swHabia=true; swUlt=Date.now(); }).catch(function(){}); });
+}
 </script>
 </body>
 </html>
