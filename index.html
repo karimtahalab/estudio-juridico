@@ -3912,7 +3912,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
       .catch(function(e){ if (state.tur!==mio) return; mio.cargando=false; mio.error=(e&&e.message)||'No se pudo armar el reporte.'; if (state.view==='reporte') render(); });
   }
   function turCuentas(r){
-    var c={nuevos:0, A:0, B:0, C:0, otra:0, otras:{}, consulta:0, llamada:0, llamadaConsulta:0, consultaAnt:0, llamadaAnt:0, llamadaConsultaAnt:0, consultaNue:0, llamadaNue:0, llamadaConsultaNue:0};
+    var c={nuevos:0, A:0, B:0, C:0, otra:0, otras:{}, consulta:0, llamada:0, llamadaConsulta:0, reagenda:0, consultaAnt:0, llamadaAnt:0, llamadaConsultaAnt:0, consultaNue:0, llamadaNue:0, llamadaConsultaNue:0};
     (r.items||[]).forEach(function(i){
       var k=i.cat;
       if (i.nuevo) c.nuevos++;
@@ -3939,6 +3939,8 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
       ls.push('• Consultas agendadas: '+c.consulta+ant(c.consultaAnt));
       ls.push('• Llamadas agendadas: '+c.llamada+ant(c.llamadaAnt));
       if (c.llamadaConsulta) ls.push('• Llamada y consulta agendada: '+c.llamadaConsulta+ant(c.llamadaConsultaAnt));
+      // Reagendas (25/11): turno nuevo a una consulta que ya estaba agendada. Van aparte para no inflar las consultas agendadas
+      if (c.reagenda) ls.push('• Reagendadas: '+c.reagenda+' (no suman a consultas agendadas)');
     });
     return ls.join('\n');
   }
@@ -3963,6 +3965,8 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     html+=fila('consulta', c.consulta, 'Consultas agendadas', ant(c.consultaAnt), its.filter(function(i){ return i.cat==='consulta'; }));
     html+=fila('llamada', c.llamada, 'Llamadas agendadas', ant(c.llamadaAnt), its.filter(function(i){ return i.cat==='llamada'; }));
     html+=fila('llamadaConsulta', c.llamadaConsulta, 'Llamada y consulta agendada', 'Las dos en este turno', its.filter(function(i){ return i.cat==='llamadaConsulta'; }));
+    // Reagendas (25/11): llegan con el motor que las separa (cat "reagenda"); con el motor anterior no aparece esta fila
+    if (c.reagenda) html+=fila('reagenda', c.reagenda, 'Reagendadas', 'Ya tenían consulta: no suman a consultas agendadas', its.filter(function(i){ return i.cat==='reagenda'; }));
     return html+'</div>';
   }
   function repTipoSeg(){ var t=state.repTipo||store('repTipo')||'turno'; return '<div class="seg2" role="tablist" aria-label="Qué reporte"><button data-reptipo="turno" class="'+(t==='turno'?'on':'')+'" role="tab" aria-selected="'+(t==='turno')+'">Mi turno</button><button data-reptipo="semana" class="'+(t==='semana'?'on':'')+'" role="tab" aria-selected="'+(t==='semana')+'">Semana</button></div>'; }
@@ -3983,10 +3987,11 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
           ((d.cierres||[]).length ? '<p class="sec-sub" style="margin:12px 0 0">O mirá un turno que ya se cerró:</p><div class="chips" style="margin-top:8px">'+d.cierres.map(function(c){
             var on=pasado && q.hasta===c.cuando; return '<button class="chip'+(on?' on':'')+'" data-turver="'+esc((c.desde||'')+'|'+c.cuando)+'">'+esc(c.quien)+' · '+esc(turDia(c.cuando))+' '+esc(turHM(c.cuando))+'</button>'; }).join('')+'</div>' : '')+'</div>';
       }
-      var tot={nuevos:0, consulta:0, llamada:0, llamadaConsulta:0};
+      var tot={nuevos:0, consulta:0, llamada:0, llamadaConsulta:0, reagenda:0};
       (d.ramas||[]).forEach(function(r){ var c=turCuentas(r); Object.keys(tot).forEach(function(k){ tot[k]+=c[k]; }); });
       body+='<div class="tu-tot">'+[['nuevos','Leads nuevos'],['consulta','Consultas agendadas'],['llamada','Llamadas agendadas'],['llamadaConsulta','Llamada y consulta']].map(function(x){
         return '<div><b class="num">'+tot[x[0]]+'</b><span>'+x[1]+'</span></div>'; }).join('')+'</div>';
+      if (tot.reagenda) body+='<p class="hint" style="margin:8px 2px 0">🔁 Además, '+plural(tot.reagenda,'reagendada','reagendadas')+' (ya tenían consulta). No suman a las consultas agendadas.</p>';
       (d.ramas||[]).forEach(function(r){ body+=turRamaCard(r); });
       body+='<p class="hint" style="margin:10px 2px 0">Sale del HISTORIAL de las planillas: cuenta los cambios de fase hechos en la app y en la planilla. Tocá cada número para ver quiénes son.</p>';
       if (pasado) body+='<div class="tu-acts"><button class="save" data-turcopiar>📋 Copiar este reporte</button><button class="link" data-turactual style="display:block;margin:10px auto 0">Volver al turno de ahora</button></div>';
