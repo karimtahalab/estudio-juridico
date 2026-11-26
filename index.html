@@ -3905,10 +3905,15 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
   function turInput(ms){ return turBA(ms).toISOString().slice(0,16); }
   function turDesdeMs(v){ var m=String(v||'').match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/); return m ? Date.UTC(+m[1], +m[2]-1, +m[3], +m[4]+3, +m[5]) : 0; }
   function loadTurno(force){
-    var q=state.turQ||{}, k=JSON.stringify(q), T=state.tur;
-    if (!force && T && T.k===k && (T.cargando || (T.d && Date.now()-T.at<60000))) return;
+    // 25/11: se manda una COPIA de lo elegido (call le agrega tok y who al objeto: antes eso cambiaba state.turQ y cada vez salía un segundo pedido con el reporte en blanco).
+    // Cada turno que ya se miró queda en memoria: ir y volver entre turnos lo muestra al instante (el de ahora se renueva si tiene más de 1 minuto; uno ya cerrado, a los 10).
+    var q=state.turQ||{}, qa={}, T=state.tur, C=state.turC||(state.turC={});
+    if (q.desde) qa.desde=q.desde; if (q.hasta) qa.hasta=q.hasta;
+    var k=JSON.stringify(qa)+'|'+((state.me && state.me.nombre)||'')+'|'+(state.verComo||''), vida=qa.hasta ? 600000 : 60000; // por persona (y Ver como): otra persona en el mismo celular nunca ve el reporte de la anterior
+    if ((!T || T.k!==k) && C[k]) T=state.tur={k:k, at:C[k].at, cargando:false, d:C[k].d};
+    if (!force && T && T.k===k && (T.cargando || (T.d && Date.now()-T.at<vida))) return;
     var mio=state.tur={k:k, at:Date.now(), cargando:true, d:(T && T.k===k) ? T.d : null};
-    call('reporteTurno', q).then(function(d){ if (state.tur!==mio) return; mio.d=d; mio.at=Date.now(); mio.cargando=false; mio.error=''; if (state.view==='reporte') render(); })
+    call('reporteTurno', qa).then(function(d){ C[k]={d:d, at:Date.now()}; if (state.tur!==mio) return; mio.d=d; mio.at=Date.now(); mio.cargando=false; mio.error=''; if (state.view==='reporte') render(); })
       .catch(function(e){ if (state.tur!==mio) return; mio.cargando=false; mio.error=(e&&e.message)||'No se pudo armar el reporte.'; if (state.view==='reporte') render(); });
   }
   function turCuentas(r){
@@ -5041,8 +5046,8 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     if (t.hasAttribute('data-turabrir')){ var tk=t.getAttribute('data-turabrir'), TA=state.turAbierto||(state.turAbierto={}); TA[tk]=!TA[tk]; render(); return; }
     if (t.hasAttribute('data-turcambiar')){ state.turCambiar=!state.turCambiar; render(); return; }
     if (t.hasAttribute('data-turdesdeok')){ var tin=$('turDesde'), tms=turDesdeMs(tin && tin.value); if (!tms){ toast('Elegí el día y la hora.', true); return; } state.turQ={desde:tms}; state.turCambiar=false; state.turHecho=null; loadTurno(true); render(); return; }
-    if (t.hasAttribute('data-turactual')){ state.turQ={}; state.turCambiar=false; loadTurno(true); render(); return; }
-    if (t.hasAttribute('data-turver')){ var tp=t.getAttribute('data-turver').split('|'); state.turQ={desde:(+tp[0])||0, hasta:+tp[1]}; state.turCambiar=false; loadTurno(true); render(); return; }
+    if (t.hasAttribute('data-turactual')){ state.turQ={}; state.turCambiar=false; loadTurno(); render(); return; }
+    if (t.hasAttribute('data-turver')){ var tp=t.getAttribute('data-turver').split('|'); state.turQ={desde:(+tp[0])||0, hasta:+tp[1]}; state.turCambiar=false; loadTurno(); render(); return; }
     if (t.hasAttribute('data-turretry')){ loadTurno(true); render(); return; }
     if (t.hasAttribute('data-turcopiar')){ var td=state.tur && state.tur.d; if (td) copiarReporte(turTexto(td)); return; }
     if (t.hasAttribute('data-turconf')){ state.turConfirmar=true; render(); return; }
