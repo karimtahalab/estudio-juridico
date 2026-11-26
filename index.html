@@ -1001,6 +1001,108 @@ a.save.wa-go svg{width:20px;height:20px}
 .rt-regla small{font-size:12px;color:var(--ink-3);font-weight:600}
 .rt-regla b{font-size:24px;font-weight:800;line-height:1.1}
 @media (min-width:700px){.rt-regla{grid-template-columns:repeat(6,1fr)}}
+/* ===== Facturación y monotributo (Reportes › Facturación) ===== */
+:root{--fc-t:#0B9494;--fc-r:#2462D6}
+@media (prefers-color-scheme: dark){:root{--fc-t:#2DB3AE;--fc-r:#6088EA}}
+.fc-aviso{display:flex;gap:10px;align-items:flex-start;margin-top:12px;padding:12px 14px;border-radius:14px;background:var(--amber-bg);font-size:14.5px;line-height:1.4;color:var(--ink)}
+.fc-aviso svg{flex:none;width:20px;height:20px;color:var(--amber);margin-top:1px}
+.fc-kpis{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.fc-hero{grid-column:1/-1;background:var(--paper);border-radius:var(--r-lg);box-shadow:0 0 0 1px var(--line) inset;padding:16px 16px 10px;min-width:0}
+.fc-hero h3,.fc-kpi h3{margin:0;font-size:14px;font-weight:700;color:var(--ink-2)}
+.fc-hero .v{display:block;font-weight:800;font-stretch:var(--cond);font-size:52px;line-height:1.02;letter-spacing:-.01em;margin-top:3px;white-space:nowrap}
+.fc-hero .s{display:block;font-size:13.5px;color:var(--ink-2);font-weight:500;margin-top:5px}
+.fc-kpi{background:var(--paper);border-radius:16px;box-shadow:0 0 0 1px var(--line) inset;padding:13px 14px 12px;min-width:0}
+.fc-kpi b{display:block;font-weight:800;font-stretch:var(--cond);font-size:30px;line-height:1.05;margin-top:3px;white-space:nowrap}
+.fc-kpi small{display:block;font-size:12.5px;color:var(--ink-2);font-weight:500;margin-top:5px;line-height:1.45}
+.fc-kpi.al b{color:var(--red)}
+@media (max-width:370px){.fc-hero .v{font-size:44px}.fc-kpi b{font-size:25px}}
+@media (min-width:860px){.fc-kpis{grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);grid-auto-rows:1fr}.fc-hero{grid-column:1;grid-row:1/3}.fc-kpi{display:flex;flex-direction:column;justify-content:center;padding:16px 18px}.fc-kpi b{font-size:36px}}
+/* Columnas por mes */
+.fc-cols{position:relative;margin-top:8px}
+.fc-cols svg{display:block;width:100%;height:auto;overflow:visible}
+.fc-cols .g{stroke:var(--line);stroke-width:1}
+.fc-cols .ax{font-size:10px;fill:var(--ink-3)}
+.fc-cols .ax.no{opacity:.55}
+.fc-cols .vl{font-size:10px;fill:var(--ink-2);font-weight:700}
+.fc-cols .c{fill:var(--ink-2);opacity:.78;pointer-events:none}
+.fc-cols .hit{fill:transparent;outline:none;cursor:default}
+.fc-cols .hit:hover + .c,.fc-cols .hit:focus + .c{opacity:1;fill:var(--ink)}
+.fc-cols .hit:focus-visible + .c{stroke:var(--mint);stroke-width:2}
+.fc-tip{position:fixed;z-index:60;pointer-events:none;background:var(--ink);color:var(--paper);border-radius:10px;padding:7px 10px;font-size:12.5px;line-height:1.3;white-space:nowrap;box-shadow:0 6px 18px rgba(0,0,0,.25);transform:translate(-50%,-100%)}
+.fc-tip b{display:block;font-size:14px;font-weight:800}
+.fc-tip[hidden]{display:none}
+/* Lista de contribuyentes: una barra por persona, todas contra el mismo tope */
+.fc-list{list-style:none;margin:8px 0 0;padding:0;background:var(--paper);border-radius:var(--r-lg);box-shadow:0 0 0 1px var(--line) inset;overflow:hidden}
+.fc-p + .fc-p{border-top:1px solid var(--line)}
+.fc-row,.fc-eje{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"who fig" "bar bar" "meta meta";gap:8px 12px;width:100%;text-align:left;padding:14px 14px 12px}
+.fc-eje{padding:10px 14px 0;grid-template-areas:"lbl lbl" "bar bar";gap:4px 12px}
+.fc-eje .lbl{grid-area:lbl;font-size:12px;font-weight:700;color:var(--ink-3)}
+.fc-eje .ej{grid-area:bar;position:relative;display:block;height:16px}
+.fc-eje .ej i{position:absolute;top:0;font-style:normal;font-size:11.5px;font-weight:800;color:var(--ink-2);text-align:center}
+.fc-who{grid-area:who;min-width:0}
+.fc-who b{display:block;font-size:17px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fc-who small{display:block;font-size:13px;color:var(--ink-2);font-weight:500;margin-top:1px}
+.fc-fig{grid-area:fig;text-align:right}
+.fc-fig small{display:block;font-size:12px;color:var(--ink-3);font-weight:600}
+.fc-fig b{display:block;font-size:23px;font-weight:800;font-stretch:var(--cond);line-height:1.08;white-space:nowrap}
+.fc-bar{grid-area:bar;position:relative;display:block;height:12px;border-radius:6px;background:var(--green-bg);overflow:hidden}
+.fc-fill{position:absolute;left:0;top:0;bottom:0;background:var(--green);border-radius:0 4px 4px 0}
+.fc-tk{position:absolute;top:0;bottom:0;width:2px;margin-left:-1px;background:var(--paper)}
+.est-cerca .fc-bar{background:var(--amber-bg)} .est-cerca .fc-fill{background:var(--amber)}
+.est-limite .fc-bar,.est-pasado .fc-bar{background:var(--red-bg)} .est-limite .fc-fill,.est-pasado .fc-fill{background:var(--red)}
+.est-pasado .fc-fill{border-radius:0}
+.fc-meta{grid-area:meta;display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:13px;color:var(--ink-2);font-weight:500;min-width:0}
+.fc-meta > span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fc-st{flex:none;display:inline-flex;align-items:center;gap:5px;font-weight:700;font-size:12.5px;padding:3px 10px 3px 7px;border-radius:999px;background:var(--green-bg);color:var(--green);white-space:nowrap}
+.fc-st svg{width:14px;height:14px;flex:none}
+.est-cerca .fc-st{background:var(--amber-bg);color:var(--amber)}
+.est-limite .fc-st,.est-pasado .fc-st{background:var(--red-bg);color:var(--red)}
+.fc-row .chev{width:16px;height:16px;color:var(--ink-3);transition:transform .15s;vertical-align:-2px;margin-left:4px}
+.fc-p.on .fc-row .chev{transform:rotate(90deg)}
+.fc-p.on{background:var(--paper-2)}
+.fc-p.on .fc-tk{background:var(--paper-2)}
+@media (min-width:860px){
+  .fc-row,.fc-eje{grid-template-columns:210px minmax(0,1fr) 150px 190px;grid-template-areas:"who bar fig meta";align-items:center;gap:8px 20px;padding:14px 18px}
+  .fc-eje{grid-template-areas:"lbl bar . .";padding:12px 18px 0}
+  .fc-meta{flex-direction:column;align-items:flex-end;gap:5px}
+  .fc-bar{height:14px;border-radius:7px}
+}
+/* Detalle de una persona */
+.fc-det{padding:0 14px 16px}
+.fc-det ul.tx{list-style:none;margin:0;padding:0;font-size:14.5px;line-height:1.45;color:var(--ink)}
+.fc-det ul.tx li{padding:7px 0 7px 22px;position:relative}
+.fc-det ul.tx li + li{border-top:1px solid var(--line)}
+.fc-det ul.tx li::before{content:"";position:absolute;left:5px;top:15px;width:6px;height:6px;border-radius:50%;background:var(--ink-3)}
+.fc-det ul.tx li.al::before{background:var(--red)} .fc-det ul.tx li.ok::before{background:var(--green)}
+.fc-kv{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.fc-kv div{background:var(--paper);border-radius:12px;box-shadow:0 0 0 1px var(--line) inset;padding:9px 11px;min-width:0}
+.fc-kv small{display:block;font-size:12px;color:var(--ink-3);font-weight:600}
+.fc-kv b{display:block;font-size:16.5px;font-weight:800;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fc-det h4{margin:16px 2px 0;font-size:13.5px;font-weight:800;color:var(--ink-2)}
+.fc-det .fc-cols{background:var(--paper);border-radius:14px;box-shadow:0 0 0 1px var(--line) inset;padding:10px 8px 6px;margin-top:6px}
+@media (min-width:860px){.fc-det{padding:0 18px 18px}.fc-det .fc-2{display:grid;grid-template-columns:1fr 1fr;gap:0 24px;align-items:start}}
+/* Reparto por grupo: barra fina partida + lista */
+.fc-seg{display:flex;gap:2px;height:8px;border-radius:4px;overflow:hidden;margin:10px 0 2px}
+.fc-seg i{display:block;height:100%;min-width:2px;background:var(--ink-3)}
+.fc-seg i.t,.fc-sw.t{background:var(--fc-t)} .fc-seg i.r,.fc-sw.r{background:var(--fc-r)}
+.fc-sw{display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--ink-3);margin-right:8px;flex:none}
+.fc-gr{list-style:none;margin:6px 0 0;padding:0}
+.fc-gr li{display:flex;align-items:baseline;gap:0;padding:6px 0;font-size:14.5px;line-height:1.3}
+.fc-gr li span.n{flex:1;min-width:0;padding-right:10px}
+.fc-gr li b{font-weight:800;white-space:nowrap}
+.fc-gr li small{color:var(--ink-3);font-weight:600;font-size:12.5px;margin-left:8px;min-width:38px;text-align:right}
+.fc-box{background:var(--paper);border-radius:var(--r-lg);box-shadow:0 0 0 1px var(--line) inset;padding:12px 16px;margin-top:8px}
+.fc-rev{list-style:none;margin:8px 0 0;padding:0;background:var(--paper);border-radius:var(--r-lg);box-shadow:0 0 0 1px var(--line) inset}
+.fc-rev li{padding:12px 14px;font-size:14.5px;line-height:1.45}
+.fc-rev li + li{border-top:1px solid var(--line)}
+.f2t.fc-tabla tr.no td{color:var(--ink-3)}
+.f2t.fc-tabla th,.f2t.fc-tabla td{padding:7px 6px}
+.f2t.fc-tabla th:first-child,.f2t.fc-tabla td:first-child{padding-left:12px}
+.f2t.fc-tabla th:last-child,.f2t.fc-tabla td:last-child{padding-right:12px}
+.f2t.fc-tabla td:first-child,.f2t.fc-tabla th:first-child{position:sticky;left:0;background:var(--paper);z-index:1}
+.f2t.fc-tabla{font-size:12.5px}
+.fc-acc{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.fc-acc .chip{height:38px}
 .seg.marca button.on.mk-transito{background:#0B8B8B;color:#fff}
 .campo-pick button{flex:1 1 auto}
 .cre-guion{white-space:pre-wrap;font-size:16px;line-height:1.55;padding:12px 14px}
@@ -1178,6 +1280,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
   <button data-view="reporte" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V11M10 20V5M16 20v-6M2 20h20"/></svg>Reporte</button>
   <button data-view="finanzas" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5.5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19M6.5 15h4"/></svg>Finanzas</button>
       <button data-view="reportes" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V11M10 20V5M16 20v-6M2 20h20"/></svg>Reportes</button>
+  <button data-view="facturacion" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3Z"/><path d="M9 8h6M9 12h6"/></svg>Facturación</button>
   <button data-view="agenda" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="3"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/><path d="M7.5 13.5h3M7.5 17h6"/></svg>Agenda</button>
   <button data-view="hoy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>Hoy</button>
   <button data-view="manana"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>Mañana</button>
@@ -1367,11 +1470,11 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
   var SNAP_ESPERA={enviarWsp:1, levantarLead:1, saveVisto:1, segComentar:1, segGuardar:1, segHecho:1, subirEstudio:1, borrarEstudio:1, saveTraslado:1, trasladoAccion:1, trasladoRecibo:1, noRepetido:1};
   var VC_SALE={equipoLogin:1, tienePin:1, login:1, crearPin:1, logout:1, resetPin:1, desbloquearPin:1};
   var VER_FN={getData:1, getReporte:1, getRitmo:1, leadsDeFase:1, getLead:1, getCreativos:1, getEstudios:1, verEstudio:1, verRecibo:1}; // lo único que se pide en "Ver como"
-  var FIN_FN={getFin2:1, getFin2Panel:1, saveFin2:1, resolverRepFin2:1, getFinanzas:1, saveFinanza:1, borrarFinanza:1};
+  var FIN_FN={getFin2:1, getFin2Panel:1, saveFin2:1, resolverRepFin2:1, getFinanzas:1, saveFinanza:1, borrarFinanza:1, getFacturacion:1};
   function esCorte(e){ return /Sin conexi|no respondi|Failed to fetch|NetworkError|Load failed|network|timeout|JSON|Unexpected token/i.test(String((e&&e.message)||e)); }
   // Lecturas (no guardan nada): si se cuelgan (el celular se bloqueó a mitad del pedido, la señal se cortó sin aviso) se cortan y se vuelven a pedir.
   // Antes un pedido colgado dejaba la pantalla esperando sin fin y frenaba las actualizaciones (registro de uso: getFin2 esperó 18 minutos).
-  var LEE={getData:1, getReporte:1, getRitmo:1, leadsDeFase:1, getLead:1, getCreativos:1, getEstudios:1, getFin2:1, getFin2Panel:1, getFinanzas:1, tienePin:1};
+  var LEE={getData:1, getReporte:1, getRitmo:1, leadsDeFase:1, getLead:1, getCreativos:1, getEstudios:1, getFin2:1, getFin2Panel:1, getFinanzas:1, getFacturacion:1, tienePin:1};
   var LEE_MAX=35000;      // más de 35 s sin respuesta: se corta (lo normal es 2-5 s; lo más lento visto, 14 s)
   var LEE_VUELVE=12000;   // al volver a la app, una lectura que lleva más de 12 s en camino se corta y se repite
   var LEE_PEND=[];
@@ -1957,17 +2060,17 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     // Si están escribiendo en el buscador de Agendar, solo se actualiza la lista (no se pierde lo escrito)
     if (state.view==='agendar' && document.activeElement && document.activeElement.id==='aq' && $('agList')){ renderAg(); renderNav(); return; }
     var v = ({hoy:viewHoy, manana:viewManana, semana:viewSemana, resumen:viewResumen, falta:viewFalta, tareas:viewTareas, agendar:viewAgendar, agenda:viewAgenda,
-      reporte:function(){ return viewReporte(false); }, reportes:function(){ return viewReporte(true); }, finanzas:viewFin2, guiones:viewGuiones, seguimiento:viewSeguimiento})[state.view]();
+      reporte:function(){ return viewReporte(false); }, reportes:function(){ return viewReporte(true); }, finanzas:viewFin2, guiones:viewGuiones, seguimiento:viewSeguimiento, facturacion:function(){ return viewFacturacion(true); }})[state.view]();
     $('ttl').innerHTML = '<h1>'+v.h1+'</h1><p>'+v.p+'</p>'; ajustarTitulo();
     $('headExtra').innerHTML = v.extra || '';
     $('offline').classList.toggle('on', state.offline);
-    $('main').innerHTML = vcBanner() + snapBanner() + trAvisoBanner() + pinBanner() + dupBanner() + internasBanner() + v.body + '<div class="foot">'+(state.snapT?'Mostrando lo guardado a las '+state.snapT+'. Actualizando…':'Actualizado a las '+nowBA().hm)+(state.verComo?'':(state.me?'. Usás la app como '+esc(state.me.nombre)+' ('+({abogada:'parte de abogadas', intaker:'parte de intakers', admin:'administración', produccion:'filmación y edición'}[state.me.rol]||state.me.rol)+')'+' <button data-yocambiar>Cambiar</button>':'')+(state.me && state.me.rol==='admin'?' · <button data-vcabrir>👁 Ver como otra persona</button>':''))+'</div>';
+    $('main').innerHTML = vcBanner() + snapBanner() + trAvisoBanner() + pinBanner() + dupBanner() + internasBanner() + v.body + '<div class="foot">'+(state.snapT?'Mostrando lo guardado a las '+state.snapT+'. Actualizando…':'Actualizado a las '+nowBA().hm)+(state.verComo?'':(state.me?'. Usás la app como '+esc(state.me.nombre)+' ('+({abogada:'parte de abogadas', intaker:'parte de intakers', admin:'administración', produccion:'filmación y edición', contable:'contaduría'}[state.me.rol]||state.me.rol)+')'+' <button data-yocambiar>Cambiar</button>':'')+(state.me && state.me.rol==='admin'?' · <button data-vcabrir>👁 Ver como otra persona</button>':''))+'</div>';
     alignRs();
     renderNav();
     // En modo prueba, arriba a la derecha se ve quién está usando la app y se toca para cambiar de persona o rol
     var by=$('btnYo'); if (by){ by.hidden=false; by.classList.toggle('vc', !!state.verComo); by.innerHTML='<span>'+(state.verComo?'👁 ':'')+esc(state.me?state.me.nombre:'¿Quién sos?')+'</span><span aria-hidden="true">▾</span>'; }
     // Pegar resúmenes: solo quienes los cargan (intakers y administración); buscar: solo quien ve leads o consultas
-    var rolYo=state.me&&state.me.rol; $('btnPaste').hidden = !(rolYo==='intaker' || rolYo==='admin'); $('btnSearch').hidden = rolYo==='produccion';
+    var rolYo=state.me&&state.me.rol; $('btnPaste').hidden = !(rolYo==='intaker' || rolYo==='admin'); $('btnSearch').hidden = rolYo==='produccion' || rolYo==='contable';
   }
 
   // Alinea la vista previa del resumen con el nombre (depende del ancho real de la hora)
@@ -2015,7 +2118,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     }, 280); }
   }
   /* ---------- Ver como: administración mira la app como la ve otra persona (solo lectura) ---------- */
-  var VC_ROL={abogada:'abogada', intaker:'intaker', admin:'administración', produccion:'filmación y edición'};
+  var VC_ROL={abogada:'abogada', intaker:'intaker', admin:'administración', produccion:'filmación y edición', contable:'contaduría'};
   // Primera apertura del día (lo guardado tiene más de 12 horas): se ve al instante, con aviso, hasta que llega lo de hoy
   function snapBanner(){
     if (!state.snapViejo || !state.snapT || state.verComo) return '';
@@ -2043,7 +2146,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
   }
   function sheetVerComo(){
     var yo=(state.vcPrev&&state.vcPrev.me&&state.vcPrev.me.nombre) || (state.me&&state.me.nombre), eq=((state.data&&state.data.equipo)||[]).filter(function(e){ return e.nombre!==yo; });
-    var grupos=[['abogada','Abogadas'],['intaker','Intakers'],['produccion','Filmación y edición'],['admin','Administración']];
+    var grupos=[['abogada','Abogadas'],['intaker','Intakers'],['produccion','Filmación y edición'],['contable','Contaduría'],['admin','Administración']];
     var html=head('👁','','Ver la app como…','<div class="mt"><span class="cp">Solo para mirar</span></div>')+
       (state.verComo ? '<button class="save" style="margin-top:12px;width:100%" data-vcsalir>← Volver a mi vista ('+esc(yo||'')+')</button>' : '')+
       '<p class="hint" style="margin:10px 2px 4px">Ves exactamente lo que ve esa persona: sus pestañas, su agenda y sus reportes. No se puede guardar nada, así que no se rompe nada. Finanzas no se abre porque pide el PIN de esa persona.</p>';
@@ -2832,7 +2935,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
 
   /* ---------- quién usa la app ---------- */
   // Cada rol ve su parte. El Resumen (con números por persona) queda solo para administración.
-  var NAV_ROL = { abogada:['agenda','falta','agendar'], intaker:['tareas','seguimiento','agendar','agenda','reporte'], admin:['agenda','tareas','agendar','reportes','falta'], produccion:['guiones'] };
+  var NAV_ROL = { abogada:['agenda','falta','agendar'], intaker:['tareas','seguimiento','agendar','agenda','reporte'], admin:['agenda','tareas','agendar','reportes','falta'], produccion:['guiones'], contable:['facturacion'] };
   function equipoBy(n){ var eq=(state.data&&state.data.equipo)||state.equipo||[]; for (var i=0;i<eq.length;i++) if (eq[i].nombre===n) return eq[i]; return null; }
   function resolveMe(d){
     var u=d.user||{};
@@ -2876,7 +2979,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     var soloPin=!!(state.sheet && state.sheet.pines);
     var html= soloPin ? '<div class="grab"></div><div class="sh-head"><div class="sh-who"><h2>Equipo y PINs</h2><p class="hint" style="margin:4px 0 0">Si alguien se olvidó su PIN, reseteálo acá. La próxima vez que entre, elige uno nuevo.</p></div>'+cerrar+'</div>' : '<div class="grab"></div><div class="sh-head"><div class="sh-who"><h2>¿Quién sos?</h2><p class="hint" style="margin:4px 0 0">Elegí tu nombre y poné tu PIN. El celular lo recuerda: no hace falta ponerlo cada vez.</p></div>'+cerrar+'</div>'+
       (state.me && state.me.rol==='admin' && !state.verComo ? '<button class="de-mia vc-menu" data-vcabrir><span>👁</span><span><b>Ver la app como otra persona</b><small>Para ver lo que ve cada uno. Solo mirar: no se guarda nada.</small></span><span class="de-mia-go">›</span></button>' : '')+
-      grp('abogada','Abogados y abogadas')+grp('intaker','Intakers')+grp('admin','Administración')+grp('produccion','Filmación y edición');
+      grp('abogada','Abogados y abogadas')+grp('intaker','Intakers')+grp('admin','Administración')+grp('produccion','Filmación y edición')+grp('contable','Contaduría');
     var pines=state.me && state.me.rol==='admin' && state.data && state.data.pines;
     if (pines){
       html += '<p class="grp-lbl">PIN de cada persona</p><div class="box pin-list">'+pines.map(function(x){ var conf=L.reset===x.nombre;
@@ -3788,7 +3891,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
       'El botón de cada rama compara estos números con lo que cargaron los intakers en CARGA SEMANAL y con la planilla KPIS PRUEBA.<br>'+
       'El <b>Resumen agenda</b> es otra vista: cuenta solo las consultas con turno cargado en la agenda de la app, por el día del turno.</div></details>';
   }
-  function repModoSeg(){ var m=state.repModo||'control'; return '<div class="seg2 rep4" role="tablist"><button data-repmodo="control" class="'+(m==='control'?'on':'')+'" role="tab" aria-selected="'+(m==='control')+'">Control semanal</button><button data-repmodo="resumen" class="'+(m==='resumen'?'on':'')+'" role="tab" aria-selected="'+(m==='resumen')+'">Resumen agenda</button>'+(state.data && state.data.finAcceso ? '<button data-repmodo="finanzas" class="'+(m==='finanzas'?'on':'')+'" role="tab" aria-selected="'+(m==='finanzas')+'">Finanzas</button>' : '')+'<button data-repmodo="ritmo" class="'+(m==='ritmo'?'on':'')+'" role="tab" aria-selected="'+(m==='ritmo')+'">Ritmo del mes</button></div>'; }
+  function repModoSeg(){ var m=state.repModo||'control'; return '<div class="seg2 rep4" role="tablist"><button data-repmodo="control" class="'+(m==='control'?'on':'')+'" role="tab" aria-selected="'+(m==='control')+'">Control semanal</button><button data-repmodo="resumen" class="'+(m==='resumen'?'on':'')+'" role="tab" aria-selected="'+(m==='resumen')+'">Resumen agenda</button>'+(state.data && state.data.finAcceso ? '<button data-repmodo="finanzas" class="'+(m==='finanzas'?'on':'')+'" role="tab" aria-selected="'+(m==='finanzas')+'">Finanzas</button>' : '')+'<button data-repmodo="ritmo" class="'+(m==='ritmo'?'on':'')+'" role="tab" aria-selected="'+(m==='ritmo')+'">Ritmo del mes</button>'+(fcPuede() ? '<button data-repmodo="factura" class="'+(m==='factura'?'on':'')+'" role="tab" aria-selected="'+(m==='factura')+'">Facturación</button>' : '')+'</div>'; }
   /* ---------- Ritmo del mes: cuántos clientes deberíamos llevar a esta altura (sale de las pestañas de ingresos) ---------- */
   var RT_NOM={ART:'ART', LABORAL:'Laboral', TRANSITO:'Tránsito'};
   function rtLoad(rama, fresco){
@@ -3893,6 +3996,206 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     var segR=ramas.length>1 ? '<div class="seg marca" role="tablist" aria-label="Rama">'+ramas.map(function(r){ return '<button class="'+(cur===r?'on':'')+(r==='TRANSITO'?' mk-transito':'')+'" data-rtrama="'+r+'" role="tab" aria-selected="'+(cur===r)+'">'+RT_NOM[r]+'</button>'; }).join('')+'</div>' : '';
     return { h1:'Reportes', p:'Ritmo de ingresos de clientes', extra:repModoSeg()+segR, body:equipoBtn()+body };
   }
+  /* ---------- Facturación y monotributo (Reportes › Facturación) ----------
+     Cuánto facturó cada contribuyente en el año y cuánto le queda antes de pasarse de categoría.
+     Sale de la planilla de la contadora: el motor la lee (no le escribe nada) y acá no queda nada guardado en el celular.
+     La ven administración, con el PIN de finanzas, y quien tenga rol 'contable'. Si el motor todavía no la tiene, la pestaña no aparece. */
+  var FC_MES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  var FC_M3=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  var FC_EST={margen:'Con margen', cerca:'Cerca del tope', limite:'Al límite', pasado:'Se pasó'};
+  // Cada estado tiene su ícono (no depende solo del color)
+  var FC_ICO={
+    margen:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>',
+    cerca:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5 2.5 20h19L12 3.5Z"/><path d="M12 10v4.5M12 17.2h.01"/></svg>',
+    limite:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2.8h8L21.2 8v8L16 21.2H8L2.8 16V8L8 2.8Z"/><path d="M12 7.5v5.5M12 16.4h.01"/></svg>',
+    pasado:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9.2"/><path d="m8.8 8.8 6.4 6.4M15.2 8.8l-6.4 6.4"/></svg>'
+  };
+  var FC_AVISO='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9.2"/><path d="M12 7.5v5.5M12 16.4h.01"/></svg>';
+  var FC_COL={TRANSITO:'t', RECLAMA:'r'}; // color de cada grupo en las barras partidas (los demás, gris)
+  function fcPuede(){ return !!P().facturacion; }
+  function fcConLlave(){ return !!(state.data && state.data.finAcceso); } // quien tiene Finanzas entra con la misma llave
+  function enFacturacion(){ return state.view==='facturacion' || (state.view==='reportes' && state.repModo==='factura'); }
+  function fcLoad(fresco){
+    var prev=state.fc||{}; if (prev.cargando) return;
+    var yo=state.me&&state.me.nombre, mio=state.fc={cargando:true, d:prev.d, quien:yo};
+    call('getFacturacion', {fresco:!!fresco}).then(function(d){ if (state.fc!==mio) return; state.fc={d:d, quien:yo}; if (enFacturacion()) render(); })
+      .catch(function(e){ if (state.fc!==mio) return; state.fc={error:(e&&e.message)||'No se pudo leer la planilla de facturación.', d:prev.d, quien:yo}; if (enFacturacion()) render(); });
+  }
+  function fcM(n){ n=Number(n)||0; var a=Math.abs(n), s=n<0?'−':''; if (a>=999950) return s+'$ '+(a/1e6).toLocaleString('es-AR',{minimumFractionDigits:1, maximumFractionDigits:1})+' M'; if (a>=1000) return s+'$ '+Math.round(a/1e3).toLocaleString('es-AR')+' mil'; return s+'$ '+Math.round(a); }
+  function fcN(n){ return Math.round(Number(n)||0).toLocaleString('es-AR'); }
+  function fcEje(v){ if (!v) return '0'; if (v>=1e6) return (v/1e6).toLocaleString('es-AR',{maximumFractionDigits:1})+' M'; return Math.round(v/1e3).toLocaleString('es-AR')+' mil'; }
+  function fcDia(s, largo){ var p=String(s||'').split('-'); if (p.length<3) return ''; return largo ? (+p[2])+' de '+FC_MES[+p[1]-1] : p[2]+'/'+p[1]; }
+  function fcJunta(xs){ return xs.length<2 ? (xs[0]||'') : xs.slice(0,-1).join(', ')+' y '+xs[xs.length-1]; }
+  function fcMayus(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
+  function fcGrupo(d, k){ return (d.grupos||[]).filter(function(g){ return g.k===k; })[0]||null; }
+  // Se puede filtrar por los grupos que son el principal de alguien
+  function fcFiltros(d){ var ks=[]; d.personas.forEach(function(p){ var k=p.grupos[0]; if (k && ks.indexOf(k)===-1) ks.push(k); }); return (d.grupos||[]).filter(function(g){ return ks.indexOf(g.k)!==-1; }); }
+  function fcMesesTxt(m){ return m<0.95 ? 'menos de un mes' : (m<1.5 ? 'un mes' : 'unos '+Math.round(m)+' meses'); }
+  // Columnas por mes (un solo color): los meses sin cargar quedan vacíos; el valor de cada mes sale al pasar el dedo o el mouse, y en la tabla
+  function fcColumnas(meses, d, titulo, ancho, alto){
+    // En pantallas anchas el dibujo es más ancho (no más alto): las columnas quedan finas y las letras del mismo tamaño
+    var ancha=window.innerWidth>=860, W=(ancha ? (ancho||340) : 340), H=(ancha && alto) || 132, L=36, R=4, T=16, B=20, w=W-L-R, h=H-T-B, bw=w/12, max=Math.max.apply(null, meses.concat([0]));
+    var u=max>0 ? Math.pow(10, Math.floor(Math.log(max)/Math.LN10))/2 : 5e5, top=Math.max(u*2, Math.ceil(max*1.1/u)*u);
+    var Y=function(v){ return T+h-(Math.max(0,v)/top)*h; }, base=T+h, imax=meses.indexOf(max), g='';
+    [0, top/2, top].forEach(function(v){ g+='<line class="g" x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(v).toFixed(1)+'" y2="'+Y(v).toFixed(1)+'"/><text class="ax" x="'+(L-5)+'" y="'+(Y(v)+3.5).toFixed(1)+'" text-anchor="end">'+fcEje(v)+'</text>'; });
+    meses.forEach(function(v,i){
+      var ok=i<=d.mesHasta, cx=L+i*bw+bw/2, cw=Math.min(24, bw*0.62), x=cx-cw/2, y=Y(v), r=Math.max(0, Math.min(4, base-y));
+      g+='<text class="ax'+(ok?'':' no')+'" x="'+cx.toFixed(1)+'" y="'+(H-6)+'" text-anchor="middle">'+FC_M3[i]+'</text>';
+      if (!ok) return;
+      var nom=fcMayus(FC_MES[i])+' '+d.anio;
+      g+='<rect class="hit" x="'+(L+i*bw).toFixed(1)+'" y="'+T+'" width="'+bw.toFixed(1)+'" height="'+h+'" tabindex="0" role="img" aria-label="'+esc(nom+': '+plata(v))+'" data-fctip="'+esc(plata(v)+'|'+nom)+'"/>';
+      g+='<path class="c" d="'+(v>0 ? 'M'+x.toFixed(1)+','+base+' V'+(y+r).toFixed(1)+' q0,-'+r.toFixed(1)+' '+r.toFixed(1)+',-'+r.toFixed(1)+' h'+(cw-2*r).toFixed(1)+' q'+r.toFixed(1)+',0 '+r.toFixed(1)+','+r.toFixed(1)+' V'+base+' Z' : 'M0,0')+'"/>';
+      if (i===imax && v>0) g+='<text class="vl" x="'+cx.toFixed(1)+'" y="'+(y-4).toFixed(1)+'" text-anchor="middle">'+fcEje(v)+'</text>';
+    });
+    return '<div class="fc-cols"><svg viewBox="0 0 '+W+' '+H+'" role="group" aria-label="'+esc(titulo||'Facturación por mes')+'">'+g+'</svg></div>';
+  }
+  // Barra fina partida por grupo + lista con el monto de cada parte
+  function fcReparto(partes){
+    var tot=partes.reduce(function(a,x){ return a+Math.max(0,x.m); },0); if (!tot) return '';
+    return '<div class="fc-seg" role="img" aria-label="'+esc(partes.map(function(x){ return x.l+': '+plataE(x.m); }).join('; '))+'">'+partes.map(function(x){ return x.m>0 ? '<i class="'+(FC_COL[x.k]||'')+'" style="flex:'+(x.m/tot).toFixed(4)+' 1 0"></i>' : ''; }).join('')+'</div>'+
+      '<ul class="fc-gr">'+partes.map(function(x){ return '<li><span class="fc-sw '+(FC_COL[x.k]||'')+'"></span><span class="n">'+esc(x.l)+(x.s?' <small style="margin-left:0">'+esc(x.s)+'</small>':'')+'</span><b class="num">'+plataE(x.m)+'</b><small class="num">'+Math.round(x.m/tot*100)+' %</small></li>'; }).join('')+'</ul>';
+  }
+  function fcAvisoTxt(a, d, junto){
+    var per=a.persona?'<b>'+esc(a.persona)+'</b>: ':'', hoja='<b>'+esc(a.hoja||'')+'</b>';
+    if (a.t==='nc'){
+      var t=per+'la nota de crédito del '+fcDia(a.fecha)+' por '+plata(a.monto)+' está cargada en positivo en la pestaña '+hoja;
+      return junto ? t+', así que RESUMEN la suma en vez de restarla: dice '+plata(junto.resumen)+' y los comprobantes dan '+plata(junto.panel)+' ('+plata(Math.abs(junto.dif))+' de diferencia). Acá ya está restada.' : t+'. Acá ya está restada.';
+    }
+    if (a.t==='resumen'){
+      var ms=(a.meses||[]).map(function(m){ return FC_MES[m]; }), fa=(a.falta||[]).map(function(m){ return FC_MES[m]; }), out=[];
+      if (ms.length || (Math.abs(a.dif)>=1 && !fa.length)) out.push('RESUMEN dice '+plata(a.resumen)+' y los comprobantes suman '+plata(a.panel)+(ms.length?' (no coincide '+fcJunta(ms)+')':''));
+      if (fa.length) out.push('RESUMEN todavía no suma '+fcJunta(fa));
+      return per+out.join('. ')+'. Acá se cuentan los comprobantes.';
+    }
+    if (a.t==='sinHoja') return 'No encontré la pestaña '+hoja+' en la planilla: lo de esa pestaña no está contado.';
+    if (a.t==='sinColumnas') return 'En la pestaña '+hoja+' no encontré las columnas Fecha e Imp. Total: no está contada.';
+    if (a.t==='sinFecha') return 'En la pestaña '+hoja+' hay '+plural(a.n,'comprobante','comprobantes')+' sin fecha válida: no se cuentan.';
+    if (a.t==='otroAnio') return 'En la pestaña '+hoja+' hay '+plural(a.n,'comprobante','comprobantes')+' de otro año: no se cuentan en '+a.anio+'.';
+    if (a.t==='sinResumen') return per+'no figura en RESUMEN, así que no se sabe en qué categoría está inscripto.';
+    return '';
+  }
+  // Avisos listos para mostrar: la nota de crédito en positivo y la diferencia con RESUMEN que provoca van en un solo renglón
+  function fcAvisos(d, nombres){
+    var as=(d.avisos||[]).filter(function(a){ return !a.persona || !nombres || nombres.indexOf(a.persona)!==-1; }), out=[], usados=[];
+    as.forEach(function(a, i){
+      if (usados.indexOf(i)!==-1) return;
+      if (a.t==='nc'){
+        var ncs=as.filter(function(x){ return x.t==='nc' && x.persona===a.persona; }), suma=ncs.reduce(function(s,x){ return s+x.monto; },0), j=-1;
+        as.forEach(function(x, k){ if (x.t==='resumen' && x.persona===a.persona && !(x.falta||[]).length && Math.abs(x.dif-2*suma)<1) j=k; });
+        if (j!==-1 && ncs.length===1){ usados.push(j); out.push(fcAvisoTxt(a, d, as[j])); return; }
+      }
+      var t=fcAvisoTxt(a, d); if (t) out.push(t);
+    });
+    return out;
+  }
+  function fcDetalle(p, d){
+    var T=d.tope, tx=[];
+    if (!p.cat) tx.push(['al','Con lo facturado supera el tope de la última categoría del monotributo.']);
+    else if (p.catActual && p.catActual!==p.cat) tx.push(['','Está inscripto en la <b>'+esc(p.catActual)+'</b> (tope '+fcM(p.limiteActual)+') y por lo facturado ya le corresponde la <b>'+esc(p.cat)+'</b>.']);
+    else if (p.catActual) tx.push(['','Está inscripto en la <b>'+esc(p.cat)+'</b> y lo facturado entra en esa categoría.']);
+    else tx.push(['','Por lo facturado le corresponde la <b>'+esc(p.cat)+'</b>.']);
+    if (p.resto<0) tx.push(['al','Se pasó del tope de la '+esc(T.cat)+' por <b>'+plataE(-p.resto)+'</b>.']);
+    else if (p.cat && p.cat!==T.cat && p.catSig && p.restoCat!=null) tx.push(['','Le quedan <b>'+plataE(p.restoCat)+'</b> para saltar de la '+esc(p.cat)+' a la '+esc(p.catSig)+', y <b>'+plataE(p.resto)+'</b> hasta el tope de la '+esc(T.cat)+'.']);
+    else if (p.catSig) tx.push([p.estado==='limite'?'al':'','Con <b>'+plataE(p.resto)+'</b> más pasa a la '+esc(p.catSig)+'.']);
+    if (p.promedio>0 && d.corte<12 && p.resto>=0){
+      var ritmo='Factura en promedio <b>'+fcM(p.promedio)+' por mes</b>. A ese ritmo cierra diciembre en '+fcM(p.proyeccion);
+      tx.push(p.proyeccion>T.limite ? ['al', ritmo+': se pasa de la '+esc(T.cat)+' por '+fcM(p.proyeccion-T.limite)+'. El margen le alcanza para '+fcMesesTxt(p.margenMeses||0)+'.'] : ['ok', ritmo+', dentro de la '+esc(T.cat)+'.']);
+    }
+    var h='<div class="fc-det"><div class="fc-2"><div><ul class="tx">'+tx.map(function(x){ return '<li class="'+x[0]+'">'+x[1]+'</li>'; }).join('')+'</ul>'+
+      '<div class="fc-kv"><div><small>Facturado en '+d.anio+'</small><b class="num">'+plataE(p.total)+'</b></div><div><small>Promedio por mes</small><b class="num">'+plataE(p.promedio)+'</b></div>'+
+      '<div><small>Comprobantes</small><b class="num">'+p.n+'</b></div><div><small>Último cargado</small><b class="num">'+(fcDia(p.ultimo)||'–')+'</b></div></div></div>'+
+      '<div><h4>Mes por mes</h4>'+fcColumnas(p.meses, d, 'Facturación de '+p.nombre+' por mes', 500)+'</div></div>';
+    if (p.partes.length>1) h+='<h4>Por dónde factura</h4><div class="fc-box" style="margin-top:6px">'+fcReparto(p.partes.map(function(x){ var g=fcGrupo(d, x.grupo); return {k:x.grupo, l:x.detalle||(g?g.nombre:x.hoja), s:plural(x.n,'comprobante','comprobantes'), m:x.total}; }))+'</div>';
+    var av=fcAvisos(d, [p.nombre]).filter(function(t){ return t.indexOf('<b>'+esc(p.nombre)+'</b>')===0; });
+    if (av.length) h+='<h4>Para revisar en la planilla</h4><ul class="fc-rev" style="margin-top:6px">'+av.map(function(t){ return '<li>'+t+'</li>'; }).join('')+'</ul>';
+    if (p.usd) h+='<p class="hint">'+plural(p.usd,'comprobante está','comprobantes están')+' en dólares: se toma el importe en pesos que figura en la planilla.</p>';
+    if (p.completo) h+='<p class="hint">'+esc(p.completo)+'</p>';
+    return h+'</div>';
+  }
+  function fcFila(p, d, abierto){
+    var T=d.tope, pct=Math.max(0, Math.min(1, p.total/T.limite)), est=FC_EST[p.estado]?p.estado:'margen', g=fcGrupo(d, p.grupos[0]);
+    var tks=d.categorias.filter(function(c){ return c.hasta<T.limite-1; }).map(function(c){ return '<i class="fc-tk" style="left:'+(c.hasta/T.limite*100).toFixed(2)+'%"></i>'; }).join('');
+    var cat=!p.cat ? 'fuera del monotributo' : (p.catActual && p.catActual!==p.cat ? 'pasa de la '+p.catActual+' a la '+p.cat : 'categoría '+p.cat);
+    var pc=Math.round(p.total/T.limite*100), queda=p.resto>=0 ? ['Le quedan', p.resto] : ['Se pasó por', -p.resto];
+    var aria=p.nombre+': facturó '+plataE(p.total)+', el '+pc+' % del tope de la '+T.cat+'. '+queda[0]+' '+plataE(queda[1])+'. '+FC_EST[est]+'.';
+    return '<li class="fc-p est-'+est+(abierto?' on':'')+'"><button class="fc-row" data-fcopen="'+esc(p.nombre)+'" aria-expanded="'+(!!abierto)+'" aria-label="'+esc(aria)+'">'+
+      '<span class="fc-who"><b>'+esc(p.nombre)+I.chev+'</b><small>'+esc((g?g.corto+' · ':'')+cat)+'</small></span>'+
+      '<span class="fc-fig"><small>'+queda[0]+'</small><b>'+fcM(queda[1])+'</b></span>'+
+      '<span class="fc-bar"><i class="fc-fill" style="width:'+(pct*100).toFixed(2)+'%"></i>'+tks+'</span>'+
+      '<span class="fc-meta"><span>'+fcM(p.total)+' de '+fcM(T.limite)+' · '+pc+' %</span><span class="fc-st">'+FC_ICO[est]+FC_EST[est]+'</span></span>'+
+      '</button>'+(abierto?fcDetalle(p, d):'')+'</li>';
+  }
+  // Lo mismo en números: un contribuyente por columna y un mes por fila (si no entra, la tabla se desliza de costado)
+  function fcTabla(d, ps){
+    var fila=function(t, f, cls){ return '<tr'+(cls?' class="'+cls+'"':'')+'><td>'+t+'</td>'+ps.map(f).join(''); };
+    var h='<div class="f2t-wrap"><table class="f2t fc-tabla"><thead><tr><th>'+d.anio+'</th>'+ps.map(function(p){ return '<th>'+esc(p.nombre)+'</th>'; }).join('')+'<th>Total</th></tr></thead><tbody>';
+    FC_MES.forEach(function(nom, m){ var ok=m<=d.mesHasta, t=0;
+      h+=fila(fcMayus(nom), function(p){ t+=p.meses[m]; return '<td class="num">'+(ok?(p.meses[m]?fcN(p.meses[m]):'–'):'')+'</td>'; }, ok?'':'no')+'<td class="num">'+(ok?fcN(t):'')+'</td></tr>'; });
+    h+=fila('Total', function(p){ return '<td class="num">'+fcN(p.total)+'</td>'; }, 'tot')+'<td class="num">'+fcN(ps.reduce(function(a,p){ return a+p.total; },0))+'</td></tr>';
+    h+=fila('Inscripto en', function(p){ return '<td class="num">'+esc(p.catActual||'–')+'</td>'; })+'<td></td></tr>';
+    h+=fila('Le corresponde', function(p){ return '<td class="num"><b>'+esc(p.cat||'–')+'</b></td>'; })+'<td></td></tr>';
+    h+=fila('Le queda hasta la '+esc(d.tope.cat), function(p){ return '<td class="num'+(p.resto<0?' neg':'')+'">'+(p.resto<0?'−':'')+fcN(Math.abs(p.resto))+'</td>'; })+'<td class="num">'+fcN(ps.reduce(function(a,p){ return a+Math.max(0,p.resto); },0))+'</td></tr>';
+    return h+'</tbody></table></div><p class="hint">En pesos, sin centavos.</p>';
+  }
+  function viewFacturacion(sola){
+    var tit={ h1: sola?'Facturación':'Reportes', p:'Facturación y monotributo', extra: sola?'':repModoSeg(), body:'' };
+    if (state.verComo){ tit.body=emptyBox('No se abre en «Ver como»', '<span>La facturación se mira desde tu propia vista, en Reportes.</span>'); return tit; }
+    // Con Finanzas cerrada no queda nada en memoria: se vuelve a pedir al entrar
+    if (fcConLlave() && !finTok()){ state.fc=null; var vl=viewFinLlave(); vl.h1=tit.h1; vl.p='La facturación se abre con el PIN de finanzas'; vl.extra=tit.extra; return vl; }
+    if (state.fc && state.fc.quien!==(state.me&&state.me.nombre)) state.fc=null;
+    var C=state.fc; if (!C){ fcLoad(false); C=state.fc; }
+    var d=C.d;
+    if (!d){ tit.body = C.error ? '<div class="err-box">'+esc(C.error)+'<br><button data-fcfresco>Reintentar</button></div>' : '<div class="skel"></div><div class="skel"></div><div class="skel"></div><p class="hint" style="text-align:center">Leyendo la planilla de facturación…</p>'; return tit; }
+    if (!d.personas.length || !d.hasta){ tit.body=emptyBox('Todavía no hay comprobantes cargados', '<span>Cuando la planilla de facturación tenga comprobantes, aparecen acá.</span>'); return tit; }
+    var T=d.tope, fs=fcFiltros(d), sel=fs.some(function(g){ return g.k===state.fcGrupo; }) ? state.fcGrupo : '', gs=sel?fcGrupo(d, sel):null;
+    var ps=d.personas.filter(function(p){ return !sel || p.grupos[0]===sel; });
+    if (fs.length>1) tit.extra+='<div class="chips" role="group" aria-label="Qué contribuyentes ver">'+[{k:'', corto:'Todos'}].concat(fs).map(function(g){ return '<button class="chip'+(g.k===sel?' on':'')+'" data-fcgrupo="'+esc(g.k)+'" aria-pressed="'+(g.k===sel)+'">'+esc(g.corto)+'</button>'; }).join('')+'</div>';
+    tit.p='Facturación '+d.anio+' y monotributo'+(gs?' · '+esc(gs.corto):'');
+    var tot=0, n=0, margen=0, meses=[0,0,0,0,0,0,0,0,0,0,0,0], lim=[], porG={};
+    ps.forEach(function(p){ tot+=p.total; n+=p.n; margen+=Math.max(0,p.resto); for (var m=0;m<12;m++) meses[m]+=p.meses[m]; if (p.estado==='limite' || p.estado==='pasado') lim.push(p);
+      p.partes.forEach(function(x){ porG[x.grupo]=(porG[x.grupo]||0)+x.total; }); });
+    var body='';
+    if (C.error) body+='<div class="warn">No se pudo actualizar: '+esc(C.error)+' Se muestra lo leído el '+esc(d.act||'')+'.</div>';
+    if ((d.faltan||[]).length){ var fm=d.faltan.map(function(m){ return FC_MES[m]; });
+      body+='<div class="fc-aviso" role="note">'+FC_AVISO+'<span>Comprobantes cargados hasta el <b>'+fcDia(d.hasta, true)+'</b>. '+fcMayus(fcJunta(fm))+' todavía no '+(fm.length>1?'están cargados':'está cargado')+' en la planilla: lo que se facturó después achica el margen que se ve acá.</span></div>'; }
+    body+='<div class="fc-kpis"><div class="fc-hero"><h3>Facturado en '+d.anio+(gs?' por los de '+esc(gs.corto):'')+'</h3><span class="v">'+fcM(tot)+'</span><span class="s">'+fcN(n)+' comprobantes de '+plural(ps.length,'contribuyente','contribuyentes')+'</span>'+fcColumnas(meses, d, 'Facturación por mes', 640, 178)+'</div>'+
+      '<div class="fc-kpi"><h3>Margen hasta la '+esc(T.cat)+'</h3><b>'+fcM(margen)+'</b><small>Lo que todavía pueden facturar entre los '+ps.length+' sin que nadie pase de la '+esc(T.cat)+'.</small></div>'+
+      '<div class="fc-kpi'+(lim.length?' al':'')+'"><h3>Al límite</h3><b>'+(lim.length?lim.length+' de '+ps.length:'Ninguno')+'</b><small>'+(lim.length?lim.map(function(p){ return esc(p.nombre)+': '+(p.resto>=0?'le quedan '+fcM(p.resto):'se pasó por '+fcM(-p.resto)); }).join('<br>'):'Nadie llega al 90 % del tope ni se pasa al ritmo actual.')+'</small></div></div>';
+    var eje=d.categorias.filter(function(c){ return c.hasta<=T.limite+1; }).map(function(c){ return '<i style="left:'+(c.desde/T.limite*100).toFixed(2)+'%;width:'+((c.hasta-c.desde)/T.limite*100).toFixed(2)+'%">'+esc(c.cat)+'</i>'; }).join('');
+    body+='<h2 class="sec-t">Cuánto le queda a cada uno</h2><p class="sec-sub">Cada barra es lo facturado en '+d.anio+' contra el tope de la '+esc(T.cat)+' ('+fcM(T.limite)+'). Las divisiones marcan el tope de cada categoría. Tocá un nombre para ver el detalle.</p>'+
+      '<ul class="fc-list"><li class="fc-eje" aria-hidden="true"><span class="lbl">Categoría del monotributo</span><span class="ej">'+eje+'</span></li>'+ps.map(function(p){ return fcFila(p, d, state.fcOpen===p.nombre); }).join('')+'</ul>';
+    var partes=(d.grupos||[]).filter(function(g){ return porG[g.k]>0; }).map(function(g){ return {k:g.k, l:g.nombre, m:porG[g.k]}; });
+    if (partes.length>1) body+='<h2 class="sec-t">Por dónde se factura</h2><div class="fc-box">'+fcReparto(partes)+'</div>';
+    var av=fcAvisos(d, sel?ps.map(function(p){ return p.nombre; }):null);
+    if (av.length) body+='<h2 class="sec-t">Para revisar en la planilla</h2><ul class="fc-rev">'+av.map(function(t){ return '<li>'+t+'</li>'; }).join('')+'</ul>';
+    body+='<div class="fc-acc"><button class="chip'+(state.fcTabla?' on':'')+'" data-fctabla aria-expanded="'+(!!state.fcTabla)+'">'+(state.fcTabla?'Ocultar la tabla':'Ver la tabla mes por mes')+'</button></div>';
+    if (state.fcTabla) body+=fcTabla(d, ps);
+    body+='<p class="hint" style="margin-top:14px">Sale de la planilla de facturación que carga la contadora: la app la lee y no le cambia nada. Se suman los comprobantes de cada pestaña (las notas de crédito restan) y los topes son los de la pestaña CAT. MON.</p>'+
+      '<p class="hint">Leído el '+esc(d.act||'')+(C.cargando?' · actualizando…':'')+' · <button class="rt-lnk" data-fcfresco>Actualizar</button></p>';
+    tit.body='<div'+(C.cargando?' style="opacity:.6"':'')+'>'+body+'</div>';
+    return tit;
+  }
+  document.addEventListener('click', function(ev){
+    var t=ev.target.closest && ev.target.closest('[data-fcopen],[data-fcgrupo],[data-fctabla],[data-fcfresco]'); if (!t) return;
+    if (t.hasAttribute('data-fcopen')){ var n=t.getAttribute('data-fcopen'); state.fcOpen = state.fcOpen===n ? null : n; render(); return; }
+    if (t.hasAttribute('data-fcgrupo')){ state.fcGrupo=t.getAttribute('data-fcgrupo'); state.fcOpen=null; render(); return; }
+    if (t.hasAttribute('data-fctabla')){ state.fcTabla=!state.fcTabla; render(); return; }
+    if (t.hasAttribute('data-fcfresco')){ fcLoad(true); render(); }
+  });
+  // Valor de cada columna al pasar el mouse, tocar o llegar con el teclado
+  var fcTipEl=null;
+  function fcTip(el){
+    if (!fcTipEl){ fcTipEl=document.createElement('div'); fcTipEl.className='fc-tip'; fcTipEl.hidden=true; document.body.appendChild(fcTipEl); }
+    if (!el){ fcTipEl.hidden=true; return; }
+    var p=String(el.getAttribute('data-fctip')||'').split('|'), r=el.getBoundingClientRect(), b=document.createElement('b');
+    fcTipEl.textContent=''; b.textContent=p[0]; fcTipEl.appendChild(b); fcTipEl.appendChild(document.createTextNode(p[1]||''));
+    fcTipEl.hidden=false;
+    fcTipEl.style.left=Math.max(80, Math.min(window.innerWidth-80, r.left+r.width/2))+'px'; fcTipEl.style.top=Math.max(48, r.top-4)+'px';
+  }
+  document.addEventListener('pointerover', function(ev){ var t=ev.target.closest && ev.target.closest('[data-fctip]'); if (t) fcTip(t); else if (fcTipEl && !fcTipEl.hidden) fcTip(null); });
+  document.addEventListener('focusin', function(ev){ var t=ev.target.closest && ev.target.closest('[data-fctip]'); if (t) fcTip(t); });
+  document.addEventListener('focusout', function(ev){ if (fcTipEl && ev.target.closest && ev.target.closest('[data-fctip]')) fcTip(null); });
+  window.addEventListener('scroll', function(){ if (fcTipEl && !fcTipEl.hidden) fcTip(null); }, {passive:true});
   /* ---------- Reporte del turno (intakers): lo que trabajó cada una desde que cerró el turno anterior ----------
      Pedido de Pri (19/11): armar el reporte de fin de turno sin entrar a la planilla. Sale del HISTORIAL de las tres ramas.
      Los turnos no se superponen, así que el turno va desde el último "cerrar turno" hasta ahora.
@@ -4018,6 +4321,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     if (!ctrl && (state.repTipo||store('repTipo')||'turno')==='turno') return viewTurno();
     if (ctrl && state.repModo==='finanzas'){ if (!(state.data && state.data.finAcceso)) state.repModo='control'; else { var vf=viewFin2(); vf.h1='Reportes'; vf.extra=repModoSeg()+vf.extra; return vf; } }
     if (ctrl && state.repModo==='ritmo') return viewRitmo();
+    if (ctrl && state.repModo==='factura'){ if (!fcPuede()) state.repModo='control'; else return viewFacturacion(false); }
     if (ctrl && state.repModo==='resumen'){ var vr=viewResumen(); vr.h1='Reportes'; vr.extra=repModoSeg()+(vr.extra||''); vr.body=equipoBtn()+vr.body; return vr; }
     if (!state.repSem) state.repSem=repDefault();
     var key=repKey(ctrl), d=(state.repCache||{})[key], lun=state.repSem, dom=addDays(lun,6), m0=mondayOf(nowBA().date);
@@ -5184,7 +5488,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     if (ev.key==='Escape'){ if (state.sheet) closeSheet(); else if ($('search').classList.contains('on')) closeSearch(); }
   });
   $('scrim').addEventListener('click', closeSheet);
-  $('btnRefresh').addEventListener('click', function(){ repInvalidar(); state.repFresco=(state.view==='reporte' || state.view==='reportes'); state.finFresco=enFinanzas(); load(false, true); if (state.view==='reporte' || state.view==='reportes') render(); });
+  $('btnRefresh').addEventListener('click', function(){ repInvalidar(); state.repFresco=(state.view==='reporte' || state.view==='reportes'); state.finFresco=enFinanzas(); if (enFacturacion() && state.fc && state.fc.d) fcLoad(true); load(false, true); if (state.view==='reporte' || state.view==='reportes') render(); });
   $('btnSearch').addEventListener('click', function(){ if (state.data) openSearch(); });
   $('btnSearchClose').addEventListener('click', closeSearch);
   $('btnPaste').addEventListener('click', function(){ if (state.data){ closeSearch(); openSheet({type:'pegar'}); } });
@@ -5750,9 +6054,9 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
   function finTok(){ if (state.ftok && Date.now()-(state.ftokT||0) > FIN_TOK_MS) finCerrar(false); return state.ftok || ''; }
   function finCerrar(aviso){
     var habia=!!state.ftok; if (state.ftok) call1('finPinSalir', {tok:store('tok')||'', ftok:state.ftok}).catch(function(){});
-    state.ftok=null; state.f2={}; state.f2p={}; state.fin={};
+    state.ftok=null; state.f2={}; state.f2p={}; state.fin={}; state.fc=null;
     if (state.sheet && state.sheet.type==='fin2') closeSheet();
-    if (enFinanzas()) render();
+    if (enFinanzas() || enFacturacion()) render();
     if (aviso && habia) toast('🔒 Finanzas se cerró. Poné tu PIN de finanzas para seguir.');
   }
   setInterval(function(){ if (state.ftok) finTok(); }, 30000);
