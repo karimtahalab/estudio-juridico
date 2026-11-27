@@ -1057,11 +1057,13 @@ a.save.wa-go svg{width:20px;height:20px}
 .fc-rama .rv{text-align:right;flex:none}
 .fc-rama .rv small{display:block;font-size:12px;color:var(--ink-3);font-weight:600}
 .fc-rama .rv b{display:block;font-size:26px;font-weight:800;font-stretch:var(--cond);line-height:1.08;white-space:nowrap}
-.fc-rsegs{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:6px;margin-top:12px}
+.fc-rsegs{display:grid;gap:10px 6px;margin-top:12px}
 .fc-rseg{display:block;min-width:0;text-align:center}
 .fc-rseg .fc-bar{height:10px;border-radius:5px}
 .fc-rseg b{display:block;font-size:12.5px;font-weight:700;margin-top:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .fc-rseg small{display:block;font-size:11.5px;color:var(--ink-2);font-weight:500;white-space:nowrap}
+.fc-nota{display:flex;align-items:flex-start;gap:2px;margin:10px 2px 0;font-size:13.5px;line-height:1.45;color:var(--ink-2)}
+.fc-nota .fc-dot{margin-top:6px}
 .fc-rama .rnota{display:block;font-size:12.5px;color:var(--ink-2);line-height:1.4;margin-top:10px;padding-top:9px;border-top:1px solid var(--line)}
 @media (min-width:860px){.fc-ramas{grid-template-columns:repeat(3,minmax(0,1fr));align-items:stretch}.fc-rama{padding:16px 18px 14px}}
 /* Lista de contribuyentes: una barra por persona, todas contra el mismo tope */
@@ -1153,6 +1155,7 @@ a.save.wa-go svg{width:20px;height:20px}
 .fc-seg i{display:block;height:100%;min-width:2px;background:var(--ink-3)}
 .fc-sw{display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--ink-3);margin-right:8px;flex:none}
 .fc-seg i.mix,.fc-sw.mix{background:repeating-linear-gradient(135deg,var(--m1) 0 4px,var(--m2) 4px 8px)}
+.fc-seg i.mix.m3,.fc-sw.mix.m3{background:repeating-linear-gradient(135deg,var(--m1) 0 4px,var(--m2) 4px 8px,var(--m3) 8px 12px)}
 .fc-gr{list-style:none;margin:6px 0 0;padding:0}
 .fc-gr li{display:flex;align-items:baseline;gap:0;padding:6px 0;font-size:14.5px;line-height:1.3}
 .fc-gr li span.n{flex:1;min-width:0;padding-right:10px}
@@ -4109,10 +4112,11 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
   // Se puede filtrar por las ramas para las que factura más de una persona
   function fcFiltros(d){ return (d.ramas||[]).filter(function(g){ return g.personas.length>1; }); }
   function fcPunto(k){ return '<i class="fc-dot '+(FC_COL[k]||'')+'"></i>'; }
-  // Color de una parte: el de su rama, o rayado con los dos si es de dos ramas
+  // Color de una parte: el de su rama, o rayado con los de todas si es de más de una
   function fcSw(ks){
     var cs=[]; (ks||[]).forEach(function(k){ var c=FC_COL[k]; if (c && cs.indexOf(c)===-1) cs.push(c); });
-    return cs.length>1 ? {c:'mix', s:'--m1:var(--fc-'+cs[0]+');--m2:var(--fc-'+cs[1]+');'} : {c:cs[0]||'', s:''};
+    if (cs.length<2) return {c:cs[0]||'', s:''};
+    return {c:'mix'+(cs.length>2?' m3':''), s:'--m1:var(--fc-'+cs[0]+');--m2:var(--fc-'+cs[1]+');'+(cs.length>2?'--m3:var(--fc-'+cs[2]+');':'')};
   }
   function fcMesesTxt(m){ return m<0.95 ? 'menos de un mes' : (m<1.5 ? 'un mes' : 'unos '+Math.round(m)+' meses'); }
   // Columnas por mes (un solo color): los meses sin cargar quedan vacíos; el valor de cada mes sale al pasar el dedo o el mouse, y en la tabla
@@ -4227,11 +4231,15 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
       '</button>'+(abierto?fcDetalle(p, d):'')+'</li>';
   }
   // Una tarjeta por rama: el margen entre todos los que facturan para ella y una barrita por persona
+  // Con quién comparte margen una rama: las mismas personas que facturan para otras se juntan en un solo renglón
   function fcNotaRama(g, d){
-    return (g.comparte||[]).map(function(c){
-      var q=fcJunta(c.personas.map(esc)), para=esc(c.para||c.corto), uno=c.personas.length===1;
-      if (c.personas.length===g.personas.length) return 'Es el mismo margen que usan para '+para+': cada uno tiene un solo monotributo.';
-      return q+' también '+(uno?'factura':'facturan')+' para '+para+' con el mismo margen ('+fcM(c.margen)+(uno?'':' entre los '+c.personas.length)+').';
+    var gr=[];
+    (g.comparte||[]).forEach(function(c){ var k=c.personas.join('|'), x=gr.filter(function(y){ return y.k===k; })[0]; if (!x){ x={k:k, personas:c.personas, margen:c.margen, para:[]}; gr.push(x); } x.para.push(esc(c.para||c.corto)); });
+    gr.sort(function(a,b){ return b.personas.length-a.personas.length; });
+    return gr.map(function(x){
+      var para=fcJunta(x.para), uno=x.personas.length===1;
+      if (x.personas.length===g.personas.length) return 'Es el mismo margen que usan para '+para+': cada uno tiene un solo monotributo.';
+      return fcJunta(x.personas.map(esc))+' también '+(uno?'factura':'facturan')+' para '+para+' con el mismo margen ('+fcM(x.margen)+(uno?'':' entre los '+x.personas.length)+').';
     }).join(' ');
   }
   function fcRamas(d){
@@ -4242,7 +4250,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
       return '<button class="fc-rama" data-fcgrupo="'+esc(g.k)+'" aria-label="'+esc(aria)+'">'+
         '<span class="rh"><span class="rn">'+fcPunto(g.k)+esc(g.nombre)+I.chev+'<small>'+plural(ps.length,'persona','personas')+' · '+usado+' % del cupo usado</small></span>'+
         '<span class="rv"><small>Margen hasta la '+esc(d.tope.cat)+'</small><b>'+fcM(g.margen)+'</b></span></span>'+
-        '<span class="fc-rsegs" aria-hidden="true">'+ps.map(function(p){ var est=FC_EST[p.estado]?p.estado:'margen'; return '<span class="fc-rseg est-'+est+'">'+fcBarra(p, d, false)+'<b>'+esc(p.nombre)+'</b><small>'+(p.resto>=0?fcM(p.resto):'se pasó')+'</small></span>'; }).join('')+'</span>'+
+        '<span class="fc-rsegs" aria-hidden="true" style="grid-template-columns:repeat('+(ps.length>5?Math.ceil(ps.length/2):ps.length)+',minmax(0,1fr))">'+ps.map(function(p){ var est=FC_EST[p.estado]?p.estado:'margen'; return '<span class="fc-rseg est-'+est+'">'+fcBarra(p, d, false)+'<b>'+esc(p.nombre)+'</b><small>'+(p.resto>=0?fcM(p.resto):'se pasó')+'</small></span>'; }).join('')+'</span>'+
         (nota?'<span class="rnota">'+nota+'</span>':'')+'</button>';
     }).join('')+'</div>';
   }
@@ -4317,15 +4325,16 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
       body+='<div class="fc-aviso" role="note">'+FC_AVISO+'<span>Comprobantes cargados hasta el <b>'+fcDia(d.hasta, true)+'</b>. '+fcMayus(fcJunta(fm))+' todavía no '+(fm.length>1?'están cargados':'está cargado')+' en la planilla: lo que se facturó después achica el margen que se ve acá.</span></div>'; }
     var notaSel=gs ? fcNotaRama(gs, d) : '';
     body+='<div class="fc-kpis"><div class="fc-hero"><h3>Facturado en '+d.anio+(gs?' por quienes facturan para '+esc(gs.para||gs.corto):'')+'</h3><span class="v">'+fcM(tot)+'</span><span class="s">'+fcN(n)+' comprobantes de '+plural(ps.length,'contribuyente','contribuyentes')+(gs && mixtos.length?' · incluye todo lo que facturaron: la planilla no dice de qué rama es cada factura':'')+'</span>'+fcColumnas(meses, d, 'Facturación por mes', 640, 178)+'</div>'+
-      '<div class="fc-kpi"><h3>Margen hasta la '+esc(T.cat)+'</h3><b>'+fcM(margen)+'</b><small>Lo que todavía pueden facturar entre los '+ps.length+' sin que nadie pase de la '+esc(T.cat)+'.'+(notaSel?' '+notaSel:'')+'</small></div>'+
+      '<div class="fc-kpi"><h3>Margen hasta la '+esc(T.cat)+'</h3><b>'+fcM(margen)+'</b><small>Lo que todavía pueden facturar entre los '+ps.length+' sin que nadie pase de la '+esc(T.cat)+'.</small></div>'+
       '<div class="fc-kpi'+(lim.length?' al':'')+'"><h3>Al límite</h3><b>'+(lim.length?lim.length+' de '+ps.length:'Ninguno')+'</b><small>'+(lim.length?lim.map(function(p){ return esc(p.nombre)+': '+(p.resto>=0?'le quedan '+fcM(p.resto):'se pasó por '+fcM(-p.resto)); }).join('<br>'):'Nadie llega al 90 % del tope ni se pasa al ritmo actual.')+'</small></div></div>';
+    if (notaSel) body+='<p class="fc-nota">'+fcPunto(sel)+'<span>'+notaSel+'</span></p>';
     if (!sel) body+=fcRamas(d);
     var eje=d.categorias.filter(function(c){ return c.hasta<=T.limite+1; }).map(function(c){ return '<i style="left:'+(c.desde/T.limite*100).toFixed(2)+'%;width:'+((c.hasta-c.desde)/T.limite*100).toFixed(2)+'%">'+esc(c.cat)+'</i>'; }).join('');
     body+='<h2 class="sec-t">Cuánto le queda a cada uno</h2><p class="sec-sub">Cada barra es lo facturado en '+d.anio+' contra el tope de la '+esc(T.cat)+' ('+fcM(T.limite)+'); las divisiones marcan el tope de cada categoría. Tocá un nombre para ver el detalle.</p>'+
       (d.corte<12?'<p class="fc-ley" aria-hidden="true"><span><i class="k"></i>Facturado</span><span><i class="k p"></i>Lo que sumaría hasta diciembre al ritmo del año</span></p>':'')+
       '<ul class="fc-list"><li class="fc-eje" aria-hidden="true"><span class="lbl">Categoría del monotributo</span><span class="ej">'+eje+'</span></li>'+ps.map(function(p){ return fcFila(p, d, state.fcOpen===p.nombre); }).join('')+'</ul>';
     body+=fcEscalera(d, ps);
-    var partes=(d.reparto||[]).filter(function(c){ return porC[c.k] && porC[c.k].m>0; }).map(function(c){ return {ks:c.ramas, l:c.nombre, s:c.ramas.length>1 || /solo/.test(c.nombre) ? fcJunta(porC[c.k].q) : '', m:porC[c.k].m}; });
+    var partes=(d.reparto||[]).filter(function(c){ return porC[c.k] && porC[c.k].m>0; }).map(function(c){ return {ks:c.ramas, l:c.nombre, s:c.ramas.length>1 || /solo/i.test(c.nombre) ? fcJunta(porC[c.k].q) : '', m:porC[c.k].m}; });
     if (partes.length>1){
       body+='<h2 class="sec-t">Por dónde se factura</h2><div class="fc-box">'+fcReparto(partes)+'</div>';
       if (mixtos.length) body+='<p class="hint">Lo de '+fcJunta(mixtos.map(esc))+' va junto porque '+(mixtos.length>1?'facturan':'factura')+' para más de una rama con el mismo monotributo y la planilla no dice de qué rama es cada factura.</p>';
