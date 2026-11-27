@@ -1089,7 +1089,9 @@ a.save.wa-go svg{width:20px;height:20px}
 .est-cerca .fc-st{background:var(--amber-bg);color:var(--amber)}
 .est-limite .fc-st,.est-pasado .fc-st{background:var(--red-bg);color:var(--red)}
 /* Categoría actual → proyectada */
-.fc-cat{grid-area:cat;display:flex;align-items:center;gap:8px;min-width:0;padding-top:9px;border-top:1px dashed var(--line)}
+.fc-cat{grid-area:cat;display:flex;flex-wrap:wrap;align-items:center;gap:8px;min-width:0;padding-top:9px;border-top:1px dashed var(--line)}
+.fc-cat .rit{flex-basis:100%;display:flex;align-items:center;gap:5px;font-size:12.5px;font-weight:600;color:var(--red);white-space:nowrap}
+.fc-cat .rit svg{width:14px;height:14px;flex:none}
 .fc-cat .c{display:inline-flex;align-items:center;gap:7px;min-width:0}
 .fc-cat small{font-size:12.5px;color:var(--ink-2);font-weight:600;white-space:nowrap}
 .fc-cat b{display:inline-flex;align-items:center;justify-content:center;min-width:28px;height:26px;padding:0 7px;border-radius:8px;background:var(--paper-2);box-shadow:0 0 0 1px var(--line) inset;color:var(--ink);font-size:14.5px;font-weight:800;line-height:1}
@@ -1102,11 +1104,12 @@ a.save.wa-go svg{width:20px;height:20px}
 .fc-p.on .fc-tk{background:var(--paper-2)}
 .fc-p.on .fc-cat b{background:var(--paper)} .fc-p.on .fc-cat .c.al b{background:var(--red)}
 @media (min-width:860px){
-  .fc-row,.fc-eje{grid-template-columns:190px minmax(0,1fr) 150px 132px 178px;grid-template-areas:"who bar cat fig meta";align-items:center;gap:8px 20px;padding:14px 18px}
+  .fc-row,.fc-eje{grid-template-columns:190px minmax(0,1fr) 200px 124px 170px;grid-template-areas:"who bar cat fig meta";align-items:center;gap:8px 20px;padding:14px 18px}
   .fc-eje{grid-template-areas:"lbl bar . . .";padding:12px 18px 0}
   .fc-meta{flex-direction:column;align-items:flex-end;gap:5px}
   .fc-row > .fc-bar{height:14px;border-radius:7px}
   .fc-cat{padding-top:0;border-top:0;justify-content:center;align-items:flex-end;gap:7px}
+  .fc-cat .rit{justify-content:center;font-size:12px;margin-top:1px}
   .fc-cat .c{flex-direction:column;gap:3px}
   .fc-cat small{font-size:11.5px}
   .fc-cat > svg{margin-bottom:6px}
@@ -4068,7 +4071,9 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     return { h1:'Reportes', p:'Ritmo de ingresos de clientes', extra:repModoSeg()+segR, body:equipoBtn()+body };
   }
   /* ---------- Facturación y monotributo (Reportes › Facturación) ----------
-     Cuánto facturó cada contribuyente en el año, en qué categoría está, en cuál terminaría el año y cuánto le queda antes de pasarse del tope.
+     Cuánto facturó cada contribuyente en el año, su categoría actual (la vigente desde la última recategorización), la proyectada
+     (la que le corresponde por lo facturado hasta hoy) y cuánto le queda antes de pasarse del tope.
+     Aparte, como aviso, la estimación a diciembre si lo que falta del año se factura al ritmo promedio: no es la proyectada.
      Sale de la planilla de la contadora: el motor la lee (no le escribe nada) y acá no queda nada guardado en el celular.
      Las ramas van por socios: quien factura para dos (ART y Laboral) figura en las dos, con un solo margen.
      La ven administración, con el PIN de finanzas, y quien tenga rol 'contable'. Si el motor todavía no la tiene, la pestaña no aparece. */
@@ -4176,33 +4181,35 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     });
     return out;
   }
-  // ¿La proyección a diciembre se pasa del tope? (con el año cerrado ya no hay proyección: es lo facturado)
-  function fcSePasa(p, d){ return p.proyeccion>d.tope.limite+0.5; }
-  function fcCatProy(p){ return p.catProy || 'Fuera'; }
-  // Categoría actual → proyectada, en dos casilleros
+  function fcCatP(p){ return p.cat || 'Fuera'; } // proyectada: por lo facturado hasta hoy
+  // ¿Pasaría el tope a diciembre si lo que falta del año se factura al ritmo promedio? (es una estimación, no la proyectada)
+  function fcRitmoPasa(p, d){ return d.corte<12 && p.resto>=0 && p.estDic>d.tope.limite+0.5; }
+  function fcRitmoTxt(p){ return 'A este ritmo, '+(p.catDic?esc(p.catDic)+' en diciembre':'fuera del monotributo en diciembre'); }
+  // Categoría actual → proyectada, en dos casilleros; si a este ritmo pasaría el tope, se avisa al lado
   function fcCats(p, d){
     return '<span class="fc-cat" aria-hidden="true"><span class="c"><small>Actual</small><b>'+esc(p.catActual||'–')+'</b></span>'+FC_FLECHA+
-      '<span class="c'+(fcSePasa(p, d)?' al':'')+'"><small>'+(d.corte<12?'Proyectada':'Le corresponde')+'</small><b>'+esc(fcCatProy(p))+'</b></span></span>';
+      '<span class="c'+(p.resto<0?' al':'')+'"><small>Proyectada</small><b>'+esc(fcCatP(p))+'</b></span>'+
+      (fcRitmoPasa(p, d)?'<span class="rit">'+FC_ICO.limite+fcRitmoTxt(p)+'</span>':'')+'</span>';
   }
   function fcDetalle(p, d){
     var T=d.tope, tx=[];
-    if (!p.cat) tx.push(['al','Con lo facturado supera el tope de la última categoría del monotributo.']);
-    else if (p.catActual && p.catActual!==p.cat) tx.push(['','Categoría actual: <b>'+esc(p.catActual)+'</b> (tope '+fcM(p.limiteActual)+'). Por lo facturado hasta hoy ya le corresponde la <b>'+esc(p.cat)+'</b>.']);
-    else if (p.catActual) tx.push(['','Categoría actual: <b>'+esc(p.cat)+'</b>, y lo facturado hasta hoy entra en esa categoría.']);
-    else tx.push(['','Por lo facturado hasta hoy le corresponde la <b>'+esc(p.cat)+'</b>.']);
+    if (!p.cat) tx.push(['al','Con lo facturado hasta hoy supera el tope de la última categoría del monotributo.']);
+    else if (p.catActual && p.catActual!==p.cat) tx.push(['','Categoría actual: <b>'+esc(p.catActual)+'</b> (tope '+fcM(p.limiteActual)+'). Proyectada: <b>'+esc(p.cat)+'</b>, la que le corresponde por lo facturado hasta hoy.']);
+    else if (p.catActual) tx.push(['','Categoría actual: <b>'+esc(p.cat)+'</b>. La proyectada es la misma: lo facturado hasta hoy entra en esa categoría.']);
+    else tx.push(['','Proyectada: <b>'+esc(p.cat)+'</b>, la que le corresponde por lo facturado hasta hoy.']);
     if (p.resto<0) tx.push(['al','Se pasó del tope de la '+esc(T.cat)+' por <b>'+plataE(-p.resto)+'</b>.']);
     else if (p.cat && p.cat!==T.cat && p.catSig && p.restoCat!=null) tx.push(['','Le quedan <b>'+plataE(p.restoCat)+'</b> para saltar de la '+esc(p.cat)+' a la '+esc(p.catSig)+', y <b>'+plataE(p.resto)+'</b> hasta el tope de la '+esc(T.cat)+'.']);
     else if (p.catSig) tx.push([p.estado==='limite'?'al':'','Con <b>'+plataE(p.resto)+'</b> más pasa a la '+esc(p.catSig)+'.']);
     if (p.promedio>0 && d.corte<12 && p.resto>=0){
-      var ritmo='Factura en promedio <b>'+fcM(p.promedio)+' por mes</b>. A ese ritmo cierra diciembre en '+fcM(p.proyeccion)+': ';
-      if (!p.catProy) tx.push(['al', ritmo+'supera el tope de la última categoría y quedaría <b>fuera del monotributo</b>.']);
-      else if (fcSePasa(p, d)) tx.push(['al', ritmo+'categoría proyectada <b>'+esc(p.catProy)+'</b>. Se pasa de la '+esc(T.cat)+' por '+fcM(p.proyeccion-T.limite)+'; el margen le alcanza para '+fcMesesTxt(p.margenMeses||0)+'.']);
-      else tx.push(['ok', ritmo+'categoría proyectada <b>'+esc(p.catProy)+'</b>, dentro del tope.']);
+      var ritmo='Factura en promedio <b>'+fcM(p.promedio)+' por mes</b>. Si lo que falta del año viene a ese ritmo, cierra diciembre en '+fcM(p.estDic);
+      if (!p.catDic) tx.push(['al', ritmo+': supera el tope de la última categoría y quedaría <b>fuera del monotributo</b>.']);
+      else if (fcRitmoPasa(p, d)) tx.push(['al', ritmo+' y pasaría a la <b>'+esc(p.catDic)+'</b>, '+fcM(p.estDic-T.limite)+' por encima del tope de la '+esc(T.cat)+'. El margen le alcanza para '+fcMesesTxt(p.margenMeses||0)+'.']);
+      else tx.push(['ok', ritmo+(p.catDic!==p.cat?' y pasaría a la <b>'+esc(p.catDic)+'</b>, dentro del tope.':' y sigue en la <b>'+esc(p.catDic)+'</b>.')]);
     }
     var otras=p.ramas.map(function(k){ return fcRama(d, k); }).filter(function(g){ return g && g.personas.length>1; });
     if (p.ramas.length>1 && otras.length>1) tx.push(['','Factura para '+fcJunta(otras.map(function(g){ return esc(g.corto); }))+' con el mismo monotributo: el margen es uno solo para las '+(otras.length===2?'dos':otras.length)+' ramas.']);
     var h='<div class="fc-det"><div class="fc-2"><div><ul class="tx">'+tx.map(function(x){ return '<li class="'+x[0]+'">'+x[1]+'</li>'; }).join('')+'</ul>'+
-      '<div class="fc-kv"><div><small>Facturado en '+d.anio+'</small><b class="num">'+plataE(p.total)+'</b></div><div><small>'+(d.corte<12?'Proyección a diciembre':'Cierre del año')+'</small><b class="num">'+plataE(p.proyeccion)+'</b></div>'+
+      '<div class="fc-kv"><div><small>Facturado en '+d.anio+'</small><b class="num">'+plataE(p.total)+'</b></div><div><small>'+(d.corte<12?'Estimado a diciembre':'Cierre del año')+'</small><b class="num">'+plataE(p.estDic)+'</b></div>'+
       '<div><small>Promedio por mes</small><b class="num">'+plataE(p.promedio)+'</b></div><div><small>Comprobantes</small><b class="num">'+p.n+(fcDia(p.ultimo)?' <small>· último '+fcDia(p.ultimo)+'</small>':'')+'</b></div></div></div>'+
       '<div><h4>Mes por mes</h4>'+fcColumnas(p.meses, d, 'Facturación de '+p.nombre+' por mes', 500)+'</div></div>';
     if (p.partes.length>1) h+='<h4>Por dónde factura</h4><div class="fc-box" style="margin-top:6px">'+fcReparto(p.partes.map(function(x){ var g=fcRama(d, x.ramas[0]); return {ks:x.ramas, l:x.detalle||(g?g.nombre:x.hoja), s:plural(x.n,'comprobante','comprobantes'), m:x.total}; }))+'</div>';
@@ -4214,7 +4221,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
   }
   // La barra de una persona contra el tope: lleno lo facturado, rayado lo que sumaría hasta diciembre al ritmo del año
   function fcBarra(p, d, enLista){
-    var T=d.tope, pct=Math.max(0, Math.min(1, p.total/T.limite)), pp=Math.max(pct, Math.min(1, p.proyeccion/T.limite));
+    var T=d.tope, pct=Math.max(0, Math.min(1, p.total/T.limite)), pp=Math.max(pct, Math.min(1, p.estDic/T.limite));
     var tks=enLista ? d.categorias.filter(function(c){ return c.hasta<T.limite-1; }).map(function(c){ return '<i class="fc-tk" style="left:'+(c.hasta/T.limite*100).toFixed(2)+'%"></i>'; }).join('') : '';
     return '<span class="fc-bar">'+(enLista && d.corte<12 && pp>pct ? '<i class="fc-proy" style="left:'+(pct*100).toFixed(2)+'%;width:'+((pp-pct)*100).toFixed(2)+'%"></i>' : '')+'<i class="fc-fill" style="width:'+(pct*100).toFixed(2)+'%"></i>'+tks+'</span>';
   }
@@ -4222,7 +4229,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     var T=d.tope, est=FC_EST[p.estado]?p.estado:'margen';
     var rs=p.ramas.map(function(k){ var g=fcRama(d, k); return '<span>'+fcPunto(k)+esc(g?g.corto:k)+'</span>'; }).join('');
     var pc=Math.round(p.total/T.limite*100), queda=p.resto>=0 ? ['Le quedan', p.resto] : ['Se pasó por', -p.resto];
-    var aria=p.nombre+': facturó '+plataE(p.total)+', el '+pc+' % del tope de la '+T.cat+'. '+queda[0]+' '+plataE(queda[1])+'. Categoría actual '+(p.catActual||'sin dato')+', '+(d.corte<12?'proyectada a diciembre ':'le corresponde ')+(p.catProy||'fuera del monotributo')+'. '+FC_EST[est]+'.';
+    var aria=p.nombre+': facturó '+plataE(p.total)+', el '+pc+' % del tope de la '+T.cat+'. '+queda[0]+' '+plataE(queda[1])+'. Categoría actual '+(p.catActual||'sin dato')+', proyectada '+(p.cat||'fuera del monotributo')+'. '+(fcRitmoPasa(p, d)?fcRitmoTxt(p)+'. ':'')+FC_EST[est]+'.';
     return '<li class="fc-p est-'+est+(abierto?' on':'')+'"><button class="fc-row" data-fcopen="'+esc(p.nombre)+'" aria-expanded="'+(!!abierto)+'" aria-label="'+esc(aria)+'">'+
       '<span class="fc-who"><b>'+esc(p.nombre)+I.chev+'</b><small>'+rs+'</small></span>'+
       '<span class="fc-fig"><small>'+queda[0]+'</small><b>'+fcM(queda[1])+'</b></span>'+
@@ -4264,24 +4271,25 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     var como = a.fuente==='pagina' ? 'Consultados en la página de ARCA el '+esc(a.leido)+' h.' : (C && C.arca==='pidiendo' ? 'Consultando la página de ARCA…' : 'Comparados con la tabla oficial de ARCA guardada en la app'+(a.sinPagina || (C && C.arca==='fallo') ? ' (la página de ARCA no respondió recién).' : '.'));
     return '<p class="fc-arca">'+FC_ICO.margen+'<span>Los topes de la planilla <b>coinciden con los de ARCA</b>, vigentes desde el '+desde+'. '+como+'</span></p>';
   }
-  // Escalera de categorías: el tope de cada una, quién está hoy y dónde terminaría el año cada uno
+  // Escalera de categorías: el tope de cada una, quién está hoy (actual) y a cuál pasa por lo facturado hasta hoy (proyectada)
   function fcEscalera(d, ps){
-    var T=d.tope, hayCosto=d.categorias.some(function(c){ return c.costo; }), proy=d.corte<12, difA={}, futura=!!(d.arca && d.arca.desde>d.hoy);
+    var T=d.tope, hayCosto=d.categorias.some(function(c){ return c.costo; }), difA={}, futura=!!(d.arca && d.arca.desde>d.hoy);
     ((d.arca && d.arca.dif)||[]).forEach(function(x){ difA[x.cat]=x; });
     var nombres=function(xs, al){ return xs.length ? xs.map(function(p){ return '<span class="n'+(al?' al':'')+'">'+(al?FC_ICO.limite:'')+esc(p.nombre)+'</span>'; }).join(' ') : '<span class="vac">–</span>'; };
     var filas=d.categorias.map(function(c){
-      var sobre=c.hasta>T.limite+1, act=ps.filter(function(p){ return p.catActual===c.cat; }), pr=ps.filter(function(p){ return p.catProy===c.cat; });
+      var sobre=c.hasta>T.limite+1, act=ps.filter(function(p){ return p.catActual===c.cat; }), pr=ps.filter(function(p){ return p.cat===c.cat; });
       return '<tr class="'+(c.cat===T.cat?'tope':'')+(sobre?' sobre':'')+'"><td class="fc-cl"><b>'+esc(c.cat)+'</b></td><td class="tp num">'+fcM(c.hasta)+(difA[c.cat]?'<small class="dif">'+(futura?'Desde '+esc(fcDia(d.arca.desde)):'ARCA')+':<br> '+fcM(difA[c.cat].arca)+'</small>':'')+(c.costo?'<small>'+fcM(c.costo)+' por mes</small>':'')+'</td><td>'+nombres(act, false)+'</td><td>'+nombres(pr, sobre)+'</td></tr>'+
         (c.cat===T.cat?'<tr class="sep"><td colspan="4">Tope del estudio: no pasar de la '+esc(T.cat)+'</td></tr>':'');
     }).join('');
-    var fuera=ps.filter(function(p){ return !p.catProy; });
+    var fuera=ps.filter(function(p){ return !p.cat; });
     if (fuera.length) filas+='<tr class="sobre"><td class="fc-cl"><b>✕</b></td><td class="tp">Fuera del monotributo</td><td><span class="vac">–</span></td><td>'+nombres(fuera, true)+'</td></tr>';
-    var sinDato=ps.filter(function(p){ return !p.catActual; });
-    return '<h2 class="sec-t">Categoría actual y proyectada</h2><p class="sec-sub">En qué categoría está inscripto hoy cada uno y en cuál '+(proy?'terminaría el año si los meses que faltan factura al ritmo promedio de '+d.anio:'cierra el año con lo facturado')+'.</p>'+
-      '<table class="fc-esc"><thead><tr><th scope="col"><span class="sr">Categoría</span></th><th scope="col">Tope anual'+(hayCosto?' · cuota':'')+'</th><th scope="col">Actual</th><th scope="col">'+(proy?'Proyectada a diciembre':'Le corresponde')+'</th></tr></thead><tbody>'+filas+'</tbody></table>'+
+    var sinDato=ps.filter(function(p){ return !p.catActual; }), ritmo=ps.filter(function(p){ return fcRitmoPasa(p, d); });
+    return '<h2 class="sec-t">Categoría actual y proyectada</h2><p class="sec-sub">Actual: la vigente desde la última recategorización. Proyectada: la que le corresponde a cada uno por lo facturado en '+d.anio+' hasta hoy.</p>'+
+      '<table class="fc-esc"><thead><tr><th scope="col"><span class="sr">Categoría</span></th><th scope="col">Tope anual'+(hayCosto?' · cuota':'')+'</th><th scope="col">Actual</th><th scope="col">Proyectada</th></tr></thead><tbody>'+filas+'</tbody></table>'+
       fcArcaTxt(d, state.fc)+
+      (ritmo.length?'<div class="fc-aviso" role="note">'+FC_AVISO+'<span>Con lo facturado hasta hoy nadie pasa de la '+esc(T.cat)+'. Si lo que falta del año se factura al ritmo promedio de '+d.anio+', a diciembre la pasarían '+fcJunta(ritmo.map(function(p){ return '<b>'+esc(p.nombre)+'</b> ('+(p.catDic?esc(p.catDic):'fuera')+')'; }))+'. Es una estimación.</span></div>':'')+
       (sinDato.length?'<p class="hint">Sin categoría actual en RESUMEN: '+fcJunta(sinDato.map(function(p){ return esc(p.nombre); }))+'.</p>':'')+
-      '<p class="hint">ARCA actualiza los topes en febrero y en agosto. La recategorización de febrero mira lo facturado de enero a diciembre con la tabla que rija ese mes: si los topes vuelven a subir, la categoría proyectada puede terminar siendo más baja.'+(hayCosto?' La cuota por mes es la que la contadora cargó en CAT. MON.':'')+'</p>';
+      '<p class="hint">La recategorización de febrero mira lo facturado de enero a diciembre con la tabla de topes que rija ese mes: lo que se facture en los meses que faltan todavía suma, y si ARCA vuelve a subir los topes, la categoría puede terminar siendo más baja.'+(hayCosto?' La cuota por mes es la que la contadora cargó en CAT. MON.':'')+'</p>';
   }
   // Lo mismo en números: un contribuyente por columna y un mes por fila (si no entra, la tabla se desliza de costado)
   function fcTabla(d, ps){
@@ -4293,10 +4301,10 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     h+=fila('Total', function(p){ return '<td class="num">'+fcN(p.total)+'</td>'; }, 'tot')+'<td class="num">'+fcN(ps.reduce(function(a,p){ return a+p.total; },0))+'</td></tr>';
     h+=fila('Le queda hasta la '+esc(d.tope.cat), function(p){ return '<td class="num'+(p.resto<0?' neg':'')+'">'+(p.resto<0?'−':'')+fcN(Math.abs(p.resto))+'</td>'; })+'<td class="num">'+fcN(ps.reduce(function(a,p){ return a+Math.max(0,p.resto); },0))+'</td></tr>';
     h+=fila('Categoría actual', function(p){ return '<td class="num">'+esc(p.catActual||'–')+'</td>'; })+'<td></td></tr>';
-    h+=fila('Por lo facturado', function(p){ return '<td class="num">'+esc(p.cat||'Fuera')+'</td>'; })+'<td></td></tr>';
+    h+=fila('Categoría proyectada', function(p){ return '<td class="num'+(p.resto<0?' neg':'')+'"><b>'+esc(fcCatP(p))+'</b></td>'; })+'<td></td></tr>';
     if (d.corte<12){
-      h+=fila('Proyección a diciembre', function(p){ return '<td class="num">'+fcN(p.proyeccion)+'</td>'; })+'<td class="num">'+fcN(ps.reduce(function(a,p){ return a+p.proyeccion; },0))+'</td></tr>';
-      h+=fila('Categoría proyectada', function(p){ return '<td class="num'+(fcSePasa(p, d)?' neg':'')+'"><b>'+esc(fcCatProy(p))+'</b></td>'; })+'<td></td></tr>';
+      h+=fila('Estimado a diciembre', function(p){ return '<td class="num">'+fcN(p.estDic)+'</td>'; })+'<td class="num">'+fcN(ps.reduce(function(a,p){ return a+p.estDic; },0))+'</td></tr>';
+      h+=fila('A ese ritmo, categoría', function(p){ return '<td class="num'+(fcRitmoPasa(p, d)?' neg':'')+'">'+esc(p.catDic||'Fuera')+'</td>'; })+'<td></td></tr>';
     }
     return h+'</tbody></table></div><p class="hint">En pesos, sin centavos.</p>';
   }
@@ -4356,10 +4364,11 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     if (t.hasAttribute('data-fcfresco')){ fcLoad(true); render(); }
   });
   // Valor de cada columna al pasar el mouse, tocar o llegar con el teclado
-  var fcTipEl=null;
-  function fcTip(el){
+  var fcTipEl=null, fcTipDe=null, fcTipT=0;
+  function fcTip(el, mismo){
     if (!fcTipEl){ fcTipEl=document.createElement('div'); fcTipEl.className='fc-tip'; fcTipEl.hidden=true; document.body.appendChild(fcTipEl); }
-    if (!el){ fcTipEl.hidden=true; return; }
+    if (!el){ fcTipEl.hidden=true; fcTipDe=null; return; }
+    fcTipDe=el; if (!mismo) fcTipT=Date.now();
     var p=String(el.getAttribute('data-fctip')||'').split('|'), r=el.getBoundingClientRect(), b=document.createElement('b');
     fcTipEl.textContent=''; b.textContent=p[0]; fcTipEl.appendChild(b); fcTipEl.appendChild(document.createTextNode(p[1]||''));
     fcTipEl.hidden=false;
@@ -4368,7 +4377,8 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
   document.addEventListener('pointerover', function(ev){ var t=ev.target.closest && ev.target.closest('[data-fctip]'); if (t) fcTip(t); else if (fcTipEl && !fcTipEl.hidden) fcTip(null); });
   document.addEventListener('focusin', function(ev){ var t=ev.target.closest && ev.target.closest('[data-fctip]'); if (t) fcTip(t); });
   document.addEventListener('focusout', function(ev){ if (fcTipEl && ev.target.closest && ev.target.closest('[data-fctip]')) fcTip(null); });
-  window.addEventListener('scroll', function(){ if (fcTipEl && !fcTipEl.hidden) fcTip(null); }, {passive:true});
+  // Al deslizar la página el cartelito se va; si la página se acomodó sola para mostrar la columna recién elegida, lo sigue
+  window.addEventListener('scroll', function(){ if (!fcTipEl || fcTipEl.hidden) return; if (Date.now()-fcTipT<400 && fcTipDe && document.contains(fcTipDe)) fcTip(fcTipDe, true); else fcTip(null); }, {passive:true});
   /* ---------- Reporte del turno (intakers): lo que trabajó cada una desde que cerró el turno anterior ----------
      Pedido de Pri (19/11): armar el reporte de fin de turno sin entrar a la planilla. Sale del HISTORIAL de las tres ramas.
      Los turnos no se superponen, así que el turno va desde el último "cerrar turno" hasta ahora.
