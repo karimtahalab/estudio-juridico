@@ -971,6 +971,68 @@ a.save.wa-go{display:flex;align-items:center;justify-content:center;gap:8px;text
 a.save.wa-go svg{width:20px;height:20px}
 .seg.marca{margin-bottom:-4px}
 .seg2.rep4{flex-wrap:wrap}.seg2.rep4 button{flex:1 1 auto;padding:0 10px}
+/* Reporte semanal (Sol): tarjeta de entrada y paso a paso */
+.rs-entrar{display:flex;align-items:center;gap:12px;width:100%;text-align:left;margin:12px 0 4px;padding:14px 14px 14px 12px;border-radius:var(--r-lg);background:var(--navy);color:#fff;box-shadow:0 8px 20px -12px rgba(21,32,56,.6)}
+.rs-entrar .rs-ic{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-size:22px;background:rgba(255,255,255,.12);flex:none}
+.rs-entrar .rs-tx{flex:1;min-width:0}
+.rs-entrar .rs-tx b{display:block;font-size:17px;font-weight:800}
+.rs-entrar .rs-tx span{display:block;font-size:13.5px;color:rgba(255,255,255,.8);margin-top:2px}
+.rs-entrar .rs-n{min-width:28px;height:28px;padding:0 8px;border-radius:999px;background:var(--amber-bg);color:var(--amber);font-weight:800;font-size:15px;display:grid;place-items:center;flex:none}
+.rs-entrar .rs-go{font-size:28px;font-weight:700;color:var(--mint);flex:none;line-height:1}
+@media (prefers-color-scheme: dark){.rs-entrar{background:var(--navy-2)}}
+.rs-pasos{list-style:none;display:flex;gap:2px;margin:12px 0 4px;padding:0}
+.rs-pasos li{flex:1;min-width:0;position:relative}
+.rs-pasos li+li::before{content:"";position:absolute;top:21px;right:calc(50% + 17px);left:calc(-50% + 17px);height:2px;background:var(--line)}
+.rs-pasos li.ok+li::before,.rs-pasos li.ok+li.on::before{background:var(--mint)}
+.rs-pasos button{width:100%;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 1px;border-radius:12px;color:var(--ink-3);position:relative}
+.rs-pasos .rs-pn{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:14px;background:var(--paper);box-shadow:0 0 0 1.5px var(--line) inset;color:var(--ink-2)}
+.rs-pasos .rs-pt{font-size:11.5px;font-weight:700;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rs-pasos li.on .rs-pn{background:var(--navy);color:#fff;box-shadow:none}
+.rs-pasos li.on .rs-pt{color:var(--ink)}
+.rs-pasos li.ok .rs-pn{background:var(--mint);color:#062a20;box-shadow:none}
+.rs-pasos li.ok .rs-pt{color:var(--mint-ink)}
+@media (prefers-color-scheme: dark){.rs-pasos li.on .rs-pn{background:var(--mint);color:#062a20}}
+.rs-h{font-size:21px;font-weight:800;margin:14px 2px 4px;line-height:1.2}
+.rs-sub{font-size:14.5px;color:var(--ink-2);margin:0 2px 12px}
+.rs-lbl{display:flex;align-items:center;gap:8px;font-weight:800;font-size:15px;margin:16px 2px 8px}
+.rs-lbl .cnt.rs-cnt-ok{background:var(--green)}
+.rs-cli{background:var(--paper);border-radius:var(--r-lg);box-shadow:0 0 0 1.5px var(--amber) inset;padding:12px;margin-bottom:10px}
+.rs-cli-top{display:flex;align-items:center;gap:10px}
+.rs-av{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:var(--amber-bg);font-size:20px;flex:none}
+.rs-cli-tx{flex:1;min-width:0}
+.rs-cli-tx b{display:block;font-size:17px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rs-cli-tx span{display:block;font-size:13.5px;color:var(--ink-2);margin-top:1px}
+.rs-tag{flex:none;font-size:11.5px;font-weight:800;color:var(--amber);background:var(--amber-bg);border-radius:999px;padding:3px 8px}
+.rs-falta{margin:10px 2px 0;font-size:14px;font-weight:700;color:var(--amber)}
+.rs-falta.rs-completo{color:var(--green)}
+.rs-cli-bt{display:flex;gap:8px;margin-top:10px;align-items:center}
+.rs-cli-bt .save{flex:1;height:48px;font-size:16px;border-radius:14px}
+.rs-no{flex:none;height:48px;padding:0 14px;border-radius:14px;font-weight:700;font-size:14.5px;color:var(--red);background:var(--red-bg)}
+.rs-seguro{margin-top:10px}
+.rs-seguro p{margin:0 2px;font-size:14px;color:var(--ink-2)}
+.rs-seguro .danger{margin-top:8px;height:48px}
+.rs-seguro .link{margin-top:2px}
+.rs-add{margin-top:12px}
+.rs-tot{display:flex;align-items:baseline;justify-content:space-between;gap:10px;background:var(--paper);border-radius:14px;box-shadow:0 0 0 1px var(--line) inset;padding:12px 14px;margin:2px 0 10px}
+.rs-tot span{font-size:14px;font-weight:700;color:var(--ink-2)}
+.rs-tot b{font-size:22px;font-weight:800}
+.rs-res{margin-top:10px}
+.rs-share{margin-top:14px}
+.rs-nav{display:flex;gap:8px;margin-top:18px}
+.rs-nav .btn3{margin-top:0;flex:none;width:auto;padding:0 16px;height:56px}
+.rs-nav .save{flex:1}
+.rs-hoja{background:var(--amber-bg);color:var(--ink);border-radius:14px;padding:11px 13px;font-size:14.5px;margin:4px 0 6px}
+/* Turnos con clientes (no son consultas) */
+.it.bq.cli{--c:var(--blue);background:color-mix(in srgb,var(--blue) 7%,var(--paper))}
+.it.bq.cli .tm{color:var(--blue)}
+.it.bq.cli .nm{color:var(--ink);font-weight:800}
+.cli-tag{display:inline-block;font-size:11.5px;font-weight:800;color:var(--blue);background:var(--blue-bg);border-radius:999px;padding:1px 7px;margin-right:3px}
+.wg-bq.wg-cli{background:color-mix(in srgb,var(--blue) 16%,var(--paper));color:var(--blue);border-left:3px solid var(--blue);border-radius:6px;opacity:1;justify-content:flex-start;padding:0 3px;overflow:hidden}
+.wg-bq.wg-cli span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;line-height:1.15;text-align:left;font-size:12px}
+.wg-bq.wg-cli b{font-weight:800}
+.lk.lk-cli{white-space:nowrap}
+.cli-acts{display:flex;gap:8px;margin-top:12px}
+.cli-acts .btn3{margin-top:0;flex:1;text-decoration:none;color:var(--ink)}
 .rt-lnk{background:none;border:0;padding:0;color:var(--mint-ink);font-weight:700;text-decoration:underline;font-size:inherit}
 .rt-h{font-size:16px;font-weight:800;margin:18px 2px 6px}
 .rt-box{padding:10px 8px 8px}
@@ -1887,6 +1949,13 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
   }
   function bqRow(b, o){
     o = o || {};
+    if (esCli(b)){ var c=cliDe(b);
+      return '<li class="it bq cli">'+
+        '<button class="it-main" data-bloq="'+esc(b.id)+'" aria-label="Ver turno con '+esc(c.nombre)+'">'+
+          '<span class="tm num">'+(o.showDate?'<small>'+shortDate(b.fecha)+'</small>':'')+esc(b.desde)+'<span class="to">a '+esc(b.hasta)+'</span></span>'+
+          '<span class="tx"><span class="nm">👤 '+esc(c.nombre)+'</span><span class="bq-note"><b class="cli-tag">Cliente</b> no es consulta'+(c.nota?' · '+esc(c.nota):'')+'</span></span>'+
+        '</button>'+(c.tel?'<span class="it-acts"><a class="ib" href="'+telHref(c.tel)+'" target="_top" aria-label="Llamar a '+esc(c.nombre)+'">'+I.call+'</a><a class="ib wa" href="'+waHref(c.tel)+'" target="_blank" rel="noopener" aria-label="WhatsApp a '+esc(c.nombre)+'">'+I.chat+'</a></span>':'<span></span>')+'</li>';
+    }
     var rail = b.todoDia ? '<span style="font-size:17px">Todo<br>el día</span>' : esc(b.desde)+'<span class="to">a '+esc(b.hasta)+'</span>';
     return '<li class="it bq">'+
       '<button class="it-main" data-bloq="'+esc(b.id)+'" aria-label="Ver bloqueo">'+
@@ -1944,7 +2013,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     if (cur!=='todas' && !c[cur]) cur = state.chip[view] = 'todas';
     return '<div class="chips" role="tablist" aria-label="Filtrar">'+defs.filter(function(d){ return d[0]==='todas' || c[d[0]]; }).map(function(d){
       return '<button class="chip'+(cur===d[0]?' on':'')+'" data-chip="'+view+':'+d[0]+'" role="tab" aria-selected="'+(cur===d[0])+'">'+d[1]+' <b class="num">'+c[d[0]]+'</b></button>';
-    }).join('')+(withBlock?'<button class="chip add" data-nuevo="'+withBlock+'">'+I.lock+'Bloquear horario</button>':'')+'</div>';
+    }).join('')+(withBlock?'<button class="chip add" data-nuevo="'+withBlock+'">'+I.lock+'Bloquear horario</button><button class="chip add" data-nuevocli="'+withBlock+'">👤 Turno con cliente</button>':'')+'</div>';
   }
   function applyChip(view, items){
     var cur = state.chip[view]||'todas';
@@ -1993,7 +2062,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     if (!items.length && !bqs.length){
       var man=nextHabil(d), nMan=onDate(man).length;
       body += emptyBox('Hoy no hay consultas', '', nMan?'<button class="go" data-view="manana">Ver '+(man===addDays(d,1)?'mañana':shortDate(man))+': '+plural(nMan,'consulta','consultas')+'</button>':'') +
-        '<div class="chips" style="justify-content:center"><button class="chip add" data-nuevo="'+d+'">'+I.lock+'Bloquear horario</button></div>';
+        '<div class="chips" style="justify-content:center"><button class="chip add" data-nuevo="'+d+'">'+I.lock+'Bloquear horario</button><button class="chip add" data-nuevocli="'+d+'">👤 Turno con cliente</button></div>';
     } else {
       body += chips('hoy',items,d) + (docket(shown,{nowLine:all, blocks: all?bqs:[]}) || emptyBox('Nada en este filtro'));
     }
@@ -2004,7 +2073,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     var lab = d===addDays(today,1) ? 'Mañana' : 'Próximo día hábil';
     var conf = items.filter(function(l){ return confFinal(l)==='Confirmó'; }).length;
     var body = (items.length||bqs.length) ? chips('manana',items,d) + (docket(shown,{blocks: all?bqs:[]}) || emptyBox('Nada en este filtro'))
-      : emptyBox('No hay consultas ese día') + '<div class="chips" style="justify-content:center"><button class="chip add" data-nuevo="'+d+'">'+I.lock+'Bloquear horario</button></div>';
+      : emptyBox('No hay consultas ese día') + '<div class="chips" style="justify-content:center"><button class="chip add" data-nuevo="'+d+'">'+I.lock+'Bloquear horario</button><button class="chip add" data-nuevocli="'+d+'">👤 Turno con cliente</button></div>';
     return { h1:DIAS[dow(d)]+' '+dnum(d)+' de '+MESES[mnum(d)], p:lab+(items.length?', '+plural(items.length,'consulta','consultas')+', '+conf+' '+(conf===1?'confirmó':'confirmaron'):''), extra:seg(), body:body };
   }
 
@@ -2039,10 +2108,10 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     var tiles = '<div class="days" role="tablist" aria-label="Días">'+days.map(function(x){
       var cnt = x.items.length ? String(x.items.length) : '–';
       return '<button class="day'+(x.d===sel?' on':'')+(x.d===today?' today':'')+'" data-day="'+x.d+'" role="tab" aria-selected="'+(x.d===sel)+'" aria-label="'+longDate(x.d)+', '+plural(x.items.length,'consulta','consultas')+'">'+
-        '<span class="dw">'+DIAS_C[dow(x.d)]+'</span><span class="dn num">'+dnum(x.d)+'</span><span class="dc">'+cnt+(x.bq.length?' 🔒':'')+'</span>'+miniBar(x.items)+'</button>';
+        '<span class="dw">'+DIAS_C[dow(x.d)]+'</span><span class="dn num">'+dnum(x.d)+'</span><span class="dc">'+cnt+bqMarcas(x.bq)+'</span>'+miniBar(x.items)+'</button>';
     }).join('')+'</div>';
     var shown=applyChip('semana',selItems), allChip=state.chip.semana==='todas';
-    var body = tiles + '<h2 class="sec-t">'+longDate(sel)+(sel===today?', hoy':'')+'<button class="lk" data-nuevo="'+sel+'">'+I.lock+'Bloquear</button></h2>' +
+    var body = tiles + '<h2 class="sec-t">'+longDate(sel)+(sel===today?', hoy':'')+'<button class="lk" data-nuevo="'+sel+'">'+I.lock+'Bloquear</button><button class="lk lk-cli" data-nuevocli="'+sel+'">👤 Cliente</button></h2>' +
       ((selItems.length||selBq.length) ? (selItems.length?chips('semana',selItems):'') + (docket(shown,{nowLine: sel===today && allChip, blocks: allChip?selBq:[]}) || emptyBox('Nada en este filtro')) : emptyBox('Sin consultas este día'));
     return { h1:'Semana', p:plural(all.length,'consulta','consultas')+' en total', extra:seg()+weekNav(), body:body };
   }
@@ -2069,12 +2138,12 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     var tiles='<div class="days" role="tablist" aria-label="Días">'+days.map(function(x){
       var cnt=x.items.length ? x.items.length+' cons.' : '–';
       return '<button class="day'+(x.d===sel?' on':'')+(x.d===today?' today':'')+'" data-day="'+x.d+'" role="tab" aria-selected="'+(x.d===sel)+'" aria-label="'+longDate(x.d)+', '+plural(x.items.length,'consulta','consultas')+'">'+
-        '<span class="dw">'+(x.d===today?'Hoy':DIAS_C[dow(x.d)])+'</span><span class="dn num">'+dnum(x.d)+'</span><span class="dc">'+cnt+(x.bq.length?' 🔒':'')+'</span>'+miniBar(x.items)+'</button>';
+        '<span class="dw">'+(x.d===today?'Hoy':DIAS_C[dow(x.d)])+'</span><span class="dn num">'+dnum(x.d)+'</span><span class="dc">'+cnt+bqMarcas(x.bq)+'</span>'+miniBar(x.items)+'</button>';
     }).join('')+'</div>';
     var shown=applyChip('semana',selItems), allChip=state.chip.semana==='todas';
     var conf=selItems.filter(function(l){ return confFinal(l)==='Confirmó'; }).length;
     var body=novBanner()+tiles+(sel===today && selItems.length ? heroHoy(selItems) : '')+
-      '<h2 class="sec-t">'+(et ? et+', '+longDate(sel).toLowerCase() : longDate(sel))+'<button class="lk" data-nuevo="'+sel+'">'+I.lock+'Bloquear</button></h2>'+
+      '<h2 class="sec-t">'+(et ? et+', '+longDate(sel).toLowerCase() : longDate(sel))+'<button class="lk" data-nuevo="'+sel+'">'+I.lock+'Bloquear</button><button class="lk lk-cli" data-nuevocli="'+sel+'">👤 Cliente</button></h2>'+
       ((selItems.length||selBq.length) ? (selItems.length?chips('semana',selItems):'') + (docket(shown,{nowLine: sel===today && allChip, blocks: allChip?selBq:[]}) || emptyBox('Nada en este filtro')) : emptyBox('Sin consultas este día'));
     return { h1:'Agenda', p:(et||cap(DIAS[dow(sel)]))+' '+dnum(sel)+(selItems.length ? ', '+plural(selItems.length,'consulta','consultas')+(sel>=today ? ', '+conf+' '+(conf===1?'confirmó':'confirmaron') : '') : ''), extra:seg()+'<div class="agbar">'+weekNav()+agModoSeg()+'</div>', body:deBoton()+body };
   }
@@ -2220,6 +2289,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
       var who = state.abog!=='Todas' ? state.abog : ((state.data.user&&state.data.user.abogada)||'');
       var hh = Math.min(19, Math.max(8, Math.ceil((nowBA().min+1)/30)*30/60|0));
       state.draft={ abogada:who, fecha:sh.fecha||nowBA().date, todoDia:false, desde:('0'+hh).slice(-2)+':00', hasta:('0'+(hh+1)).slice(-2)+':00', aclaracion:'' };
+      if (sh.cliente){ var yoCli=state.me&&state.me.nombre; state.draft.cliente=true; state.draft.nombre=''; state.draft.tel=''; state.draft.nota=''; state.draft.hasta=cliMas(state.draft.desde, 30); if (yoCli && personas().indexOf(yoCli)!==-1) state.draft.abogada=yoCli; else if (personas().length===1) state.draft.abogada=personas()[0]; }
     }
     if (sh.type==='bloq') state.draft={ armed:false };
     if (sh.type==='pegar') state.draft={ step:'paste', text:'', items:[] };
@@ -2436,6 +2506,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     }).sort(byTime);
   }
   function sheetNuevo(){
+    if (state.draft && state.draft.cliente) return sheetCli();
     var d=state.draft, ppl=personas();
     var html = '<div class="grab"></div><div class="sh-head"><div class="sh-who"><h2>Bloquear horario</h2><p class="hint" style="margin:4px 0 0">Los intakers lo ven en la pestaña BLOQUEOS de la planilla y no agendan en ese horario.</p></div><button class="close" data-close aria-label="Cerrar">'+I.x+'</button></div>';
     html += '<div class="field"><span class="lbl">¿Quién no está disponible?</span><div class="pick" role="radiogroup">'+ppl.map(function(p){
@@ -2456,22 +2527,73 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
   }
   function syncNuevo(){
     var d=state.draft; if (!d || !state.sheet || state.sheet.type!=='nuevo') return;
-    var f=$('bqFecha'), a=$('bqDesde'), b=$('bqHasta'), n=$('bqNota');
+    var f=$('bqFecha'), a=$('bqDesde'), b=$('bqHasta'), n=$('bqNota'), desde0=d.desde, dur=hmin(d.hasta)-hmin(d.desde);
     if (f && f.value) d.fecha=f.value;
     if (a) d.desde=a.value;
     if (b) d.hasta=b.value;
     if (n) d.aclaracion=n.value;
+    // Turno con cliente: al cambiar la hora de inicio, el fin se corre igual (30 minutos si no había duración)
+    if (d.cliente){ var cn=$('cliNom'), ct=$('cliTel'), cx=$('cliNota'); if (cn) d.nombre=cn.value; if (ct) d.tel=ct.value; if (cx) d.nota=cx.value;
+      if (a && d.desde!==desde0) d.hasta=cliMas(d.desde, dur>0?dur:30); }
   }
+  /* ---------- Turnos con clientes que ya son del estudio (Juan): se ven en la agenda y no cuentan como consulta.
+     Van como un bloqueo cuya aclaración empieza con "👤 Cliente: ": los intakers no agendan ahí y ningún reporte lo cuenta. ---------- */
+  var CLI_PRE='👤 Cliente: ';
+  function cliLimpio(s, max){ return String(s||'').replace(/\s+/g,' ').replace(/·/g,'-').trim().slice(0, max); }
+  function cliAclaracion(d){
+    var tel=String(d.tel||'').replace(/[^\d+ ]/g,'').replace(/\s+/g,' ').trim().slice(0,25), nota=cliLimpio(d.nota,150);
+    return CLI_PRE+cliLimpio(d.nombre,80)+(tel?' · tel '+tel:'')+(nota?' · '+nota:'');
+  }
+  function esCli(b){ return !!b && String(b.aclaracion||'').indexOf(CLI_PRE)===0; }
+  function cliDe(b){
+    var xs=String(b.aclaracion||'').slice(CLI_PRE.length).split(' · '), o={nombre:(xs.shift()||'').trim()||'Cliente', tel:'', nota:''}, r=[];
+    xs.forEach(function(x){ if (!o.tel && /^tel /.test(x)) o.tel=x.slice(4).trim(); else r.push(x); });
+    o.nota=r.join(' · '); return o;
+  }
+  function cliMas(h, min){ var m=hmin(h); if (m===null) return h; m=Math.max(0, Math.min(m+min, 23*60+30)); return ('0'+(m/60|0)).slice(-2)+':'+('0'+(m%60)).slice(-2); }
+  function bqMarcas(bq){ var c=bq.filter(esCli).length, o=bq.length-c; return (o?' 🔒':'')+(c?' 👤':''); }
+  function sheetCli(){
+    var d=state.draft, ppl=personas();
+    var html = '<div class="grab"></div><div class="sh-head"><div class="sh-who"><h2>Turno con un cliente</h2><p class="hint" style="margin:4px 0 0">Para alguien que ya es cliente. Se ve en la agenda y no cuenta como consulta agendada en ningún reporte. En ese horario no se agendan consultas.</p></div><button class="close" data-close aria-label="Cerrar">'+I.x+'</button></div>';
+    if (ppl.length>1 || !d.abogada) html += '<div class="field"><span class="lbl">¿Con quién es el turno?</span><div class="pick" role="radiogroup">'+ppl.map(function(p){
+      return '<button data-bqwho="'+esc(p)+'" class="'+(d.abogada===p?'on':'')+'" role="radio" aria-checked="'+(d.abogada===p)+'">'+esc(p)+'</button>'; }).join('')+'</div></div>';
+    html += '<div class="field"><label for="cliNom">Cliente</label><input class="inp" id="cliNom" type="text" autocomplete="off" placeholder="Nombre y apellido" value="'+esc(d.nombre||'')+'"></div>';
+    html += '<div class="field"><label for="cliTel">Teléfono <small>(opcional)</small></label><input class="inp" id="cliTel" type="tel" inputmode="tel" autocomplete="off" placeholder="Ej.: 261 555 1234" value="'+esc(d.tel||'')+'"></div>';
+    html += '<div class="field"><label for="bqFecha">Día</label><input class="inp" id="bqFecha" type="date" value="'+esc(d.fecha)+'"></div>';
+    html += '<div class="field two"><div><label for="bqDesde" class="lbl">Desde</label><select id="bqDesde">'+timeOpts(d.desde)+'</select></div><div><label for="bqHasta" class="lbl">Hasta</label><select id="bqHasta">'+timeOpts(d.hasta)+'</select></div></div>';
+    html += '<div class="field"><label for="cliNota">¿A qué viene? <small>(opcional)</small></label><textarea id="cliNota" style="margin-top:0" placeholder="Ej.: firma el poder, trae papeles, pregunta por su causa">'+esc(d.nota||'')+'</textarea></div>';
+    var ch = choques(d);
+    if (ch.length) html += '<div class="warn">Ojo: '+esc(d.abogada)+' ya tiene '+plural(ch.length,'consulta','consultas')+' en ese horario: '+ch.map(function(l){ return esc(l.hora)+' '+esc(l.nombre); }).join(', ')+'.</div>';
+    var err = !d.abogada ? 'Elegí con quién es' : (d.hasta<=d.desde ? 'La hora de fin tiene que ser después de la de inicio' : '');
+    html += '<div class="save-wrap"><button class="save" data-savebq '+(err?'disabled':'')+'>'+(err||'Anotar turno')+'</button></div>';
+    return html;
+  }
+  function sheetCliVer(b){
+    var c=cliDe(b);
+    var html = head(esc(b.desde), 'a '+esc(b.hasta), '👤 '+esc(c.nombre), '<p class="hint" style="margin:6px 0 0">'+longDate(b.fecha)+' · turno con cliente de '+esc(b.abogada)+'. No cuenta como consulta.</p>');
+    html += '<div class="blk"><div class="box">'+
+      (c.nota?'<div class="kv stack"><span>A qué viene</span><b>'+esc(c.nota)+'</b></div>':'')+
+      (c.tel?'<div class="kv"><span>Teléfono</span><b>'+esc(c.tel)+'</b></div>':'')+
+      (b.creadoPor?'<div class="kv"><span>Lo anotó</span><b>'+esc(b.creadoPor)+'</b></div>':'')+
+      (!c.nota && !c.tel && !b.creadoPor?'<div class="kv"><span>Turno</span><b>Con un cliente del estudio</b></div>':'')+
+    '</div></div>';
+    if (c.tel) html += '<div class="cli-acts"><a class="btn3" href="'+telHref(c.tel)+'" target="_top">'+I.call+' Llamar</a><a class="btn3" href="'+waHref(c.tel)+'" target="_blank" rel="noopener">'+I.chat+' WhatsApp</a></div>';
+    html += '<button class="danger'+(state.draft&&state.draft.armed?' armed':'')+'" data-delbq>'+(state.draft&&state.draft.armed?'Tocá de nuevo para sacarlo':'Sacar este turno de la agenda')+'</button>';
+    return html;
+  }
+  document.addEventListener('click', function(ev){ var t=ev.target.closest && ev.target.closest('[data-nuevocli]'); if (!t) return; openSheet({type:'nuevo', fecha:t.getAttribute('data-nuevocli'), cliente:true}); });
   function saveBloqueo(){
-    syncNuevo(); var d=state.draft;
+    syncNuevo(); var d=state.draft, cli=!!d.cliente;
+    if (cli && !String(d.nombre||'').trim()){ toast('Escribí el nombre del cliente.', true); var cn=$('cliNom'); if (cn) cn.focus(); return; }
     busySheet(true);
-    call('saveBloqueo',{fecha:d.fecha, desde:d.desde, hasta:d.hasta, todoDia:d.todoDia, abogada:d.abogada, aclaracion:d.aclaracion}).then(function(list){
+    call('saveBloqueo',{fecha:d.fecha, desde:d.desde, hasta:d.hasta, todoDia:cli?false:d.todoDia, abogada:d.abogada, aclaracion:cli?cliAclaracion(d):d.aclaracion}).then(function(list){
       state.data.bloqueos = list || state.data.bloqueos;
-      closeSheet(); render(); toast('🔒 Horario bloqueado');
-    }).catch(function(e){ renderSheet(); toast(e.message||'No se pudo guardar el bloqueo.', true); });
+      closeSheet(); render(); toast(cli?'👤 Turno anotado en la agenda':'🔒 Horario bloqueado');
+    }).catch(function(e){ renderSheet(); toast(e.message||(cli?'No se pudo anotar el turno.':'No se pudo guardar el bloqueo.'), true); });
   }
   function sheetBloq(){
     var b=findBloq(state.sheet.id); if (!b) return null;
+    if (esCli(b)) return sheetCliVer(b);
     var html = head(b.todoDia?'Todo':esc(b.desde), b.todoDia?'el día':'a '+esc(b.hasta), '🔒 '+esc(b.abogada)+' no está disponible',
       '<p class="hint" style="margin:6px 0 0">'+longDate(b.fecha)+'</p>');
     html += '<div class="blk"><div class="box">'+
@@ -2487,7 +2609,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     busySheet(true);
     call('deleteBloqueo', {id:b.id}).then(function(list){
       state.data.bloqueos = list || state.data.bloqueos;
-      closeSheet(); render(); toast('Bloqueo eliminado');
+      closeSheet(); render(); toast(esCli(b)?'Turno sacado de la agenda':'Bloqueo eliminado');
     }).catch(function(e){ renderSheet(); toast(e.message||'No se pudo eliminar.', true); });
   }
 
@@ -4920,6 +5042,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
       grupos.forEach(function(g){ var fins=[]; g.items.forEach(function(x){ var k=0; while (fins[k]!==undefined && fins[k]>x.s) k++; fins[k]=x.e; x.k=k; }); g.items.forEach(function(x){ x.n=fins.length; }); });
       var bqh=c.bq.map(function(b){
         var s=b.todoDia?ini:Math.max(ini,hmin(b.desde)), e=b.todoDia?fin:Math.min(fin,hmin(b.hasta)); if (!(e>s)) return '';
+        if (esCli(b)) return '<div class="wg-bq wg-cli" style="top:'+((s-ini)*PX)+'px;height:'+((e-s)*PX)+'px" title="'+esc((b.abogada?b.abogada+': ':'')+'turno con '+cliDe(b).nombre+' (cliente, no es consulta)')+'"><span><b>'+esc(b.desde)+'</b><br>👤 '+esc(cliDe(b).nombre.split(' ')[0])+'</span></div>';
         return '<div class="wg-bq" style="top:'+((s-ini)*PX)+'px;height:'+((e-s)*PX)+'px" title="'+esc((b.abogada?b.abogada+': ':'')+(b.aclaracion||'No disponible'))+'"><span>🔒'+(b.todoDia?' Todo el día':'')+'</span></div>';
       }).join('');
       var evh=ev.map(function(x){
@@ -5482,7 +5605,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
         return '<button class="slot num'+(on?' on':'')+'" data-slot="'+esc(a)+'|'+t+'" aria-pressed="'+on+'" aria-label="'+esc(a)+' a las '+t+'">'+t+'</button>'; }).join('')+'</div>';
       var notas=[];
       if (s.ocup.length && !s.todo) notas.push('Ocupado: '+s.ocup.map(function(o){ return o.hora; }).join(', '));
-      s.bq.filter(function(b){ return !b.todoDia; }).forEach(function(b){ notas.push('🔒 '+b.desde+' a '+b.hasta+(b.aclaracion?' ('+b.aclaracion+')':'')); });
+      s.bq.filter(function(b){ return !b.todoDia; }).forEach(function(b){ notas.push(esCli(b) ? '👤 '+b.desde+' a '+b.hasta+' turno con '+cliDe(b).nombre : '🔒 '+b.desde+' a '+b.hasta+(b.aclaracion?' ('+b.aclaracion+')':'')); });
       if (notas.length) html += '<p class="ag-note">'+esc(notas.join('. '))+'</p>';
       html += '</div>';
     });
@@ -5568,7 +5691,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     if (o) return {ok:false, t:'Tiene consulta a las '+o.hora+' ('+String(o.nombre||'').split(' ')[0]+')'};
     var bq=(state.data.bloqueos||[]).filter(function(b){ return b.abogada===a && b.fecha===l.fecha &&
       (b.todoDia || (m<hmin(b.hasta) && m+D>hmin(b.desde))); })[0];
-    if (bq) return {ok:false, t:'Bloqueó ese horario'+(bq.aclaracion?' ('+bq.aclaracion+')':'')};
+    if (bq) return {ok:false, t:esCli(bq) ? 'Tiene un turno con un cliente ('+cliDe(bq).nombre+')' : 'Bloqueó ese horario'+(bq.aclaracion?' ('+bq.aclaracion+')':'')};
     if (!dispOk(a, l.fecha, h)) return {ok:false, t:'No marcó disponible ese horario'};
     return {ok:true, t:'Libre a las '+h};
   }
@@ -6479,6 +6602,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
   }
   function viewFin2Adentro(){
     if (f2Per()==='panel') return viewF2Panel();
+    if (state.rsPaso!=null && f2Per()==='semana') return rsVista();
     var rs=(state.data && state.data.finRamas)||[], r=f2Rama(), d=f2Data(), carga=f2Modo(r)==='carga', sem=f2Per()==='semana';
     if (!d) { f2Load(state.finFresco); state.finFresco=false; d=f2Data(); }
     var nav='<div class="wk-nav"><button class="chip" data-f2mes="-1" aria-label="Anterior">‹</button><b>'+esc(f2PerTxt())+'</b><button class="chip" data-f2mes="1" aria-label="Siguiente">›</button></div>';
@@ -6491,6 +6615,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     if ((state.f2Pend||0)>0) body+='<p class="hint f2-pend">Guardando en la planilla…</p>';
     else if (d && d.cargando) body+='<p class="hint" style="text-align:center">Actualizando…</p>';
     if (d && d.error) body+='<div class="warn">'+esc(d.error)+'</div>';
+    body+=rsTarjeta(b, carga, sem);
     // Números arriba
     var tiles='<div class="ftile"><span>Cobrado</span><b class="num">'+plata(R.cobrado)+'</b></div>';
     if (b.tieneFacturas) tiles+='<div class="ftile"><span>Facturado</span><b class="num">'+plata(R.facturado)+'</b></div>';
@@ -6525,9 +6650,11 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     }
     if (b.tieneClientes){
       var cl=b.clientes||[];
-      body+=f2Sec('Clientes nuevos', cl.length, null, F.cliente?'cliente':'', 'Los que firmaron entran solos desde la agenda. Tocá uno para completar '+(hom?'el tipo y la lesión':'el detalle')+'. Si falta alguno, cargalo con ＋ Cargar.');
+      body+=f2Sec('Clientes nuevos', cl.length, null, F.cliente?'cliente':'', 'Los que firmaron los anota la app sola: '+((carga||sem)?'confirmalos con <b>Cargar reporte semanal</b> o tocando cada uno':'tocá cada uno para confirmarlo')+'. Si falta alguno, cargalo con ＋ Cargar.');
       body+=f2RepHtml(b.posiblesRep||[]);
-      body+=cl.length ? '<ul class="todo">'+cl.map(function(c){ var falta=!c.lesion || (hom && !c.tipo); return f2Fila('cl','👤', c.nombre, [shortDate(c.fecha), c.tipo, c.lesion, c.atiende?'atendió '+c.atiende:''].filter(Boolean).join(' · '), falta?'Completar':'', f2At('cliente', c)); }).join('')+'</ul>' : emptyBox('Todavía no hay clientes nuevos');
+      body+=cl.length ? '<ul class="todo">'+cl.map(function(c){ var falta=!c.lesion || (hom && !c.tipo);
+        if (c.app && !c.pend) return f2Fila('cl','👤', c.nombre, ['Lo anotó la app', shortDate(c.fecha), c.atiende?'atendió '+c.atiende:''].filter(Boolean).join(' · '), 'Confirmar', 'data-rsconf="'+c.fila+'"');
+        return f2Fila('cl','👤', c.nombre, [shortDate(c.fecha), c.tipo, c.lesion, c.atiende?'atendió '+c.atiende:''].filter(Boolean).join(' · '), falta?'Completar':'', f2At('cliente', c)); }).join('')+'</ul>' : emptyBox('Todavía no hay clientes nuevos');
     } else if ((b.firmados||[]).length){
       body+='<h2 class="sec-t">Firmaron <span class="cnt num">'+b.firmados.length+'</span></h2><p class="sec-sub">Según la planilla de leads.</p><ul class="todo">'+b.firmados.map(function(c){ return '<li><span class="w" style="padding:10px 4px;display:block"><b>👤 '+esc(c.nombre)+'</b><span>'+esc([shortDate(c.fecha), c.atendio].filter(Boolean).join(' · '))+'</span></span></li>'; }).join('')+'</ul>';
     }
@@ -6566,6 +6693,122 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     var ok=function(){ toast('Reporte copiado: pegalo donde quieras.'); };
     try{ navigator.clipboard.writeText(t).then(ok, function(){ window.open('https://wa.me/?text='+encodeURIComponent(t), '_blank'); }); }catch(e){ window.open('https://wa.me/?text='+encodeURIComponent(t), '_blank'); }
   }
+  /* ---------- Reporte semanal (Sol): paso a paso. La app anota sola a los que firmaron; Sol los confirma y carga lo demás a mano ---------- */
+  // Por confirmar, en el orden en que firmaron
+  function rsSinConf(b){ return ((b&&b.clientes)||[]).filter(function(c){ return c.app && !c.pend; }).sort(function(x, y){ return String(x.fecha).localeCompare(String(y.fecha)) || x.fila-y.fila; }); }
+  function rsConf(b){ return ((b&&b.clientes)||[]).filter(function(c){ return !c.app || c.pend; }); }
+  function rsPasos(b){
+    var F=(b&&b.forms)||{}, p=[{k:'clientes', t:'Clientes'}];
+    if (F.cobro) p.push({k:'cobros', t:'Cobrado'});
+    if (b && b.tieneFacturas && F.factura) p.push({k:'facturas', t:'Facturado'});
+    if (b && b.tieneAcuerdos && F.acuerdo) p.push({k:'homolog', t:f2Rama()==='ART'?'Homologaciones':'Acuerdos'});
+    p.push({k:'listo', t:'Listo'});
+    return p;
+  }
+  // Lo que le falta a un cliente para el reporte (la app suele anotar solo el nombre de pila)
+  function rsFalta(c){
+    var f=[], hom=f2Rama()==='ART';
+    if (String(c.nombre||'').trim().split(/\s+/).filter(function(x){ return x.length>=2; }).length<2) f.push('apellido');
+    if (hom && !c.tipo) f.push('tipo de siniestro');
+    if (!c.lesion) f.push(hom?'lesión':'detalle');
+    if (!c.atiende) f.push('quién lo atendió');
+    return f;
+  }
+  function rsSinApp(v){ var o={}; Object.keys(v||{}).forEach(function(k){ o[k]=v[k]; }); o.app=false; return o; }
+  function rsTarjeta(b, carga, sem){
+    if (!b || !b.tieneClientes || !(carga || sem)) return '';
+    var n=sem ? rsSinConf(b).length : 0, lun=mondayOf(nowBA().date);
+    var sub = sem ? (n ? plural(n,'cliente para confirmar','clientes para confirmar')+' · ' : '')+'clientes, cobros, facturas'+(b.tieneAcuerdos?' y '+(f2Rama()==='ART'?'homologaciones':'acuerdos'):'')
+      : 'Semana del '+f2DM(lun)+' al '+f2DM(addDays(lun,6));
+    return '<button class="rs-entrar" data-rsabrir><span class="rs-ic" aria-hidden="true">📋</span><span class="rs-tx"><b>Cargar reporte semanal</b><span>'+esc(sub)+'</span></span>'+
+      (n?'<span class="rs-n num" aria-label="'+n+' por confirmar">'+n+'</span>':'')+'<span class="rs-go" aria-hidden="true">›</span></button>';
+  }
+  function rsAbrir(){
+    if (f2Per()!=='semana'){ state.f2Per='semana'; state.f2Sem=mondayOf(nowBA().date); }
+    state.rsPaso=0; state.rsSacar=null; render(); window.scrollTo(0,0);
+  }
+  function rsCard(c){
+    var falta=rsFalta(c), sacar=state.rsSacar===c.fila;
+    return '<div class="rs-cli'+(sacar?' rs-sacando':'')+'"><div class="rs-cli-top"><span class="rs-av" aria-hidden="true">👤</span><span class="rs-cli-tx"><b>'+esc(c.nombre)+'</b><span>Firmó el '+esc(shortDate(c.fecha))+(c.atiende?' · atendió '+esc(c.atiende):'')+'</span></span><span class="rs-tag">Lo anotó la app</span></div>'+
+      (falta.length?'<div class="rs-falta">Falta: '+esc(falta.join(', '))+'</div>':'<div class="rs-falta rs-completo">Tiene todo: revisalo y confirmalo</div>')+
+      (sacar ? '<div class="rs-seguro"><p>¿Lo sacamos de la lista de clientes'+(f2Rama()==='ART'?' y de Ingresos ART':'')+'? Hacelo solo si al final no firmó.</p><button class="danger armed" data-rssacarok="'+c.fila+'">Sí, sacarlo: no firmó</button><button class="link" data-rssacar="0">Cancelar</button></div>'
+        : '<div class="rs-cli-bt"><button class="save" data-rsconf="'+c.fila+'">Revisar y confirmar</button><button class="rs-no" data-rssacar="'+c.fila+'">No firmó</button></div>')+'</div>';
+  }
+  function rsVista(){
+    var r=f2Rama(), d=f2Data(), b=f2Base();
+    if (!d) { f2Load(state.finFresco); state.finFresco=false; d=f2Data(); b=f2Base(); }
+    var nav='<div class="wk-nav"><button class="chip" data-f2mes="-1" aria-label="Semana anterior">‹</button><b>'+esc(f2PerTxt())+'</b><button class="chip" data-f2mes="1" aria-label="Semana siguiente">›</button></div>';
+    var t={ h1:'Reporte semanal', p:F2_RAMA[r]+' · paso a paso', extra:nav };
+    if (!b){ t.body = d && d.error ? emptyBox('No se pudo cargar', esc(d.error), '<button class="btn3" data-f2retry>Reintentar</button>') : '<div class="skel"></div><div class="skel"></div>'; return t; }
+    var ps=rsPasos(b), i=Math.max(0, Math.min(ps.length-1, state.rsPaso||0)), p=ps[i], sinC=rsSinConf(b), R=b.resumen||{}, hom=r==='ART';
+    state.rsPaso=i;
+    t.extra='<ol class="rs-pasos" aria-label="Pasos del reporte">'+ps.map(function(x, j){
+      var hecho = j!==i && (j<i || (x.k==='clientes' && !sinC.length));
+      return '<li class="'+(j===i?'on':(hecho?'ok':''))+'"><button data-rspaso="'+j+'"'+(j===i?' aria-current="step"':'')+'><span class="rs-pn num">'+(hecho?'✓':(j+1))+'</span><span class="rs-pt">'+esc(x.t)+'</span></button></li>'; }).join('')+'</ol>'+nav;
+    var body='';
+    if ((state.f2Pend||0)>0) body+='<p class="hint f2-pend">Guardando en la planilla…</p>';
+    else if (d && d.cargando) body+='<p class="hint" style="text-align:center">Actualizando…</p>';
+    if (d && d.error) body+='<div class="warn">'+esc(d.error)+'</div>';
+    if (p.k==='clientes'){
+      var cf=rsConf(b);
+      body+='<h2 class="rs-h">¿Quiénes firmaron esta semana?</h2><p class="rs-sub">La app anota sola a los que firmaron en la agenda. Revisá cada uno, completá lo que falte y confirmalo. Si falta alguien, agregalo.</p>';
+      body+=f2RepHtml(b.posiblesRep||[]);
+      if (sinC.length) body+='<div class="rs-lbl">Para confirmar <span class="cnt num">'+sinC.length+'</span></div>'+sinC.map(rsCard).join('');
+      if (cf.length) body+='<div class="rs-lbl">Confirmados <span class="cnt num rs-cnt-ok">'+cf.length+'</span></div><ul class="todo">'+cf.map(function(c){
+        return f2Fila('cl','✅', c.nombre, [shortDate(c.fecha), c.tipo, c.lesion, c.atiende?'atendió '+c.atiende:''].filter(Boolean).join(' · '), rsFalta(c).length?'Completar':'', f2At('cliente', c)); }).join('')+'</ul>';
+      if (!sinC.length && !cf.length) body+=emptyBox('Nadie firmó esta semana según la agenda', '<p class="hint" style="margin:6px 0 0">Si alguien firmó y no aparece, agregalo.</p>');
+      if (b.forms && b.forms.cliente) body+='<button class="btn3 rs-add" data-f2nuevo="cliente">＋ Falta alguien: agregarlo</button>';
+    } else if (p.k==='cobros'){
+      var co=b.cobros||[];
+      body+='<h2 class="rs-h">¿Qué se cobró esta semana?</h2><p class="rs-sub">Cargá cada cobro con el monto que entró.</p>';
+      body+='<div class="rs-tot"><span>Cobrado esta semana</span><b class="num">'+plata(R.cobrado)+'</b></div>';
+      body+= co.length ? '<ul class="todo">'+co.map(function(c){ return f2Fila('co','💰', c.caso, [shortDate(c.fecha), c.paga?'pagó '+(c.paga==='Cliente'?'el cliente':c.paga):'', c.entro?'entró a '+c.entro:'', c.detalle].filter(Boolean).join(' · '), plata(c.monto), f2At('cobro',c)); }).join('')+'</ul>' : emptyBox('Todavía no hay cobros cargados esta semana');
+      body+='<button class="btn3 rs-add" data-f2nuevo="cobro">＋ Cargar un cobro</button>';
+    } else if (p.k==='facturas'){
+      var fa=b.facturas||[];
+      body+='<h2 class="rs-h">¿Qué se facturó esta semana?</h2><p class="rs-sub">Escribí el monto de cada factura tal cual salió: la app no lo completa.</p>';
+      body+='<div class="rs-tot"><span>Facturado esta semana</span><b class="num">'+plata(R.facturado)+'</b></div>';
+      body+= fa.length ? '<ul class="todo">'+fa.map(function(x){ return f2Fila('fa','🧾', x.caso, [shortDate(x.fecha), x.quien?'facturó '+x.quien:'', x.a?'a '+x.a:'', x.expte?'expte '+x.expte:''].filter(Boolean).join(' · '), plata(x.monto), f2At('factura',x)); }).join('')+'</ul>' : emptyBox('Todavía no hay facturas cargadas esta semana');
+      body+='<button class="btn3 rs-add" data-f2nuevo="factura">＋ Cargar una factura</button>';
+    } else if (p.k==='homolog'){
+      var ac=b.acuerdos||[];
+      body+='<h2 class="rs-h">'+(hom?'¿Hubo homologaciones esta semana?':'¿Hubo acuerdos esta semana?')+'</h2><p class="rs-sub">'+(hom?'Cargá cada una con el monto homologado.':'Cargá cada acuerdo con sus honorarios.')+'</p>';
+      body+= ac.length ? '<ul class="todo">'+ac.map(function(a){ return f2Fila('ac','⚖️', a.caso, [shortDate(a.fecha), a.estado, a.expte?'expte '+a.expte:'', a.cobroAprox?'cobro aprox. '+f2DM(a.cobroAprox):''].filter(Boolean).join(' · '), plata(hom&&a.homologado?a.homologado:a.total), 'data-f2edit="acuerdo|'+a.fila+'"'); }).join('')+'</ul>' : emptyBox(hom?'Sin homologaciones esta semana':'Sin acuerdos esta semana');
+      body+='<button class="btn3 rs-add" data-f2nuevo="acuerdo">＋ Cargar '+(hom?'una homologación':'un acuerdo')+'</button>';
+    } else {
+      body+='<h2 class="rs-h">Reporte de la semana</h2><p class="rs-sub">'+esc(f2PerTxt())+'. Revisalo y mandalo.</p>';
+      if (sinC.length) body+='<div class="warn">Te '+(sinC.length===1?'queda 1 cliente':'quedan '+sinC.length+' clientes')+' por confirmar. <button class="lk" data-rspaso="0">Ir a confirmar</button></div>';
+      body+='<div class="fin-tabs rs-res">'+
+        '<div class="ftile"><span>Clientes nuevos</span><b class="num">'+(b.clientes||[]).length+'</b></div>'+
+        (b.forms&&b.forms.cobro?'<div class="ftile"><span>Cobrado</span><b class="num">'+plata(R.cobrado)+'</b></div>':'')+
+        (b.tieneFacturas?'<div class="ftile"><span>Facturado</span><b class="num">'+plata(R.facturado)+'</b></div>':'')+
+        (b.tieneAcuerdos?'<div class="ftile"><span>'+(hom?'Homologaciones':'Acuerdos')+'</span><b class="num">'+(b.acuerdos||[]).length+'</b></div>':'')+'</div>';
+      body+='<button class="save rs-share" data-f2share>Compartir el reporte de la semana</button>';
+    }
+    var sig=ps[i+1], ant=ps[i-1];
+    body+='<div class="rs-nav">'+(ant?'<button class="btn3" data-rspaso="'+(i-1)+'" aria-label="Paso anterior">‹ Atrás</button>':'')+
+      (sig?'<button class="save" data-rspaso="'+(i+1)+'">Siguiente: '+esc(sig.t)+' ›</button>':'<button class="save" data-rssalir>Terminar</button>')+'</div>';
+    body+='<p class="hint" style="text-align:center;margin-top:12px"><button class="lk" data-rssalir>Salir del reporte</button> · todo se guarda en la planilla de '+F2_RAMA[r]+'</p>';
+    t.body=body; return t;
+  }
+  function rsSacar(fila){
+    var rama=f2Rama(), kk=f2Key(), copia=f2Optimista(kk, 'cliente', {}, fila, true);
+    state.rsSacar=null; state.f2Pend=(state.f2Pend||0)+1; if (enFinanzas()) render(); toast('Sacando de la lista…');
+    call('saveFin2', {rama:rama, tipo:'cliente', fila:fila, borrar:true}).then(function(){
+      state.f2Pend=Math.max(0,(state.f2Pend||1)-1); toast('Listo: salió de la lista de clientes');
+      var C2=state.f2||{}; Object.keys(C2).forEach(function(x){ if (x!==kk || (C2[x] && C2[x].cargando)) delete C2[x]; });
+      if (f2Key()===kk) f2Load(true); if (enFinanzas()) render();
+    }).catch(function(e){ state.f2Pend=Math.max(0,(state.f2Pend||1)-1); if (copia && state.f2) state.f2[kk]=copia; toast((e&&e.message)||'No se pudo sacar.', true); if (enFinanzas()) render(); });
+  }
+  document.addEventListener('click', function(ev){
+    var t=ev.target.closest && ev.target.closest('[data-rsabrir],[data-rspaso],[data-rssalir],[data-rsconf],[data-rssacar],[data-rssacarok]'); if (!t) return;
+    if (t.hasAttribute('data-rsabrir')){ rsAbrir(); return; }
+    if (t.hasAttribute('data-rspaso')){ state.rsPaso=+t.getAttribute('data-rspaso'); state.rsSacar=null; render(); window.scrollTo(0,0); return; }
+    if (t.hasAttribute('data-rssalir')){ state.rsPaso=null; state.rsSacar=null; render(); window.scrollTo(0,0); return; }
+    if (t.hasAttribute('data-rsconf')){ openSheet({type:'fin2', tipo:'cliente', fila:+t.getAttribute('data-rsconf'), confirmar:true}); return; }
+    if (t.hasAttribute('data-rssacar')){ state.rsSacar=+t.getAttribute('data-rssacar')||null; render(); return; }
+    if (t.hasAttribute('data-rssacarok')){ rsSacar(+t.getAttribute('data-rssacarok')); return; }
+  });
   function f2Campos(tipo){ var b=f2Base(); return ((b&&b.forms)||{})[tipo]||[]; }
   // Clientes que pueden estar cargados dos veces: lo ven Sol y los socios, y se resuelve con un toque
   function f2RepHtml(xs){
@@ -6597,19 +6840,21 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     var pd=b.periodo; if (pd && v.fecha && (hoy<pd.desde || hoy>pd.hasta)) v.fecha=pd.desde;
     var src=null;
     if (sh.fila){ var lista={cobro:b.cobros, gasto:b.gastos, cliente:b.clientes, factura:b.facturas, acuerdo:b.acuerdos, retiro:b.retiros}[sh.tipo]||[]; src=lista.filter(function(x){ return x.fila===sh.fila; })[0]||null; }
-    if (src) Object.keys(src).forEach(function(k){ if (k!=='fila' && src[k]!=='' && src[k]!=null && !(src[k]===0 && sh.tipo==='cliente')) v[k]=String(src[k]); }); // un salario o edad vacíos llegan como 0: no se precargan
+    if (src) Object.keys(src).forEach(function(k){ if (k!=='fila' && k!=='app' && k!=='pend' && src[k]!=='' && src[k]!=null && !(src[k]===0 && sh.tipo==='cliente')) v[k]=String(src[k]); }); // un salario o edad vacíos llegan como 0: no se precargan
     if (sh.pre) Object.keys(sh.pre).forEach(function(k){ v[k]=sh.pre[k]; });
     // Cómo estaba al abrirlo: el servidor escribe solo lo que se cambió (si la lista estaba vieja, no pisa lo que ya está en la planilla)
     return { v:v, borrar:false, dup:null, orig: sh.fila ? JSON.parse(JSON.stringify(v)) : null };
   }
-  function f2Titulo(sh){ var b=f2Base()||{}; return ({cobro:'Cargar cobro', gasto:'Cargar gasto', factura:'Cargar facturado', acuerdo:'Cargar '+(b.acuerdoNombre||'acuerdo').toLowerCase(), cliente:'Cliente', retiro:'Retiro de honorarios'})[sh.tipo]+(sh.fila && sh.tipo!=='cliente'?' (corregir)':''); }
+  function f2Titulo(sh){ var b=f2Base()||{}; if (sh.confirmar) return 'Confirmar cliente'; return ({cobro:'Cargar cobro', gasto:'Cargar gasto', factura:'Cargar facturado', acuerdo:'Cargar '+(b.acuerdoNombre||'acuerdo').toLowerCase(), cliente:'Cliente', retiro:'Retiro de honorarios'})[sh.tipo]+(sh.fila && sh.tipo!=='cliente'?' (corregir)':''); }
   // Honorarios que salen de lo homologado (se ven mientras se escribe)
   function f2HonTxt(c, v){ var n=finNum(v); if (!(isFinite(n) && n>0) || !c.pct) return montoTxt(v); var cli=n*c.pct[0], art=n*c.pct[1]; return '= '+plata(n)+' · honorarios '+plata(Math.round((cli+art)*100)/100)+' (cliente '+plata(Math.round(cli*100)/100)+' + ART '+plata(Math.round(art*100)/100)+')'; }
   function sheetFin2(){
     var sh=state.sheet, d=state.draft||(state.draft=f2Draft(sh)), cs=f2Campos(sh.tipo), r=f2Rama();
     var html='<div class="grab"></div><div class="sh-head"><div class="sh-who"><h2>'+esc(f2Titulo(sh))+'</h2><div class="mt"><span class="rama r-'+ramaKey(r)+'">'+F2_RAMA[r]+'</span></div></div><button class="close" data-close aria-label="Cerrar">'+I.x+'</button></div>';
     if (!cs.length) return html+'<div class="note">Cargando…</div>';
-    if (d.dup && d.dup.cliente) html+='<div class="warn">Puede ser el mismo cliente que ya está cargado: <b>'+esc(d.dup.nombre)+'</b> ('+esc(shortDate(d.dup.fecha))+(d.dup.app?', lo cargó la app cuando firmó':'')+'). Si es la misma persona, completá esa fila así no queda dos veces.</div><div class="save-wrap" style="margin-top:8px"><button class="save" data-f2completar="'+d.dup.fila+'">Es el mismo: completar esa fila</button><button class="btn3" data-f2forzar>Es otro cliente: cargar igual</button></div>';
+    if (sh.confirmar) html+='<div class="rs-hoja"><b>Lo anotó la app cuando firmó.</b> Completá el nombre y apellido, el tipo y la lesión, revisá quién lo atendió y tocá <b>Confirmar</b>.</div>';
+    if (d.dup && d.dup.cliente) html+='<div class="warn">'+(d.dup.app ? 'Ya está en la lista: <b>'+esc(d.dup.nombre)+'</b> ('+esc(shortDate(d.dup.fecha))+'). Lo anotó la app cuando firmó. Si es la misma persona, tocá <b>Es el mismo</b>: se completa y se confirma esa fila, sin duplicarlo.'
+      : 'Puede ser el mismo cliente que ya está cargado: <b>'+esc(d.dup.nombre)+'</b> ('+esc(shortDate(d.dup.fecha))+'). Si es la misma persona, completá esa fila así no queda dos veces.')+'</div><div class="save-wrap" style="margin-top:8px"><button class="save" data-f2completar="'+d.dup.fila+'">Es el mismo: completar esa fila</button><button class="'+(d.dup.app?'link':'btn3')+'" data-f2forzar>'+(d.dup.app?'Es otra persona: cargar igual':'Es otro cliente: cargar igual')+'</button></div>';
     else if (d.dup) html+='<div class="warn">Ya hay '+(r==='ART'?'una homologación':'un acuerdo')+' con el nombre "'+esc(d.dup.caso)+'". Si es otro caso, cambiá el nombre; si es el mismo, tocalo en la lista para corregirlo.</div><button class="btn3" data-f2forzar>Es otro caso: cargar igual</button>';
     cs.forEach(function(c,i){
       var val=d.v[c.k]==null?'':d.v[c.k], id='f2c'+i, lab='<label for="'+id+'">'+esc(c.label)+(c.req?'':' <small>(opcional)</small>')+'</label>';
@@ -6626,9 +6871,11 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
       }
     });
     if (sh.tipo==='gasto' && d.v.reparto && !/100%|^Solo/.test(d.v.reparto)) html+='<p class="hint">El gasto compartido se anota también en las planillas de las otras ramas, cada una con su parte.</p>';
-    html+='<div class="save-wrap"><button class="save" data-f2save>Guardar</button>';
+    html+='<div class="save-wrap"><button class="save" data-f2save>'+(sh.confirmar?'✔ Confirmar cliente':'Guardar')+'</button>';
     if (sh.fila && (sh.tipo==='cobro' || sh.tipo==='gasto' || sh.tipo==='factura' || sh.tipo==='retiro')){ var qn=({cobro:'este cobro', gasto:'este gasto', factura:'esta factura', retiro:'este retiro'})[sh.tipo];
       html+= d.borrar ? '<button class="danger armed" data-f2borrar="2">🗑 Sí, borrar '+qn+' de la planilla</button><button class="link" data-f2borrar="0" style="display:block;margin:10px auto 0">Cancelar</button>' : '<button class="danger" data-f2borrar="1">🗑 Borrar '+qn+'</button>'; }
+    if (sh.fila && sh.tipo==='cliente' && sh.confirmar)
+      html+= d.borrar ? '<p class="hint" style="margin:14px 2px 0">Sale de la lista de clientes'+(f2Rama()==='ART'?' y de Ingresos ART':'')+'. Hacelo solo si al final no firmó.</p><button class="danger armed" data-f2borrar="2">Sí, sacarlo: no firmó</button><button class="link" data-f2borrar="0" style="display:block;margin:10px auto 0">Cancelar</button>' : '<button class="danger" data-f2borrar="1">No firmó: sacarlo de la lista</button>';
     html+='</div>';
     return html;
   }
@@ -6638,13 +6885,13 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     if (!opts.borrar){ for (var i=0;i<cs.length;i++){ var c=cs[i]; if (c.req && !String(d.v[c.k]||'').trim()){ toast('Completá '+c.label.toLowerCase()+'.', true); return; } } }
     var shC=JSON.parse(JSON.stringify(sh)), dC=JSON.parse(JSON.stringify(d)), rama=f2Rama(), kk=f2Key();
     closeSheet(); toast(opts.borrar?'Borrando…':'Guardando…');
-    var copiaD=f2Optimista(kk, shC.tipo, dC.v, shC.fila||0, !!opts.borrar);
+    var copiaD=f2Optimista(kk, shC.tipo, shC.confirmar && !opts.borrar ? rsSinApp(dC.v) : dC.v, shC.fila||0, !!opts.borrar);
     state.f2Pend=(state.f2Pend||0)+1; if (enFinanzas()) render();
     var reabrir=function(dup){ state.f2Rama=rama; openSheet(shC); dC.borrar=false; if (dup) dC.dup=dup; state.draft=dC; renderSheet(); };
-    call('saveFin2', {rama:rama, tipo:shC.tipo, datos:dC.v, orig:dC.orig||null, fila:shC.fila||0, borrar:!!opts.borrar, forzar:!!opts.forzar}).then(function(r){
+    call('saveFin2', {rama:rama, tipo:shC.tipo, datos:dC.v, orig:dC.orig||null, fila:shC.fila||0, borrar:!!opts.borrar, forzar:!!opts.forzar, confirmar:!!shC.confirmar}).then(function(r){
       state.f2Pend=Math.max(0,(state.f2Pend||1)-1);
       if (r && r.duplicado){ reabrir(r.duplicado); if (enFinanzas()) render(); return; }
-      toast(opts.borrar?'Borrado de la planilla':('✔ Guardado en la planilla'+(r && r.ramas && r.ramas.length>1?' de '+r.ramas.map(function(x){ return F2_RAMA[x]; }).join(', '):'')+(r && r.ingreso && !r.ingreso.error?(r.ingreso.estado==='nuevo'?' y anotado en '+r.ingreso.hoja+' (N° '+r.ingreso.n+')':' (ya estaba en '+r.ingreso.hoja+')'):'')));
+      toast(opts.borrar?(shC.tipo==='cliente'?'Listo: salió de la lista de clientes':'Borrado de la planilla'):((shC.confirmar?'✔ Cliente confirmado':'✔ Guardado en la planilla')+(r && r.ramas && r.ramas.length>1?' de '+r.ramas.map(function(x){ return F2_RAMA[x]; }).join(', '):'')+(r && r.ingreso && !r.ingreso.error?(r.ingreso.estado==='nuevo'?' y anotado en '+r.ingreso.hoja+' (N° '+r.ingreso.n+')':(shC.confirmar?' y actualizado en '+r.ingreso.hoja:' (ya estaba en '+r.ingreso.hoja+')')):'')));
       var C2=state.f2||{}, mira=f2Key()===kk; Object.keys(C2).forEach(function(x){ if (x!==kk || !mira || (C2[x] && C2[x].cargando)) delete C2[x]; });
       if (f2Key()===kk) f2Load(true); if (enFinanzas()) render();
     }).catch(function(e){ state.f2Pend=Math.max(0,(state.f2Pend||1)-1); if (copiaD && state.f2) state.f2[kk]=copiaD; reabrir(null); toast((e&&e.message)||'No se pudo guardar.', true); if (enFinanzas()) render(); });
@@ -6686,18 +6933,21 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     if (t.hasAttribute('data-f2pick')){ var pk=t.getAttribute('data-f2pick').split('|'), k=pk.shift(); state.draft.v[k]=pk.join('|'); renderSheet(); return; }
     if (t.hasAttribute('data-f2save')){ f2Guardar(); return; }
     if (t.hasAttribute('data-f2forzar')){ f2Guardar({forzar:true}); return; }
-    if (t.hasAttribute('data-f2completar')){ if (state.sheet && state.draft){ state.sheet.fila=+t.getAttribute('data-f2completar'); state.draft.dup=null; f2Guardar(); } return; }
+    if (t.hasAttribute('data-f2completar')){ if (state.sheet && state.draft){
+      // Es el mismo: se completa esa fila con lo que se escribió. Lo que quedó como venía en el formulario (la fecha de hoy, quién lo
+      // atendió por defecto) no pisa lo que ya tiene la planilla; la fecha de firma sigue siendo la de esa fila.
+      var dupC=state.draft.dup, v0=f2Draft({type:'fin2', tipo:state.sheet.tipo}).v;
+      state.sheet.fila=+t.getAttribute('data-f2completar');
+      if (dupC && dupC.app) state.sheet.confirmar=true;
+      if (dupC && dupC.fecha && state.draft.v.fecha===v0.fecha) state.draft.v.fecha=dupC.fecha;
+      v0.fecha=state.draft.v.fecha; state.draft.orig=v0; state.draft.dup=null; f2Guardar(); } return; }
     if (t.hasAttribute('data-f2borrar')){ var bv=t.getAttribute('data-f2borrar'); if (bv==='1' || bv==='0'){ state.draft.borrar=bv==='1'; renderSheet(); } else f2Guardar({borrar:true}); return; }
   });
   function f2Input(ev){
     var k=ev.target.getAttribute && ev.target.getAttribute('data-f2k'); if (!k || !state.draft || !state.sheet || state.sheet.type!=='fin2') return;
     state.draft.v[k]=ev.target.value;
     var c=f2Campos(state.sheet.tipo).filter(function(x){ return x.k===k; })[0]||{}, h=$(ev.target.id+'h'); if (h) h.textContent=c.pct?f2HonTxt(c, ev.target.value):montoTxt(ev.target.value);
-    // Facturado: al elegir el caso, se completa la parte de la ART de esa homologación
-    if (state.sheet.tipo==='factura' && k==='caso'){
-      var pa=((f2Base()||{}).parteArtCaso||{})[ev.target.value], m=document.querySelector('#sheet [data-f2k="monto"]');
-      if (pa && m && !String(m.value||'').trim()){ m.value=String(pa); state.draft.v.monto=String(pa); var mh=$(m.id+'h'); if (mh) mh.textContent=montoTxt(String(pa)); }
-    }
+    // Facturado: el monto lo escribe quien carga la factura (desde el 27/11 la app no lo completa al elegir el caso)
   }
   document.addEventListener('input', f2Input); document.addEventListener('change', f2Input);
   $('btnRefresh').addEventListener('click', function(){ if (enFinanzas()){ state.f2={}; state.finFresco=true; render(); } });
