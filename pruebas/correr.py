@@ -42,7 +42,8 @@ AUDIT_JS = r"""() => {
   });
   const ov = document.documentElement.scrollWidth > document.documentElement.clientWidth + 1;
   const noLabel = [...root.querySelectorAll('input, select, textarea')].filter(e => vis(e) && !e.labels?.length && !e.getAttribute('aria-label') && !e.getAttribute('placeholder')).map(lab);
-  return {en_hoja: !!sh, chicos: small, texto_chico: [...tiny].slice(0,60), scroll_horizontal: ov, sin_label: noLabel, alto_pagina: document.documentElement.scrollHeight};
+  const desborda = [...root.querySelectorAll('button, a, .chip, .rama')].filter(e => vis(e) && getComputedStyle(e).overflow==='visible' && e.scrollWidth > e.clientWidth + 2 && e.clientWidth>0).map(e => lab(e)+' '+e.clientWidth+'<'+e.scrollWidth);
+  return {desborda: desborda.slice(0,20), en_hoja: !!sh, chicos: small, texto_chico: [...tiny].slice(0,60), scroll_horizontal: ov, sin_label: noLabel, alto_pagina: document.documentElement.scrollHeight};
 }"""
 
 def run_role(pw, browser, who, vp, tag):
