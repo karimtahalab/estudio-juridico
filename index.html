@@ -1232,6 +1232,8 @@ a.save.wa-go svg{width:20px;height:20px}
 .f2t.fc-tabla{font-size:12.5px}
 .fc-acc{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
 .fc-acc .chip{height:38px}
+
+.fc-who small .fc-appb{display:inline-block;margin-left:2px;padding:0 7px;border-radius:999px;background:var(--paper-2);box-shadow:0 0 0 1px var(--line) inset;font-size:11.5px;font-weight:700;color:var(--ink-2);white-space:nowrap}
 .seg.marca button.on.mk-transito{background:#0B8B8B;color:#fff}
 .campo-pick button{flex:1 1 auto}
 .cre-guion{white-space:pre-wrap;font-size:16px;line-height:1.55;padding:12px 14px}
@@ -4256,8 +4258,18 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
       }
       var t=fcAvisoTxt(a, d); if (t) out.push(t);
     });
+    var A=d.app;
+    if (A && !nombres){
+      if ((A.sinPersona||[]).length) out.push('En Finanzas de la app hay facturas a nombre de <b>'+fcJunta(A.sinPersona.map(esc))+'</b>, que no '+(A.sinPersona.length>1?'son contribuyentes':'es contribuyente')+' de la planilla de la contadora: no se suman acá. Revisá «Quién facturó».');
+      if ((A.errores||[]).length) out.push('Para sumar lo que se carga en la app falta la pestaña de facturación en la planilla contable de '+fcJunta(A.errores.map(function(k){ var g=fcRama(d, k); return '<b>'+(g?esc(g.corto):esc(k))+'</b>'; }))+'.');
+    }
     return out;
   }
+  // Lo cargado en la app (pestaña Facturación de cada rama) que todavía no está en la planilla de la contadora
+  function fcAppPend(p){ return p.app && p.app.pend>0 ? p.app.pend : 0; }
+  function fcAppTot(d, ps){ return ps.reduce(function(a,p){ return a+fcAppPend(p); },0); }
+  // Cuánto cargó en la app para cada rama en el año: «ART $ 1,2 M · Laboral $ 0,5 M»
+  function fcAppRamasTxt(d, p){ var R=(p.app&&p.app.porRama)||{}; return Object.keys(R).sort(function(a,b){ return R[b]-R[a]; }).map(function(k){ var g=fcRama(d, k); return (g?esc(g.corto):esc(k))+' '+fcM(R[k]); }).join(' · '); }
   function fcCatP(p){ return p.cat || 'Fuera'; } // proyectada: por lo facturado hasta hoy
   // ¿Pasaría el tope a diciembre si lo que falta del año se factura al ritmo promedio? (es una estimación, no la proyectada)
   function fcRitmoPasa(p, d){ return d.corte<12 && p.resto>=0 && p.estDic>d.tope.limite+0.5; }
@@ -4287,13 +4299,15 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
       var ritmo='Viene facturando <b>'+fcM(p.promedio)+' por mes</b> en promedio'+(p.margenMeses!=null && p.margenMeses<11.5 ? ': los '+fcM(p.resto)+' que puede facturar son lo que factura en '+fcTiempoTxt(p.margenMeses) : '')+'. Si '+cuando+' a ese ritmo, cerraría el año en '+fcM(p.estDic)+' ('+(p.catDic?'categoría '+esc(p.catDic):'fuera del monotributo')+')';
       tx.push(fcRitmoPasa(p, d) ? ['al', ritmo+', '+fcM(p.estDic-T.limite)+' por encima del tope. Es una estimación.'] : ['ok', ritmo+'. Es una estimación.']);
     }
+    if (fcAppPend(p)) tx.push(['','Incluye <b>'+fcPE(p.app.pend)+'</b> de '+plural(p.app.nPend,'factura cargada','facturas cargadas')+' en la app después del '+fcDia(d.hasta)+', que todavía no '+(p.app.nPend>1?'están':'está')+' en la planilla de la contadora.']);
+    if (p.app && p.app.n && Object.keys(p.app.porRama).length) tx.push(['','Según lo cargado en la app en '+d.anio+': '+fcAppRamasTxt(d, p)+'.'+(p.ramas.length>1?' La planilla de la contadora no separa por rama: esto es solo lo que se cargó en la app.':'')]);
     var otras=p.ramas.map(function(k){ return fcRama(d, k); }).filter(function(g){ return g && g.personas.length>1; });
     if (p.ramas.length>1 && otras.length>1) tx.push(['','Factura para '+fcJunta(otras.map(function(g){ return esc(g.corto); }))+' con el mismo monotributo: lo que puede facturar es un solo importe, compartido entre las '+(otras.length===2?'dos':otras.length)+' ramas.']);
     var h='<div class="fc-det"><div class="fc-2"><div><ul class="tx">'+tx.map(function(x){ return '<li class="'+x[0]+'">'+x[1]+'</li>'; }).join('')+'</ul>'+
       '<div class="fc-kv"><div><small>Facturado en '+d.anio+'</small><b class="num">'+fcPE(p.total)+'</b></div><div><small>'+(d.corte<12?'Estimado a diciembre':'Cierre del año')+'</small><b class="num">'+fcPE(p.estDic)+'</b></div>'+
       '<div><small>Promedio por mes</small><b class="num">'+fcPE(p.promedio)+'</b></div><div><small>Comprobantes</small><b class="num">'+p.n+(fcDia(p.ultimo)?' <small>· último '+fcDia(p.ultimo)+'</small>':'')+'</b></div></div></div>'+
       '<div><h4>Mes por mes</h4>'+fcColumnas(p.meses, d, 'Facturación de '+p.nombre+' por mes', 500)+'</div></div>';
-    if (p.partes.length>1) h+='<h4>Por dónde factura</h4><div class="fc-box" style="margin-top:6px">'+fcReparto(p.partes.map(function(x){ var g=fcRama(d, x.ramas[0]); return {ks:x.ramas, l:x.detalle||(g?g.nombre:x.hoja), s:plural(x.n,'comprobante','comprobantes'), m:x.total}; }))+'</div>';
+    if (p.partes.length>1) h+='<h4>Por dónde factura</h4><div class="fc-box" style="margin-top:6px">'+fcReparto(p.partes.map(function(x){ var g=fcRama(d, x.ramas[0]); return {ks:x.ramas, l:x.detalle||(g?g.nombre:x.hoja), s:plural(x.n,x.app?'factura':'comprobante',x.app?'facturas':'comprobantes'), m:x.total}; }))+'</div>';
     var av=fcAvisos(d, [p.nombre]).filter(function(t){ return t.indexOf('<b>'+esc(p.nombre)+'</b>')===0; });
     if (av.length) h+='<h4>Para revisar en la planilla</h4><ul class="fc-rev" style="margin-top:6px">'+av.map(function(t){ return '<li>'+t+'</li>'; }).join('')+'</ul>';
     if (p.usd) h+='<p class="hint">'+plural(p.usd,'comprobante está','comprobantes están')+' en dólares: se toma el importe en pesos que figura en la planilla.</p>';
@@ -4316,9 +4330,9 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     if (monto){ var s=fcSimDe(p, d, monto);
       sTxt=s.entra ? 'Con '+fcM(monto)+' más queda en la '+(s.cat||'–')+' y todavía puede facturar '+fcM(s.resto)+'.' : (p.resto<0 ? 'Ya pasó la '+T.cat+': con '+fcM(monto)+' más quedaría '+fcM(-s.resto)+' por encima del tope.' : 'Con '+fcM(monto)+' más se pasa de la '+T.cat+' por '+fcM(-s.resto)+'.');
       sim='<span class="fc-simr '+(s.entra?(s.pct>=0.9?'justo':'ok'):'no')+'">'+(s.entra?(s.pct>=0.9?FC_ICO.cerca:FC_ICO.margen):FC_ICO.pasado)+'<span>'+(s.entra ? 'Con '+fcM(monto)+' más queda en la <b>'+esc(s.cat||'–')+'</b> y todavía puede facturar <b>'+fcM(s.resto)+'</b>.' : (p.resto<0 ? 'Ya pasó la '+esc(T.cat)+': con '+fcM(monto)+' más quedaría <b>'+fcM(-s.resto)+' por encima</b> del tope.' : 'Con '+fcM(monto)+' más <b>se pasa de la '+esc(T.cat)+'</b> por '+fcM(-s.resto)+'.'))+'</span></span>'; }
-    var aria=p.nombre+': facturó '+fcPE(p.total)+', el '+pc+' % del tope de la '+T.cat+'. '+(p.resto>=0?'Puede facturar '+fcPE(p.resto)+' más sin pasar de la '+T.cat:'Se pasó de la '+T.cat+' por '+fcPE(-p.resto))+'. Categoría actual '+(p.catActual||'sin dato')+', proyectada '+(p.cat||'fuera del monotributo')+'. '+(fcSaltaAntes(p, d)?'Con '+fcPE(p.restoCat)+' más pasa a la '+p.catSig+'. ':'')+(fcRitmoPasa(p, d)?fcRitmoTxt(p)+'. ':'')+FC_EST[est]+'.'+(sTxt?' '+sTxt:'');
+    var aria=p.nombre+': facturó '+fcPE(p.total)+', el '+pc+' % del tope de la '+T.cat+'. '+(p.resto>=0?'Puede facturar '+fcPE(p.resto)+' más sin pasar de la '+T.cat:'Se pasó de la '+T.cat+' por '+fcPE(-p.resto))+(fcAppPend(p)?'. Incluye '+fcPE(p.app.pend)+' cargados en la app':'')+'. Categoría actual '+(p.catActual||'sin dato')+', proyectada '+(p.cat||'fuera del monotributo')+'. '+(fcSaltaAntes(p, d)?'Con '+fcPE(p.restoCat)+' más pasa a la '+p.catSig+'. ':'')+(fcRitmoPasa(p, d)?fcRitmoTxt(p)+'. ':'')+FC_EST[est]+'.'+(sTxt?' '+sTxt:'');
     return '<li class="fc-p est-'+est+(abierto?' on':'')+'"><button class="fc-row'+(sim?' consim':'')+'" data-fcopen="'+esc(p.nombre)+'" aria-expanded="'+(!!abierto)+'" aria-label="'+esc(aria)+'">'+
-      '<span class="fc-who"><b>'+esc(p.nombre)+I.chev+'</b><small>'+rs+'</small></span>'+
+      '<span class="fc-who"><b>'+esc(p.nombre)+I.chev+'</b><small>'+rs+(fcAppPend(p)?'<span class="fc-appb">+ '+fcM(p.app.pend)+' de la app</span>':'')+'</small></span>'+
       '<span class="fc-fig">'+fig+'</span>'+
       fcBarra(p, d, true, monto)+fcCats(p, d)+
       '<span class="fc-meta"><span class="fc-fact"><span>Facturó '+fcM(p.total)+'</span><i> · </i><span>'+pc+' % del tope</span></span><span class="fc-st">'+FC_ICO[est]+FC_EST[est]+'</span></span>'+sim+
@@ -4415,6 +4429,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     h+=fila('Factura para', function(p){ return '<td class="num">'+p.ramas.map(function(k){ var g=fcRama(d, k); return esc(g?g.corto:k); }).join('<br>')+'</td>'; })+'<td></td></tr>';
     FC_MES.forEach(function(nom, m){ var ok=m<=d.mesHasta, t=0;
       h+=fila(fcMayus(nom), function(p){ t+=p.meses[m]; return '<td class="num">'+(ok?(p.meses[m]?fcN(p.meses[m]):'–'):'')+'</td>'; }, ok?'':'no')+'<td class="num">'+(ok?fcN(t):'')+'</td></tr>'; });
+    if (fcAppTot(d, ps)) h+=fila('Cargado en la app (falta en la planilla)', function(p){ return '<td class="num">'+(fcAppPend(p)?fcN(p.app.pend):'–')+'</td>'; })+'<td class="num">'+fcN(fcAppTot(d, ps))+'</td></tr>';
     h+=fila('Total', function(p){ return '<td class="num">'+fcN(p.total)+'</td>'; }, 'tot')+'<td class="num">'+fcN(ps.reduce(function(a,p){ return a+p.total; },0))+'</td></tr>';
     h+=fila('Puede facturar sin pasar de la '+esc(d.tope.cat), function(p){ return '<td class="num'+(p.resto<0?' neg':'')+'">'+(p.resto<0?'−':'')+fcN(Math.abs(p.resto))+'</td>'; })+'<td class="num">'+fcN(ps.reduce(function(a,p){ return a+Math.max(0,p.resto); },0))+'</td></tr>';
     h+=fila('Categoría actual', function(p){ return '<td class="num">'+esc(p.catActual||'–')+'</td>'; })+'<td></td></tr>';
@@ -4448,12 +4463,12 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     if (C.error) body+='<div class="warn">No se pudo actualizar: '+esc(C.error)+' Se muestra lo leído el '+esc(d.act||'')+'.</div>';
     if ((d.faltan||[]).length){ var fm=d.faltan.map(function(m){ return FC_MES[m]; });
       var hace=fcDias(d.hasta, d.hoy);
-      body+='<div class="fc-aviso" role="note">'+FC_AVISO+'<span>Comprobantes cargados hasta el <b>'+fcDia(d.hasta, true)+'</b>'+(hace>7?' (hace '+hace+' días)':'')+'. '+fcMayus(fcJunta(fm))+' todavía no '+(fm.length>1?'están cargados':'está cargado')+' en la planilla: lo que se facturó después hay que restarlo de lo que acá figura que puede facturar cada uno.</span></div>'; }
+      body+='<div class="fc-aviso" role="note">'+FC_AVISO+'<span>Comprobantes cargados hasta el <b>'+fcDia(d.hasta, true)+'</b>'+(hace>7?' (hace '+hace+' días)':'')+'. '+fcMayus(fcJunta(fm))+' todavía no '+(fm.length>1?'están cargados':'está cargado')+' en la planilla'+(fcAppTot(d, ps)?'. Ya están sumados los '+fcM(fcAppTot(d, ps))+' que se cargaron en la app después del '+fcDia(d.hasta)+'; si se facturó algo más y no se cargó,':':')+' lo que se facturó después hay que restarlo de lo que acá figura que puede facturar cada uno.</span></div>'; }
     var notaSel=gs ? fcNotaRama(gs, d) : '', ordenC={}, queda=d.corte<12 ? ', en lo que queda de '+d.anio+',' : ',';
     d.categorias.forEach(function(c, i){ ordenC[c.cat]=i; });
     // Suben de categoría: por lo facturado hasta hoy ya les corresponde una más alta que la actual
     var suben=ps.filter(function(p){ return (p.catActual in ordenC) && (p.cat ? ordenC[p.cat] : 99)>ordenC[p.catActual]; });
-    body+='<div class="fc-kpis"><div class="fc-hero"><h3>Facturado en '+d.anio+(gs?' por quienes facturan para '+esc(gs.para||gs.corto):'')+'</h3><span class="v">'+fcM(tot)+'</span><span class="s">'+fcN(n)+' comprobantes de '+plural(ps.length,'contribuyente','contribuyentes')+' · cargado hasta el '+fcDia(d.hasta)+(gs && mixtos.length?'. Incluye todo lo que facturaron: la planilla no dice de qué rama es cada factura':'')+'</span>'+fcColumnas(meses, d, 'Facturación por mes', 640, 190)+'</div>'+
+    body+='<div class="fc-kpis"><div class="fc-hero"><h3>Facturado en '+d.anio+(gs?' por quienes facturan para '+esc(gs.para||gs.corto):'')+'</h3><span class="v">'+fcM(tot)+'</span><span class="s">'+fcN(n)+' comprobantes de '+plural(ps.length,'contribuyente','contribuyentes')+' · cargado hasta el '+fcDia(d.hasta)+(fcAppTot(d, ps)?' + '+fcM(fcAppTot(d, ps))+' cargados en la app':'')+(gs && mixtos.length?'. Incluye todo lo que facturaron: la planilla no dice de qué rama es cada factura':'')+'</span>'+fcColumnas(meses, d, 'Facturación por mes', 640, 190)+'</div>'+
       '<div class="fc-kpi"><h3>Pueden facturar todavía</h3><b>'+fcM(margen)+'</b><small>'+(ps.length>1?'Entre los '+ps.length:esc(ps[0].nombre))+queda+' sin '+(ps.length>1?'que nadie pase':'pasar')+' de la '+esc(T.cat)+' ('+fcM(T.limite)+' en el año por persona).</small></div>'+
       '<div class="fc-kpi'+(lim.length?' al':'')+'"><h3>Al límite de la '+esc(T.cat)+'</h3><b>'+(lim.length?lim.length+' de '+ps.length:'Ninguno')+'</b>'+(lim.length?'<small>Lo que todavía puede facturar cada uno:</small><ul class="kl">'+lim.map(function(p){ return '<li><span>'+esc(p.nombre)+'</span><b>'+(p.resto>=0?fcM(p.resto):'se pasó por '+fcM(-p.resto))+'</b></li>'; }).join('')+'</ul>':'<small>Nadie llegó al 90 % del tope ni lo alcanzaría antes de fin de año al ritmo que viene.</small>')+'</div>'+
       '<div class="fc-kpi fc-kpi3"><h3>Suben de categoría</h3><b>'+(suben.length?suben.length+' de '+ps.length:'Ninguno')+'</b>'+(suben.length?'<small class="ccs">'+suben.map(function(p){ return '<span class="cc">'+esc(p.nombre)+' <i>'+esc(p.catActual)+' → '+esc(fcCatP(p))+'</i></span>'; }).join('')+'</small><small>Por lo facturado hasta hoy ya '+(suben.length>1?'les':'le')+' corresponde una categoría más alta que la actual.</small>':'<small class="solo">Por lo facturado hasta hoy, nadie pasa a una categoría más alta que la actual.</small>')+'</div></div>';
@@ -4470,6 +4485,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
         '<dt>Proyectada</dt><dd>La que le corresponde por lo facturado en '+d.anio+' hasta hoy: en la que quedaría en la próxima recategorización si no facturara nada más.</dd>'+
         '<dt>«Con $ … más pasa a la…»</dt><dd>Lo que le falta para subir a la categoría siguiente, cuando todavía está por debajo de la '+esc(T.cat)+'.</dd>'+
         '<dt>Con margen · Cerca del tope · Al límite · Se pasó</dt><dd>Con margen: usó menos del 75 % del tope. Cerca del tope: 75 % o más. Al límite: 90 % o más, o lo alcanzaría antes de fin de año al ritmo que viene facturando. Se pasó: ya superó el tope.</dd>'+
+        '<dt>Cargado en la app</dt><dd>Las facturas que se cargan en Finanzas de cada rama (con «Quién facturó»). Las que tienen fecha posterior a lo último que cargó la contadora se suman acá hasta que ella las pase a su planilla. También muestran cuánto factura cada uno para cada rama.</dd>'+
         '<dt>Parte rayada de la barra</dt><dd>Lo que sumaría hasta diciembre si sigue facturando al ritmo promedio del año. Es una estimación.</dd>'+
         '<dt>Probar una factura</dt><dd>Muestra cómo quedaría cada uno si factura ese importe. Es una cuenta en pantalla: no guarda ni cambia nada en la planilla.</dd>'+
       '</dl></div>':'')+
@@ -4484,7 +4500,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     var partes=(d.reparto||[]).filter(function(c){ return porC[c.k] && porC[c.k].m>0; }).map(function(c){ return {ks:c.ramas, l:c.nombre, s:c.ramas.length>1 || /solo/i.test(c.nombre) ? fcJunta(porC[c.k].q) : '', m:porC[c.k].m}; });
     if (partes.length>1){
       body+='<h2 class="sec-t">Por dónde se factura</h2><div class="fc-box">'+fcReparto(partes)+'</div>';
-      if (mixtos.length) body+='<p class="hint">Lo de '+fcJunta(mixtos.map(esc))+' va junto porque '+(mixtos.length>1?'facturan':'factura')+' para más de una rama con el mismo monotributo y la planilla no dice de qué rama es cada factura.</p>';
+      if (mixtos.length) body+='<p class="hint">Lo de '+fcJunta(mixtos.map(esc))+' va junto porque '+(mixtos.length>1?'facturan':'factura')+' para más de una rama con el mismo monotributo y la planilla no dice de qué rama es cada factura.'+(function(){ var q=ps.filter(function(p){ return mixtos.indexOf(p.nombre)!==-1 && p.app && Object.keys(p.app.porRama).length; }); return q.length ? ' Según lo cargado en la app en '+d.anio+': '+q.map(function(p){ return esc(p.nombre)+' '+fcAppRamasTxt(d, p); }).join('; ')+'.' : ''; })()+'</p>';
     }
     var av=fcAvisos(d, sel?ps.map(function(p){ return p.nombre; }):null);
     // Cuotas que faltan en CAT. MON. para las categorías a las que alguien pasaría
@@ -6316,9 +6332,11 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     var socios=C.tipo==='socios', conArq=C.personas.some(function(p){ return p.arqueo!=null; });
     html+='<h2 class="sec-t">Caja hoy</h2><p class="sec-sub">'+(socios?'Saldo de la plata de Tránsito en la cuenta de cada socio, lo que le toca según su porcentaje y cuánto tiene de más o de menos.':'Plata de '+F2_RAMA[r]+' que tiene cada uno (cobros que recibió menos gastos que pagó y retiros). Negativo = puso de su bolsillo.')+' Sale de la pestaña «'+esc(C.hoja)+'» y cambia solo con cada cobro o gasto.</p>';
     html+='<div class="fin-tabs f2p-tiles"><div class="ftile"><span>💵 Efectivo'+(socios?' (caja fuerte)':'')+'</span><b class="num">'+plataE(C.efectivo)+'</b></div><div class="ftile'+(C.totalMano<0?' bad':'')+'"><span>'+(socios?'En cuentas de socios':'En mano de cada uno')+'</span><b class="num">'+plataE(C.totalMano)+'</b></div>'+
-      (C.totalCaja!=null?'<div class="ftile'+(C.totalCaja<0?' bad':' good')+'"><span>'+(socios?'Patrimonio':'Total en caja')+'</span><b class="num">'+plataE(C.totalCaja)+'</b><small class="f2-sub">'+(socios?'cuentas + caja fuerte':'con créditos y deudas')+'</small></div>':'')+'</div>';
+      (socios && C.enFacturan?'<div class="ftile"><span>En cuentas de quienes facturan</span><b class="num">'+plataE(C.enFacturan)+'</b></div>':'')+
+      (C.totalCaja!=null?'<div class="ftile'+(C.totalCaja<0?' bad':' good')+'"><span>'+(socios?'Patrimonio':'Total en caja')+'</span><b class="num">'+plataE(C.totalCaja)+'</b><small class="f2-sub">'+(socios?'cuentas + caja fuerte'+(C.enFacturan?' + quienes facturan':''):'con créditos y deudas')+'</small></div>':'')+'</div>';
     html+='<ul class="f2-hb">'+C.personas.map(function(p){ var ex=[];
-        if (socios) ex.push('le toca '+plataE(p.deberia)+(p.pct?' ('+p.pct+')':''));
+        if (socios && p.deberia!=null) ex.push('le toca '+plataE(p.deberia)+(p.pct?' ('+p.pct+')':''));
+        if (socios && p.noReparte) ex.push('factura para Tránsito: lo suyo no se reparte hasta que se lo pasa a un socio');
         if (p.arqueo!=null) ex.push('contado '+plataE(p.arqueo)+(p.dif?' · diferencia '+plataE(p.dif):''));
         return '<li'+(p.n===me?' class="yo"':'')+'><span><b>'+esc(p.n)+'</b></span><b class="num'+(p.saldo<0?' neg':'')+'">'+plataE(p.saldo)+'</b><small>'+esc(f2CajaSaldoTxt(p, r))+(ex.length?' · '+esc(ex.join(' · ')):'')+'</small></li>'; }).join('')+'</ul>';
     var cr=(C.creditos||[]).filter(function(k){ return k.saldo || k.con; });
@@ -6367,7 +6385,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
       body+= A.length ? '<ul class="todo">'+A.map(function(x){ return f2Fila('at','⏰', x.caso, [x.rama&&r==='TODAS'?lbl(x.rama):'', x.desde>=0?'desde '+idxLbl(x.desde,true):'', x.cobra?'cobra '+x.cobra:''].filter(Boolean).join(' · '), plata(x.atrasado), 'disabled'); }).join('')+'</ul>' : '<p class="hint">Nada atrasado. 👌</p>';
       if ((b.sinPlan||[]).length) body+='<p class="hint">Sin mes de primera cuota (no se pueden proyectar): '+b.sinPlan.map(function(x){ return esc(x.caso)+' '+plata(x.debido); }).join(' · ')+'.</p>';
     }
-    if (b.tieneFacturas){
+    if (b.tieneFacturas && b.facturaArt!==false){
       var SF=b.sinFacturar||[];
       body+=f2Sec('Sin facturar a la ART', b.nSinFacturar||0, null, '', 'Homologaciones con parte de la ART que todavía no aparecen en Facturación.');
       body+= SF.length ? '<ul class="todo">'+SF.map(function(x){ return f2Fila('sf','🧾', x.caso, [x.fecha?shortDate(x.fecha):'', 'parte ART'].filter(Boolean).join(' · '), plata(x.monto), 'disabled'); }).join('')+'</ul>' : '<p class="hint">Todo facturado.</p>';
