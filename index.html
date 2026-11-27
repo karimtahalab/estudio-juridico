@@ -1002,15 +1002,16 @@ a.save.wa-go svg{width:20px;height:20px}
 .rt-regla b{font-size:24px;font-weight:800;line-height:1.1}
 @media (min-width:700px){.rt-regla{grid-template-columns:repeat(6,1fr)}}
 /* ===== Facturación y monotributo (Reportes › Facturación) ===== */
-:root{--fc-t:#0B9494;--fc-r:#2462D6}
-@media (prefers-color-scheme: dark){:root{--fc-t:#2DB3AE;--fc-r:#6088EA}}
+/* Color de cada rama: Tránsito, ART y Laboral (validados para daltonismo en claro y en oscuro) */
+:root{--fc-t:#0B9494;--fc-a:#2462D6;--fc-l:#9D6DF9}
+@media (prefers-color-scheme: dark){:root{--fc-t:#2DB3AE;--fc-a:#6088EA;--fc-l:#8946FB}}
 .fc-aviso{display:flex;gap:10px;align-items:flex-start;margin-top:12px;padding:12px 14px;border-radius:14px;background:var(--amber-bg);font-size:14.5px;line-height:1.4;color:var(--ink)}
 .fc-aviso svg{flex:none;width:20px;height:20px;color:var(--amber);margin-top:1px}
 .fc-kpis{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
 .fc-hero{grid-column:1/-1;background:var(--paper);border-radius:var(--r-lg);box-shadow:0 0 0 1px var(--line) inset;padding:16px 16px 10px;min-width:0}
 .fc-hero h3,.fc-kpi h3{margin:0;font-size:14px;font-weight:700;color:var(--ink-2)}
 .fc-hero .v{display:block;font-weight:800;font-stretch:var(--cond);font-size:52px;line-height:1.02;letter-spacing:-.01em;margin-top:3px;white-space:nowrap}
-.fc-hero .s{display:block;font-size:13.5px;color:var(--ink-2);font-weight:500;margin-top:5px}
+.fc-hero .s{display:block;font-size:13.5px;color:var(--ink-2);font-weight:500;margin-top:5px;line-height:1.4}
 .fc-kpi{background:var(--paper);border-radius:16px;box-shadow:0 0 0 1px var(--line) inset;padding:13px 14px 12px;min-width:0}
 .fc-kpi b{display:block;font-weight:800;font-stretch:var(--cond);font-size:30px;line-height:1.05;margin-top:3px;white-space:nowrap}
 .fc-kpi small{display:block;font-size:12.5px;color:var(--ink-2);font-weight:500;margin-top:5px;line-height:1.45}
@@ -1031,41 +1032,82 @@ a.save.wa-go svg{width:20px;height:20px}
 .fc-tip{position:fixed;z-index:60;pointer-events:none;background:var(--ink);color:var(--paper);border-radius:10px;padding:7px 10px;font-size:12.5px;line-height:1.3;white-space:nowrap;box-shadow:0 6px 18px rgba(0,0,0,.25);transform:translate(-50%,-100%)}
 .fc-tip b{display:block;font-size:14px;font-weight:800}
 .fc-tip[hidden]{display:none}
+/* Punto de color de una rama (siempre al lado de su nombre) */
+.fc-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--ink-3);margin-right:6px;vertical-align:1px;flex:none}
+.fc-dot.t,.fc-seg i.t,.fc-sw.t{background:var(--fc-t)} .fc-dot.a,.fc-seg i.a,.fc-sw.a{background:var(--fc-a)} .fc-dot.l,.fc-seg i.l,.fc-sw.l{background:var(--fc-l)}
+/* Barra de una persona contra el tope: lleno lo facturado, rayado lo que sumaría hasta diciembre */
+.fc-bar{position:relative;display:block;height:12px;border-radius:6px;color:var(--green);background:var(--green-bg);overflow:hidden}
+.fc-fill{position:absolute;left:0;top:0;bottom:0;background:currentColor;border-radius:0 4px 4px 0}
+.fc-proy{position:absolute;top:0;bottom:0;background:repeating-linear-gradient(135deg,currentColor 0 2px,transparent 2px 5px);opacity:.6}
+.fc-tk{position:absolute;top:0;bottom:0;width:2px;margin-left:-1px;background:var(--paper)}
+.est-cerca .fc-bar{color:var(--amber);background:var(--amber-bg)}
+.est-limite .fc-bar,.est-pasado .fc-bar{color:var(--red);background:var(--red-bg)}
+.est-pasado .fc-fill{border-radius:0}
+.fc-ley{display:flex;flex-wrap:wrap;gap:4px 16px;margin:0 2px 8px;font-size:12.5px;color:var(--ink-2);font-weight:500}
+.fc-ley span{display:inline-flex;align-items:center;gap:7px}
+.fc-ley .k{display:inline-block;width:22px;height:10px;border-radius:3px;color:var(--ink-2);background:currentColor}
+.fc-ley .k.p{background:repeating-linear-gradient(135deg,currentColor 0 2px,transparent 2px 5px);box-shadow:0 0 0 1px var(--line) inset}
+/* Margen por rama: una tarjeta por rama con una barrita por persona */
+.fc-ramas{display:grid;gap:8px;margin-top:8px}
+.fc-rama{display:block;width:100%;text-align:left;background:var(--paper);border-radius:var(--r-lg);box-shadow:0 0 0 1px var(--line) inset;padding:14px 14px 12px;min-width:0}
+.fc-rama .rh{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.fc-rama .rn{font-size:15.5px;font-weight:800;min-width:0;line-height:1.25}
+.fc-rama .rn small{display:block;font-size:12.5px;color:var(--ink-2);font-weight:500;margin-top:3px}
+.fc-rama .rn .chev{width:15px;height:15px;color:var(--ink-3);vertical-align:-2px;margin-left:3px}
+.fc-rama .rv{text-align:right;flex:none}
+.fc-rama .rv small{display:block;font-size:12px;color:var(--ink-3);font-weight:600}
+.fc-rama .rv b{display:block;font-size:26px;font-weight:800;font-stretch:var(--cond);line-height:1.08;white-space:nowrap}
+.fc-rsegs{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:6px;margin-top:12px}
+.fc-rseg{display:block;min-width:0;text-align:center}
+.fc-rseg .fc-bar{height:10px;border-radius:5px}
+.fc-rseg b{display:block;font-size:12.5px;font-weight:700;margin-top:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fc-rseg small{display:block;font-size:11.5px;color:var(--ink-2);font-weight:500;white-space:nowrap}
+.fc-rama .rnota{display:block;font-size:12.5px;color:var(--ink-2);line-height:1.4;margin-top:10px;padding-top:9px;border-top:1px solid var(--line)}
+@media (min-width:860px){.fc-ramas{grid-template-columns:repeat(3,minmax(0,1fr));align-items:stretch}.fc-rama{padding:16px 18px 14px}}
 /* Lista de contribuyentes: una barra por persona, todas contra el mismo tope */
 .fc-list{list-style:none;margin:8px 0 0;padding:0;background:var(--paper);border-radius:var(--r-lg);box-shadow:0 0 0 1px var(--line) inset;overflow:hidden}
 .fc-p + .fc-p{border-top:1px solid var(--line)}
-.fc-row,.fc-eje{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"who fig" "bar bar" "meta meta";gap:8px 12px;width:100%;text-align:left;padding:14px 14px 12px}
+.fc-row,.fc-eje{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"who fig" "bar bar" "meta meta" "cat cat";gap:8px 12px;width:100%;text-align:left;padding:14px 14px 13px}
 .fc-eje{padding:10px 14px 0;grid-template-areas:"lbl lbl" "bar bar";gap:4px 12px}
 .fc-eje .lbl{grid-area:lbl;font-size:12px;font-weight:700;color:var(--ink-3)}
 .fc-eje .ej{grid-area:bar;position:relative;display:block;height:16px}
 .fc-eje .ej i{position:absolute;top:0;font-style:normal;font-size:11.5px;font-weight:800;color:var(--ink-2);text-align:center}
 .fc-who{grid-area:who;min-width:0}
 .fc-who b{display:block;font-size:17px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.fc-who small{display:block;font-size:13px;color:var(--ink-2);font-weight:500;margin-top:1px}
+.fc-who small{display:flex;flex-wrap:wrap;gap:1px 12px;font-size:13px;color:var(--ink-2);font-weight:500;margin-top:2px}
+.fc-who small span{white-space:nowrap}
 .fc-fig{grid-area:fig;text-align:right}
 .fc-fig small{display:block;font-size:12px;color:var(--ink-3);font-weight:600}
 .fc-fig b{display:block;font-size:23px;font-weight:800;font-stretch:var(--cond);line-height:1.08;white-space:nowrap}
-.fc-bar{grid-area:bar;position:relative;display:block;height:12px;border-radius:6px;background:var(--green-bg);overflow:hidden}
-.fc-fill{position:absolute;left:0;top:0;bottom:0;background:var(--green);border-radius:0 4px 4px 0}
-.fc-tk{position:absolute;top:0;bottom:0;width:2px;margin-left:-1px;background:var(--paper)}
-.est-cerca .fc-bar{background:var(--amber-bg)} .est-cerca .fc-fill{background:var(--amber)}
-.est-limite .fc-bar,.est-pasado .fc-bar{background:var(--red-bg)} .est-limite .fc-fill,.est-pasado .fc-fill{background:var(--red)}
-.est-pasado .fc-fill{border-radius:0}
+.fc-row > .fc-bar{grid-area:bar}
 .fc-meta{grid-area:meta;display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:13px;color:var(--ink-2);font-weight:500;min-width:0}
 .fc-meta > span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .fc-st{flex:none;display:inline-flex;align-items:center;gap:5px;font-weight:700;font-size:12.5px;padding:3px 10px 3px 7px;border-radius:999px;background:var(--green-bg);color:var(--green);white-space:nowrap}
 .fc-st svg{width:14px;height:14px;flex:none}
 .est-cerca .fc-st{background:var(--amber-bg);color:var(--amber)}
 .est-limite .fc-st,.est-pasado .fc-st{background:var(--red-bg);color:var(--red)}
+/* Categoría actual → proyectada */
+.fc-cat{grid-area:cat;display:flex;align-items:center;gap:8px;min-width:0;padding-top:9px;border-top:1px dashed var(--line)}
+.fc-cat .c{display:inline-flex;align-items:center;gap:7px;min-width:0}
+.fc-cat small{font-size:12.5px;color:var(--ink-2);font-weight:600;white-space:nowrap}
+.fc-cat b{display:inline-flex;align-items:center;justify-content:center;min-width:28px;height:26px;padding:0 7px;border-radius:8px;background:var(--paper-2);box-shadow:0 0 0 1px var(--line) inset;color:var(--ink);font-size:14.5px;font-weight:800;line-height:1}
+.fc-cat .c.al b{background:var(--red);color:var(--paper);box-shadow:none}
+.fc-cat .c.al small{color:var(--red)}
+.fc-cat > svg{width:15px;height:15px;color:var(--ink-3);flex:none}
 .fc-row .chev{width:16px;height:16px;color:var(--ink-3);transition:transform .15s;vertical-align:-2px;margin-left:4px}
 .fc-p.on .fc-row .chev{transform:rotate(90deg)}
 .fc-p.on{background:var(--paper-2)}
 .fc-p.on .fc-tk{background:var(--paper-2)}
+.fc-p.on .fc-cat b{background:var(--paper)} .fc-p.on .fc-cat .c.al b{background:var(--red)}
 @media (min-width:860px){
-  .fc-row,.fc-eje{grid-template-columns:210px minmax(0,1fr) 150px 190px;grid-template-areas:"who bar fig meta";align-items:center;gap:8px 20px;padding:14px 18px}
-  .fc-eje{grid-template-areas:"lbl bar . .";padding:12px 18px 0}
+  .fc-row,.fc-eje{grid-template-columns:190px minmax(0,1fr) 150px 132px 178px;grid-template-areas:"who bar cat fig meta";align-items:center;gap:8px 20px;padding:14px 18px}
+  .fc-eje{grid-template-areas:"lbl bar . . .";padding:12px 18px 0}
   .fc-meta{flex-direction:column;align-items:flex-end;gap:5px}
-  .fc-bar{height:14px;border-radius:7px}
+  .fc-row > .fc-bar{height:14px;border-radius:7px}
+  .fc-cat{padding-top:0;border-top:0;justify-content:center;align-items:flex-end;gap:7px}
+  .fc-cat .c{flex-direction:column;gap:3px}
+  .fc-cat small{font-size:11.5px}
+  .fc-cat > svg{margin-bottom:6px}
 }
 /* Detalle de una persona */
 .fc-det{padding:0 14px 16px}
@@ -1078,17 +1120,42 @@ a.save.wa-go svg{width:20px;height:20px}
 .fc-kv div{background:var(--paper);border-radius:12px;box-shadow:0 0 0 1px var(--line) inset;padding:9px 11px;min-width:0}
 .fc-kv small{display:block;font-size:12px;color:var(--ink-3);font-weight:600}
 .fc-kv b{display:block;font-size:16.5px;font-weight:800;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fc-kv b small{display:inline;font-size:12px;font-weight:600}
 .fc-det h4{margin:16px 2px 0;font-size:13.5px;font-weight:800;color:var(--ink-2)}
 .fc-det .fc-cols{background:var(--paper);border-radius:14px;box-shadow:0 0 0 1px var(--line) inset;padding:10px 8px 6px;margin-top:6px}
 @media (min-width:860px){.fc-det{padding:0 18px 18px}.fc-det .fc-2{display:grid;grid-template-columns:1fr 1fr;gap:0 24px;align-items:start}}
-/* Reparto por grupo: barra fina partida + lista */
+/* Escalera de categorías: tope de cada una, quién está hoy y quién terminaría ahí el año */
+.fc-esc{width:100%;border-collapse:separate;border-spacing:0;background:var(--paper);border-radius:var(--r-lg);box-shadow:0 0 0 1px var(--line) inset;overflow:hidden;margin-top:8px;font-size:13.5px;table-layout:fixed}
+.fc-esc th{font-size:12px;font-weight:700;color:var(--ink-3);text-align:left;padding:11px 6px 7px;vertical-align:bottom;line-height:1.25}
+.fc-esc td{padding:8px 6px;border-top:1px solid var(--line);vertical-align:middle;line-height:1.4;overflow-wrap:anywhere}
+.fc-esc th:first-child,.fc-esc td:first-child{padding-left:14px;width:50px}
+.fc-esc th:nth-child(2),.fc-esc td:nth-child(2){width:96px}
+.fc-esc th:last-child,.fc-esc td:last-child{padding-right:12px}
+.fc-esc .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.fc-esc td.fc-cl b{display:inline-flex;align-items:center;justify-content:center;width:28px;height:26px;border-radius:8px;background:var(--paper-2);box-shadow:0 0 0 1px var(--line) inset;font-size:14.5px;font-weight:800}
+.fc-esc td.tp{font-weight:700;white-space:nowrap}
+.fc-esc td.tp small{display:block;font-size:11.5px;color:var(--ink-3);font-weight:500}
+.fc-esc tr.tope td.fc-cl b{background:var(--ink);color:var(--paper);box-shadow:none}
+.fc-esc tr.sep td{padding:5px 14px;background:var(--ink);color:var(--paper);font-size:12px;font-weight:700;letter-spacing:.01em;border-top:0}
+.fc-esc tr.sobre td{background:var(--red-bg)}
+.fc-esc tr.sobre td.fc-cl b{background:var(--paper)}
+.fc-esc .n{display:inline-block;font-weight:700;margin-right:8px;white-space:nowrap}
+.fc-esc .n.al{color:var(--red)}
+.fc-esc .n.al svg{width:14px;height:14px;vertical-align:-2px;margin-right:3px}
+.fc-esc .vac{color:var(--ink-3)}
+@media (min-width:860px){.fc-esc{font-size:14.5px}.fc-esc th:first-child,.fc-esc td:first-child{padding-left:18px;width:64px}.fc-esc th:nth-child(2),.fc-esc td:nth-child(2){width:230px}.fc-esc td.tp small{display:inline;margin-left:10px;font-size:12.5px}.fc-esc td{padding:9px 6px}}
+.fc-arca{display:flex;gap:8px;align-items:flex-start;margin:10px 2px 0;font-size:13.5px;line-height:1.45;color:var(--ink-2)}
+.fc-arca svg{flex:none;width:16px;height:16px;margin-top:2px;color:var(--green)}
+.fc-arca b{color:var(--ink)}
+/* Reparto: barra fina partida + lista */
 .fc-seg{display:flex;gap:2px;height:8px;border-radius:4px;overflow:hidden;margin:10px 0 2px}
 .fc-seg i{display:block;height:100%;min-width:2px;background:var(--ink-3)}
-.fc-seg i.t,.fc-sw.t{background:var(--fc-t)} .fc-seg i.r,.fc-sw.r{background:var(--fc-r)}
 .fc-sw{display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--ink-3);margin-right:8px;flex:none}
+.fc-seg i.mix,.fc-sw.mix{background:repeating-linear-gradient(135deg,var(--m1) 0 4px,var(--m2) 4px 8px)}
 .fc-gr{list-style:none;margin:6px 0 0;padding:0}
 .fc-gr li{display:flex;align-items:baseline;gap:0;padding:6px 0;font-size:14.5px;line-height:1.3}
 .fc-gr li span.n{flex:1;min-width:0;padding-right:10px}
+.fc-gr li span.n small{display:block;margin:1px 0 0;min-width:0;text-align:left}
 .fc-gr li b{font-weight:800;white-space:nowrap}
 .fc-gr li small{color:var(--ink-3);font-weight:600;font-size:12.5px;margin-left:8px;min-width:38px;text-align:right}
 .fc-box{background:var(--paper);border-radius:var(--r-lg);box-shadow:0 0 0 1px var(--line) inset;padding:12px 16px;margin-top:8px}
@@ -3997,8 +4064,9 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     return { h1:'Reportes', p:'Ritmo de ingresos de clientes', extra:repModoSeg()+segR, body:equipoBtn()+body };
   }
   /* ---------- Facturación y monotributo (Reportes › Facturación) ----------
-     Cuánto facturó cada contribuyente en el año y cuánto le queda antes de pasarse de categoría.
+     Cuánto facturó cada contribuyente en el año, en qué categoría está, en cuál terminaría el año y cuánto le queda antes de pasarse del tope.
      Sale de la planilla de la contadora: el motor la lee (no le escribe nada) y acá no queda nada guardado en el celular.
+     Las ramas van por socios: quien factura para dos (ART y Laboral) figura en las dos, con un solo margen.
      La ven administración, con el PIN de finanzas, y quien tenga rol 'contable'. Si el motor todavía no la tiene, la pestaña no aparece. */
   var FC_MES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
   var FC_M3=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
@@ -4011,25 +4079,40 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     pasado:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9.2"/><path d="m8.8 8.8 6.4 6.4M15.2 8.8l-6.4 6.4"/></svg>'
   };
   var FC_AVISO='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9.2"/><path d="M12 7.5v5.5M12 16.4h.01"/></svg>';
-  var FC_COL={TRANSITO:'t', RECLAMA:'r'}; // color de cada grupo en las barras partidas (los demás, gris)
+  var FC_FLECHA='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 12h15M13.5 6l6 6-6 6"/></svg>';
+  var FC_COL={TRANSITO:'t', ART:'a', LABORAL:'l'}; // color de cada rama (las demás, gris)
   function fcPuede(){ return !!P().facturacion; }
   function fcConLlave(){ return !!(state.data && state.data.finAcceso); } // quien tiene Finanzas entra con la misma llave
   function enFacturacion(){ return state.view==='facturacion' || (state.view==='reportes' && state.repModo==='factura'); }
   function fcLoad(fresco){
     var prev=state.fc||{}; if (prev.cargando) return;
     var yo=state.me&&state.me.nombre, mio=state.fc={cargando:true, d:prev.d, quien:yo};
-    call('getFacturacion', {fresco:!!fresco}).then(function(d){ if (state.fc!==mio) return; state.fc={d:d, quien:yo}; if (enFacturacion()) render(); })
+    call('getFacturacion', {fresco:!!fresco}).then(function(d){ if (state.fc!==mio) return; state.fc={d:d, quien:yo}; if (enFacturacion()) render(); fcArcaPedir(); })
       .catch(function(e){ if (state.fc!==mio) return; state.fc={error:(e&&e.message)||'No se pudo leer la planilla de facturación.', d:prev.d, quien:yo}; if (enFacturacion()) render(); });
+  }
+  // Los topes se controlan con la página de ARCA. Esa consulta se pide aparte, con el panel ya en pantalla, para no hacer esperar
+  function fcArcaPedir(){
+    var mio=state.fc; if (!mio || !mio.d || !mio.d.arca || !mio.d.arca.pendiente || mio.arca) return;
+    mio.arca='pidiendo';
+    call('getFacturacion', {arca:true}).then(function(d){ if (state.fc!==mio) return; state.fc={d:d, quien:mio.quien, arca:'listo'}; if (enFacturacion()) render(); })
+      .catch(function(){ if (state.fc!==mio) return; mio.arca='fallo'; if (enFacturacion()) render(); });
   }
   function fcM(n){ n=Number(n)||0; var a=Math.abs(n), s=n<0?'−':''; if (a>=999950) return s+'$ '+(a/1e6).toLocaleString('es-AR',{minimumFractionDigits:1, maximumFractionDigits:1})+' M'; if (a>=1000) return s+'$ '+Math.round(a/1e3).toLocaleString('es-AR')+' mil'; return s+'$ '+Math.round(a); }
   function fcN(n){ return Math.round(Number(n)||0).toLocaleString('es-AR'); }
   function fcEje(v){ if (!v) return '0'; if (v>=1e6) return (v/1e6).toLocaleString('es-AR',{maximumFractionDigits:1})+' M'; return Math.round(v/1e3).toLocaleString('es-AR')+' mil'; }
   function fcDia(s, largo){ var p=String(s||'').split('-'); if (p.length<3) return ''; return largo ? (+p[2])+' de '+FC_MES[+p[1]-1] : p[2]+'/'+p[1]; }
+  function fcFecha(s){ var p=String(s||'').split('-'); return p.length<3 ? '' : (+p[2])+'/'+p[1]+'/'+p[0]; }
   function fcJunta(xs){ return xs.length<2 ? (xs[0]||'') : xs.slice(0,-1).join(', ')+' y '+xs[xs.length-1]; }
   function fcMayus(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
-  function fcGrupo(d, k){ return (d.grupos||[]).filter(function(g){ return g.k===k; })[0]||null; }
-  // Se puede filtrar por los grupos que son el principal de alguien
-  function fcFiltros(d){ var ks=[]; d.personas.forEach(function(p){ var k=p.grupos[0]; if (k && ks.indexOf(k)===-1) ks.push(k); }); return (d.grupos||[]).filter(function(g){ return ks.indexOf(g.k)!==-1; }); }
+  function fcRama(d, k){ return (d.ramas||[]).filter(function(g){ return g.k===k; })[0]||null; }
+  // Se puede filtrar por las ramas para las que factura más de una persona
+  function fcFiltros(d){ return (d.ramas||[]).filter(function(g){ return g.personas.length>1; }); }
+  function fcPunto(k){ return '<i class="fc-dot '+(FC_COL[k]||'')+'"></i>'; }
+  // Color de una parte: el de su rama, o rayado con los dos si es de dos ramas
+  function fcSw(ks){
+    var cs=[]; (ks||[]).forEach(function(k){ var c=FC_COL[k]; if (c && cs.indexOf(c)===-1) cs.push(c); });
+    return cs.length>1 ? {c:'mix', s:'--m1:var(--fc-'+cs[0]+');--m2:var(--fc-'+cs[1]+');'} : {c:cs[0]||'', s:''};
+  }
   function fcMesesTxt(m){ return m<0.95 ? 'menos de un mes' : (m<1.5 ? 'un mes' : 'unos '+Math.round(m)+' meses'); }
   // Columnas por mes (un solo color): los meses sin cargar quedan vacíos; el valor de cada mes sale al pasar el dedo o el mouse, y en la tabla
   function fcColumnas(meses, d, titulo, ancho, alto){
@@ -4049,11 +4132,11 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     });
     return '<div class="fc-cols"><svg viewBox="0 0 '+W+' '+H+'" role="group" aria-label="'+esc(titulo||'Facturación por mes')+'">'+g+'</svg></div>';
   }
-  // Barra fina partida por grupo + lista con el monto de cada parte
+  // Barra fina partida + lista con el monto de cada parte. partes = [{ks: ramas, l: nombre, s: aclaración, m: monto}]
   function fcReparto(partes){
     var tot=partes.reduce(function(a,x){ return a+Math.max(0,x.m); },0); if (!tot) return '';
-    return '<div class="fc-seg" role="img" aria-label="'+esc(partes.map(function(x){ return x.l+': '+plataE(x.m); }).join('; '))+'">'+partes.map(function(x){ return x.m>0 ? '<i class="'+(FC_COL[x.k]||'')+'" style="flex:'+(x.m/tot).toFixed(4)+' 1 0"></i>' : ''; }).join('')+'</div>'+
-      '<ul class="fc-gr">'+partes.map(function(x){ return '<li><span class="fc-sw '+(FC_COL[x.k]||'')+'"></span><span class="n">'+esc(x.l)+(x.s?' <small style="margin-left:0">'+esc(x.s)+'</small>':'')+'</span><b class="num">'+plataE(x.m)+'</b><small class="num">'+Math.round(x.m/tot*100)+' %</small></li>'; }).join('')+'</ul>';
+    return '<div class="fc-seg" role="img" aria-label="'+esc(partes.map(function(x){ return x.l+': '+plataE(x.m); }).join('; '))+'">'+partes.map(function(x){ var c=fcSw(x.ks); return x.m>0 ? '<i class="'+c.c+'" style="'+c.s+'flex:'+(x.m/tot).toFixed(4)+' 1 0"></i>' : ''; }).join('')+'</div>'+
+      '<ul class="fc-gr">'+partes.map(function(x){ var c=fcSw(x.ks); return '<li><span class="fc-sw '+c.c+'"'+(c.s?' style="'+c.s+'"':'')+'></span><span class="n">'+esc(x.l)+(x.s?' <small style="margin-left:0">'+esc(x.s)+'</small>':'')+'</span><b class="num">'+plataE(x.m)+'</b><small class="num">'+Math.round(x.m/tot*100)+' %</small></li>'; }).join('')+'</ul>';
   }
   function fcAvisoTxt(a, d, junto){
     var per=a.persona?'<b>'+esc(a.persona)+'</b>: ':'', hoja='<b>'+esc(a.hoja||'')+'</b>';
@@ -4088,53 +4171,122 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     });
     return out;
   }
+  // ¿La proyección a diciembre se pasa del tope? (con el año cerrado ya no hay proyección: es lo facturado)
+  function fcSePasa(p, d){ return p.proyeccion>d.tope.limite+0.5; }
+  function fcCatProy(p){ return p.catProy || 'Fuera'; }
+  // Categoría actual → proyectada, en dos casilleros
+  function fcCats(p, d){
+    return '<span class="fc-cat" aria-hidden="true"><span class="c"><small>Actual</small><b>'+esc(p.catActual||'–')+'</b></span>'+FC_FLECHA+
+      '<span class="c'+(fcSePasa(p, d)?' al':'')+'"><small>'+(d.corte<12?'Proyectada':'Le corresponde')+'</small><b>'+esc(fcCatProy(p))+'</b></span></span>';
+  }
   function fcDetalle(p, d){
     var T=d.tope, tx=[];
     if (!p.cat) tx.push(['al','Con lo facturado supera el tope de la última categoría del monotributo.']);
-    else if (p.catActual && p.catActual!==p.cat) tx.push(['','Está inscripto en la <b>'+esc(p.catActual)+'</b> (tope '+fcM(p.limiteActual)+') y por lo facturado ya le corresponde la <b>'+esc(p.cat)+'</b>.']);
-    else if (p.catActual) tx.push(['','Está inscripto en la <b>'+esc(p.cat)+'</b> y lo facturado entra en esa categoría.']);
-    else tx.push(['','Por lo facturado le corresponde la <b>'+esc(p.cat)+'</b>.']);
+    else if (p.catActual && p.catActual!==p.cat) tx.push(['','Categoría actual: <b>'+esc(p.catActual)+'</b> (tope '+fcM(p.limiteActual)+'). Por lo facturado hasta hoy ya le corresponde la <b>'+esc(p.cat)+'</b>.']);
+    else if (p.catActual) tx.push(['','Categoría actual: <b>'+esc(p.cat)+'</b>, y lo facturado hasta hoy entra en esa categoría.']);
+    else tx.push(['','Por lo facturado hasta hoy le corresponde la <b>'+esc(p.cat)+'</b>.']);
     if (p.resto<0) tx.push(['al','Se pasó del tope de la '+esc(T.cat)+' por <b>'+plataE(-p.resto)+'</b>.']);
     else if (p.cat && p.cat!==T.cat && p.catSig && p.restoCat!=null) tx.push(['','Le quedan <b>'+plataE(p.restoCat)+'</b> para saltar de la '+esc(p.cat)+' a la '+esc(p.catSig)+', y <b>'+plataE(p.resto)+'</b> hasta el tope de la '+esc(T.cat)+'.']);
     else if (p.catSig) tx.push([p.estado==='limite'?'al':'','Con <b>'+plataE(p.resto)+'</b> más pasa a la '+esc(p.catSig)+'.']);
     if (p.promedio>0 && d.corte<12 && p.resto>=0){
-      var ritmo='Factura en promedio <b>'+fcM(p.promedio)+' por mes</b>. A ese ritmo cierra diciembre en '+fcM(p.proyeccion);
-      tx.push(p.proyeccion>T.limite ? ['al', ritmo+': se pasa de la '+esc(T.cat)+' por '+fcM(p.proyeccion-T.limite)+'. El margen le alcanza para '+fcMesesTxt(p.margenMeses||0)+'.'] : ['ok', ritmo+', dentro de la '+esc(T.cat)+'.']);
+      var ritmo='Factura en promedio <b>'+fcM(p.promedio)+' por mes</b>. A ese ritmo cierra diciembre en '+fcM(p.proyeccion)+': ';
+      if (!p.catProy) tx.push(['al', ritmo+'supera el tope de la última categoría y quedaría <b>fuera del monotributo</b>.']);
+      else if (fcSePasa(p, d)) tx.push(['al', ritmo+'categoría proyectada <b>'+esc(p.catProy)+'</b>. Se pasa de la '+esc(T.cat)+' por '+fcM(p.proyeccion-T.limite)+'; el margen le alcanza para '+fcMesesTxt(p.margenMeses||0)+'.']);
+      else tx.push(['ok', ritmo+'categoría proyectada <b>'+esc(p.catProy)+'</b>, dentro del tope.']);
     }
+    var otras=p.ramas.map(function(k){ return fcRama(d, k); }).filter(function(g){ return g && g.personas.length>1; });
+    if (p.ramas.length>1 && otras.length>1) tx.push(['','Factura para '+fcJunta(otras.map(function(g){ return esc(g.corto); }))+' con el mismo monotributo: el margen es uno solo para las '+(otras.length===2?'dos':otras.length)+' ramas.']);
     var h='<div class="fc-det"><div class="fc-2"><div><ul class="tx">'+tx.map(function(x){ return '<li class="'+x[0]+'">'+x[1]+'</li>'; }).join('')+'</ul>'+
-      '<div class="fc-kv"><div><small>Facturado en '+d.anio+'</small><b class="num">'+plataE(p.total)+'</b></div><div><small>Promedio por mes</small><b class="num">'+plataE(p.promedio)+'</b></div>'+
-      '<div><small>Comprobantes</small><b class="num">'+p.n+'</b></div><div><small>Último cargado</small><b class="num">'+(fcDia(p.ultimo)||'–')+'</b></div></div></div>'+
+      '<div class="fc-kv"><div><small>Facturado en '+d.anio+'</small><b class="num">'+plataE(p.total)+'</b></div><div><small>'+(d.corte<12?'Proyección a diciembre':'Cierre del año')+'</small><b class="num">'+plataE(p.proyeccion)+'</b></div>'+
+      '<div><small>Promedio por mes</small><b class="num">'+plataE(p.promedio)+'</b></div><div><small>Comprobantes</small><b class="num">'+p.n+(fcDia(p.ultimo)?' <small>· último '+fcDia(p.ultimo)+'</small>':'')+'</b></div></div></div>'+
       '<div><h4>Mes por mes</h4>'+fcColumnas(p.meses, d, 'Facturación de '+p.nombre+' por mes', 500)+'</div></div>';
-    if (p.partes.length>1) h+='<h4>Por dónde factura</h4><div class="fc-box" style="margin-top:6px">'+fcReparto(p.partes.map(function(x){ var g=fcGrupo(d, x.grupo); return {k:x.grupo, l:x.detalle||(g?g.nombre:x.hoja), s:plural(x.n,'comprobante','comprobantes'), m:x.total}; }))+'</div>';
+    if (p.partes.length>1) h+='<h4>Por dónde factura</h4><div class="fc-box" style="margin-top:6px">'+fcReparto(p.partes.map(function(x){ var g=fcRama(d, x.ramas[0]); return {ks:x.ramas, l:x.detalle||(g?g.nombre:x.hoja), s:plural(x.n,'comprobante','comprobantes'), m:x.total}; }))+'</div>';
     var av=fcAvisos(d, [p.nombre]).filter(function(t){ return t.indexOf('<b>'+esc(p.nombre)+'</b>')===0; });
     if (av.length) h+='<h4>Para revisar en la planilla</h4><ul class="fc-rev" style="margin-top:6px">'+av.map(function(t){ return '<li>'+t+'</li>'; }).join('')+'</ul>';
     if (p.usd) h+='<p class="hint">'+plural(p.usd,'comprobante está','comprobantes están')+' en dólares: se toma el importe en pesos que figura en la planilla.</p>';
     if (p.completo) h+='<p class="hint">'+esc(p.completo)+'</p>';
     return h+'</div>';
   }
+  // La barra de una persona contra el tope: lleno lo facturado, rayado lo que sumaría hasta diciembre al ritmo del año
+  function fcBarra(p, d, enLista){
+    var T=d.tope, pct=Math.max(0, Math.min(1, p.total/T.limite)), pp=Math.max(pct, Math.min(1, p.proyeccion/T.limite));
+    var tks=enLista ? d.categorias.filter(function(c){ return c.hasta<T.limite-1; }).map(function(c){ return '<i class="fc-tk" style="left:'+(c.hasta/T.limite*100).toFixed(2)+'%"></i>'; }).join('') : '';
+    return '<span class="fc-bar">'+(enLista && d.corte<12 && pp>pct ? '<i class="fc-proy" style="left:'+(pct*100).toFixed(2)+'%;width:'+((pp-pct)*100).toFixed(2)+'%"></i>' : '')+'<i class="fc-fill" style="width:'+(pct*100).toFixed(2)+'%"></i>'+tks+'</span>';
+  }
   function fcFila(p, d, abierto){
-    var T=d.tope, pct=Math.max(0, Math.min(1, p.total/T.limite)), est=FC_EST[p.estado]?p.estado:'margen', g=fcGrupo(d, p.grupos[0]);
-    var tks=d.categorias.filter(function(c){ return c.hasta<T.limite-1; }).map(function(c){ return '<i class="fc-tk" style="left:'+(c.hasta/T.limite*100).toFixed(2)+'%"></i>'; }).join('');
-    var cat=!p.cat ? 'fuera del monotributo' : (p.catActual && p.catActual!==p.cat ? 'pasa de la '+p.catActual+' a la '+p.cat : 'categoría '+p.cat);
+    var T=d.tope, est=FC_EST[p.estado]?p.estado:'margen';
+    var rs=p.ramas.map(function(k){ var g=fcRama(d, k); return '<span>'+fcPunto(k)+esc(g?g.corto:k)+'</span>'; }).join('');
     var pc=Math.round(p.total/T.limite*100), queda=p.resto>=0 ? ['Le quedan', p.resto] : ['Se pasó por', -p.resto];
-    var aria=p.nombre+': facturó '+plataE(p.total)+', el '+pc+' % del tope de la '+T.cat+'. '+queda[0]+' '+plataE(queda[1])+'. '+FC_EST[est]+'.';
+    var aria=p.nombre+': facturó '+plataE(p.total)+', el '+pc+' % del tope de la '+T.cat+'. '+queda[0]+' '+plataE(queda[1])+'. Categoría actual '+(p.catActual||'sin dato')+', '+(d.corte<12?'proyectada a diciembre ':'le corresponde ')+(p.catProy||'fuera del monotributo')+'. '+FC_EST[est]+'.';
     return '<li class="fc-p est-'+est+(abierto?' on':'')+'"><button class="fc-row" data-fcopen="'+esc(p.nombre)+'" aria-expanded="'+(!!abierto)+'" aria-label="'+esc(aria)+'">'+
-      '<span class="fc-who"><b>'+esc(p.nombre)+I.chev+'</b><small>'+esc((g?g.corto+' · ':'')+cat)+'</small></span>'+
+      '<span class="fc-who"><b>'+esc(p.nombre)+I.chev+'</b><small>'+rs+'</small></span>'+
       '<span class="fc-fig"><small>'+queda[0]+'</small><b>'+fcM(queda[1])+'</b></span>'+
-      '<span class="fc-bar"><i class="fc-fill" style="width:'+(pct*100).toFixed(2)+'%"></i>'+tks+'</span>'+
-      '<span class="fc-meta"><span>'+fcM(p.total)+' de '+fcM(T.limite)+' · '+pc+' %</span><span class="fc-st">'+FC_ICO[est]+FC_EST[est]+'</span></span>'+
+      fcBarra(p, d, true)+fcCats(p, d)+
+      '<span class="fc-meta"><span>Facturó '+fcM(p.total)+' · '+pc+' %</span><span class="fc-st">'+FC_ICO[est]+FC_EST[est]+'</span></span>'+
       '</button>'+(abierto?fcDetalle(p, d):'')+'</li>';
+  }
+  // Una tarjeta por rama: el margen entre todos los que facturan para ella y una barrita por persona
+  function fcNotaRama(g, d){
+    return (g.comparte||[]).map(function(c){
+      var q=fcJunta(c.personas.map(esc)), para=esc(c.para||c.corto), uno=c.personas.length===1;
+      if (c.personas.length===g.personas.length) return 'Es el mismo margen que usan para '+para+': cada uno tiene un solo monotributo.';
+      return q+' también '+(uno?'factura':'facturan')+' para '+para+' con el mismo margen ('+fcM(c.margen)+(uno?'':' entre los '+c.personas.length)+').';
+    }).join(' ');
+  }
+  function fcRamas(d){
+    var gs=fcFiltros(d); if (gs.length<2) return '';
+    return '<h2 class="sec-t">Margen por rama</h2><p class="sec-sub">Lo que todavía pueden facturar, sin pasar de la '+esc(d.tope.cat)+', quienes facturan para cada rama. Tocá una rama para ver solo a los suyos.</p><div class="fc-ramas">'+gs.map(function(g){
+      var ps=d.personas.filter(function(p){ return p.ramas.indexOf(g.k)!==-1; }), nota=fcNotaRama(g, d), usado=g.cupo>0 ? Math.round((1-g.margen/g.cupo)*100) : 0;
+      var aria=g.nombre+': facturan '+fcJunta(g.personas)+'. Margen hasta la '+d.tope.cat+' '+plataE(g.margen)+'; usaron el '+usado+' % del cupo.'+(g.limite.length?' Al límite: '+fcJunta(g.limite)+'.':'');
+      return '<button class="fc-rama" data-fcgrupo="'+esc(g.k)+'" aria-label="'+esc(aria)+'">'+
+        '<span class="rh"><span class="rn">'+fcPunto(g.k)+esc(g.nombre)+I.chev+'<small>'+plural(ps.length,'persona','personas')+' · '+usado+' % del cupo usado</small></span>'+
+        '<span class="rv"><small>Margen hasta la '+esc(d.tope.cat)+'</small><b>'+fcM(g.margen)+'</b></span></span>'+
+        '<span class="fc-rsegs" aria-hidden="true">'+ps.map(function(p){ var est=FC_EST[p.estado]?p.estado:'margen'; return '<span class="fc-rseg est-'+est+'">'+fcBarra(p, d, false)+'<b>'+esc(p.nombre)+'</b><small>'+(p.resto>=0?fcM(p.resto):'se pasó')+'</small></span>'; }).join('')+'</span>'+
+        (nota?'<span class="rnota">'+nota+'</span>':'')+'</button>';
+    }).join('')+'</div>';
+  }
+  // Los topes de la planilla contra los de ARCA
+  function fcArcaTxt(d, C){
+    var a=d.arca; if (!a) return '';
+    var desde=fcFecha(a.desde), futura=a.desde>d.hoy, T=d.tope, dt=(a.dif||[]).filter(function(x){ return x.cat===T.cat; })[0];
+    if ((a.dif||[]).length && futura) return '<div class="fc-aviso" role="note">'+FC_AVISO+'<span>ARCA ya publicó los topes que van a regir <b>desde el '+desde+'</b>'+(dt?': el de la '+esc(T.cat)+' pasa de '+plataE(dt.planilla)+' a <b>'+plataE(dt.arca)+'</b>':'')+'. Acá se sigue contando con los de la planilla, que son los vigentes hasta esa fecha.</span></div>';
+    if ((a.dif||[]).length) return '<div class="fc-aviso" role="note">'+FC_AVISO+'<span>Los topes de la pestaña CAT. MON. no coinciden con los de ARCA (vigentes desde el '+desde+'): '+a.dif.map(function(x){ return '<b>'+esc(x.cat)+'</b> planilla '+plataE(x.planilla)+' · ARCA '+plataE(x.arca); }).join('; ')+'. Acá se cuenta con los de la planilla.</span></div>';
+    var como = a.fuente==='pagina' ? 'Consultados en la página de ARCA el '+esc(a.leido)+' h.' : (C && C.arca==='pidiendo' ? 'Consultando la página de ARCA…' : 'Comparados con la tabla oficial de ARCA guardada en la app'+(a.sinPagina || (C && C.arca==='fallo') ? ' (la página de ARCA no respondió recién).' : '.'));
+    return '<p class="fc-arca">'+FC_ICO.margen+'<span>Los topes de la planilla <b>coinciden con los de ARCA</b>, vigentes desde el '+desde+'. '+como+'</span></p>';
+  }
+  // Escalera de categorías: el tope de cada una, quién está hoy y dónde terminaría el año cada uno
+  function fcEscalera(d, ps){
+    var T=d.tope, hayCosto=d.categorias.some(function(c){ return c.costo; }), proy=d.corte<12;
+    var nombres=function(xs, al){ return xs.length ? xs.map(function(p){ return '<span class="n'+(al?' al':'')+'">'+(al?FC_ICO.limite:'')+esc(p.nombre)+'</span>'; }).join(' ') : '<span class="vac">–</span>'; };
+    var filas=d.categorias.map(function(c){
+      var sobre=c.hasta>T.limite+1, act=ps.filter(function(p){ return p.catActual===c.cat; }), pr=ps.filter(function(p){ return p.catProy===c.cat; });
+      return '<tr class="'+(c.cat===T.cat?'tope':'')+(sobre?' sobre':'')+'"><td class="fc-cl"><b>'+esc(c.cat)+'</b></td><td class="tp num">'+fcM(c.hasta)+(c.costo?'<small>'+fcM(c.costo)+' por mes</small>':'')+'</td><td>'+nombres(act, false)+'</td><td>'+nombres(pr, sobre)+'</td></tr>'+
+        (c.cat===T.cat?'<tr class="sep"><td colspan="4">Tope del estudio: no pasar de la '+esc(T.cat)+'</td></tr>':'');
+    }).join('');
+    var fuera=ps.filter(function(p){ return !p.catProy; });
+    if (fuera.length) filas+='<tr class="sobre"><td class="fc-cl"><b>✕</b></td><td class="tp">Fuera del monotributo</td><td><span class="vac">–</span></td><td>'+nombres(fuera, true)+'</td></tr>';
+    var sinDato=ps.filter(function(p){ return !p.catActual; });
+    return '<h2 class="sec-t">Categoría actual y proyectada</h2><p class="sec-sub">En qué categoría está inscripto hoy cada uno y en cuál '+(proy?'terminaría el año si los meses que faltan factura al ritmo promedio de '+d.anio:'cierra el año con lo facturado')+'.</p>'+
+      '<table class="fc-esc"><thead><tr><th scope="col"><span class="sr">Categoría</span></th><th scope="col">Tope anual'+(hayCosto?' · cuota':'')+'</th><th scope="col">Actual</th><th scope="col">'+(proy?'Proyectada a diciembre':'Le corresponde')+'</th></tr></thead><tbody>'+filas+'</tbody></table>'+
+      fcArcaTxt(d, state.fc)+
+      (sinDato.length?'<p class="hint">Sin categoría actual en RESUMEN: '+fcJunta(sinDato.map(function(p){ return esc(p.nombre); }))+'.</p>':'')+
+      '<p class="hint">ARCA actualiza los topes en febrero y en agosto. La recategorización de febrero mira lo facturado de enero a diciembre con la tabla que rija ese mes: si los topes vuelven a subir, la categoría proyectada puede terminar siendo más baja.'+(hayCosto?' La cuota por mes es la que la contadora cargó en CAT. MON.':'')+'</p>';
   }
   // Lo mismo en números: un contribuyente por columna y un mes por fila (si no entra, la tabla se desliza de costado)
   function fcTabla(d, ps){
     var fila=function(t, f, cls){ return '<tr'+(cls?' class="'+cls+'"':'')+'><td>'+t+'</td>'+ps.map(f).join(''); };
     var h='<div class="f2t-wrap"><table class="f2t fc-tabla"><thead><tr><th>'+d.anio+'</th>'+ps.map(function(p){ return '<th>'+esc(p.nombre)+'</th>'; }).join('')+'<th>Total</th></tr></thead><tbody>';
+    h+=fila('Factura para', function(p){ return '<td class="num">'+p.ramas.map(function(k){ var g=fcRama(d, k); return esc(g?g.corto:k); }).join('<br>')+'</td>'; })+'<td></td></tr>';
     FC_MES.forEach(function(nom, m){ var ok=m<=d.mesHasta, t=0;
       h+=fila(fcMayus(nom), function(p){ t+=p.meses[m]; return '<td class="num">'+(ok?(p.meses[m]?fcN(p.meses[m]):'–'):'')+'</td>'; }, ok?'':'no')+'<td class="num">'+(ok?fcN(t):'')+'</td></tr>'; });
     h+=fila('Total', function(p){ return '<td class="num">'+fcN(p.total)+'</td>'; }, 'tot')+'<td class="num">'+fcN(ps.reduce(function(a,p){ return a+p.total; },0))+'</td></tr>';
-    h+=fila('Inscripto en', function(p){ return '<td class="num">'+esc(p.catActual||'–')+'</td>'; })+'<td></td></tr>';
-    h+=fila('Le corresponde', function(p){ return '<td class="num"><b>'+esc(p.cat||'–')+'</b></td>'; })+'<td></td></tr>';
     h+=fila('Le queda hasta la '+esc(d.tope.cat), function(p){ return '<td class="num'+(p.resto<0?' neg':'')+'">'+(p.resto<0?'−':'')+fcN(Math.abs(p.resto))+'</td>'; })+'<td class="num">'+fcN(ps.reduce(function(a,p){ return a+Math.max(0,p.resto); },0))+'</td></tr>';
+    h+=fila('Categoría actual', function(p){ return '<td class="num">'+esc(p.catActual||'–')+'</td>'; })+'<td></td></tr>';
+    h+=fila('Por lo facturado', function(p){ return '<td class="num">'+esc(p.cat||'Fuera')+'</td>'; })+'<td></td></tr>';
+    if (d.corte<12){
+      h+=fila('Proyección a diciembre', function(p){ return '<td class="num">'+fcN(p.proyeccion)+'</td>'; })+'<td class="num">'+fcN(ps.reduce(function(a,p){ return a+p.proyeccion; },0))+'</td></tr>';
+      h+=fila('Categoría proyectada', function(p){ return '<td class="num'+(fcSePasa(p, d)?' neg':'')+'"><b>'+esc(fcCatProy(p))+'</b></td>'; })+'<td></td></tr>';
+    }
     return h+'</tbody></table></div><p class="hint">En pesos, sin centavos.</p>';
   }
   function viewFacturacion(sola){
@@ -4147,30 +4299,39 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     var d=C.d;
     if (!d){ tit.body = C.error ? '<div class="err-box">'+esc(C.error)+'<br><button data-fcfresco>Reintentar</button></div>' : '<div class="skel"></div><div class="skel"></div><div class="skel"></div><p class="hint" style="text-align:center">Leyendo la planilla de facturación…</p>'; return tit; }
     if (!d.personas.length || !d.hasta){ tit.body=emptyBox('Todavía no hay comprobantes cargados', '<span>Cuando la planilla de facturación tenga comprobantes, aparecen acá.</span>'); return tit; }
-    var T=d.tope, fs=fcFiltros(d), sel=fs.some(function(g){ return g.k===state.fcGrupo; }) ? state.fcGrupo : '', gs=sel?fcGrupo(d, sel):null;
-    var ps=d.personas.filter(function(p){ return !sel || p.grupos[0]===sel; });
-    if (fs.length>1) tit.extra+='<div class="chips" role="group" aria-label="Qué contribuyentes ver">'+[{k:'', corto:'Todos'}].concat(fs).map(function(g){ return '<button class="chip'+(g.k===sel?' on':'')+'" data-fcgrupo="'+esc(g.k)+'" aria-pressed="'+(g.k===sel)+'">'+esc(g.corto)+'</button>'; }).join('')+'</div>';
+    var T=d.tope, fs=fcFiltros(d), sel=fs.some(function(g){ return g.k===state.fcGrupo; }) ? state.fcGrupo : '', gs=sel?fcRama(d, sel):null;
+    var ps=d.personas.filter(function(p){ return !sel || p.ramas.indexOf(sel)!==-1; });
+    if (fs.length>1) tit.extra+='<div class="chips" role="group" aria-label="Qué rama ver">'+[{k:'', corto:'Todos'}].concat(fs).map(function(g){ return '<button class="chip'+(g.k===sel?' on':'')+'" data-fcgrupo="'+esc(g.k)+'" aria-pressed="'+(g.k===sel)+'">'+esc(g.corto)+'</button>'; }).join('')+'</div>';
     tit.p='Facturación '+d.anio+' y monotributo'+(gs?' · '+esc(gs.corto):'');
-    var tot=0, n=0, margen=0, meses=[0,0,0,0,0,0,0,0,0,0,0,0], lim=[], porG={};
+    var tot=0, n=0, margen=0, meses=[0,0,0,0,0,0,0,0,0,0,0,0], lim=[], porC={}, orden=[];
     ps.forEach(function(p){ tot+=p.total; n+=p.n; margen+=Math.max(0,p.resto); for (var m=0;m<12;m++) meses[m]+=p.meses[m]; if (p.estado==='limite' || p.estado==='pasado') lim.push(p);
-      p.partes.forEach(function(x){ porG[x.grupo]=(porG[x.grupo]||0)+x.total; }); });
+      p.partes.forEach(function(x){ var k=x.ramas.join('+'); if (!(k in porC)){ porC[k]={ks:x.ramas, m:0, q:[]}; orden.push(k); } porC[k].m+=x.total; if (porC[k].q.indexOf(p.nombre)===-1) porC[k].q.push(p.nombre); }); });
+    // ¿Alguno de los que se ven factura también para otra rama? (lo suyo no se puede separar)
+    var mixtos=ps.filter(function(p){ return p.partes.some(function(x){ return x.ramas.length>1; }); }).map(function(p){ return p.nombre; });
     var body='';
     if (C.error) body+='<div class="warn">No se pudo actualizar: '+esc(C.error)+' Se muestra lo leído el '+esc(d.act||'')+'.</div>';
     if ((d.faltan||[]).length){ var fm=d.faltan.map(function(m){ return FC_MES[m]; });
       body+='<div class="fc-aviso" role="note">'+FC_AVISO+'<span>Comprobantes cargados hasta el <b>'+fcDia(d.hasta, true)+'</b>. '+fcMayus(fcJunta(fm))+' todavía no '+(fm.length>1?'están cargados':'está cargado')+' en la planilla: lo que se facturó después achica el margen que se ve acá.</span></div>'; }
-    body+='<div class="fc-kpis"><div class="fc-hero"><h3>Facturado en '+d.anio+(gs?' por los de '+esc(gs.corto):'')+'</h3><span class="v">'+fcM(tot)+'</span><span class="s">'+fcN(n)+' comprobantes de '+plural(ps.length,'contribuyente','contribuyentes')+'</span>'+fcColumnas(meses, d, 'Facturación por mes', 640, 178)+'</div>'+
-      '<div class="fc-kpi"><h3>Margen hasta la '+esc(T.cat)+'</h3><b>'+fcM(margen)+'</b><small>Lo que todavía pueden facturar entre los '+ps.length+' sin que nadie pase de la '+esc(T.cat)+'.</small></div>'+
+    var notaSel=gs ? fcNotaRama(gs, d) : '';
+    body+='<div class="fc-kpis"><div class="fc-hero"><h3>Facturado en '+d.anio+(gs?' por quienes facturan para '+esc(gs.para||gs.corto):'')+'</h3><span class="v">'+fcM(tot)+'</span><span class="s">'+fcN(n)+' comprobantes de '+plural(ps.length,'contribuyente','contribuyentes')+(gs && mixtos.length?' · incluye todo lo que facturaron: la planilla no dice de qué rama es cada factura':'')+'</span>'+fcColumnas(meses, d, 'Facturación por mes', 640, 178)+'</div>'+
+      '<div class="fc-kpi"><h3>Margen hasta la '+esc(T.cat)+'</h3><b>'+fcM(margen)+'</b><small>Lo que todavía pueden facturar entre los '+ps.length+' sin que nadie pase de la '+esc(T.cat)+'.'+(notaSel?' '+notaSel:'')+'</small></div>'+
       '<div class="fc-kpi'+(lim.length?' al':'')+'"><h3>Al límite</h3><b>'+(lim.length?lim.length+' de '+ps.length:'Ninguno')+'</b><small>'+(lim.length?lim.map(function(p){ return esc(p.nombre)+': '+(p.resto>=0?'le quedan '+fcM(p.resto):'se pasó por '+fcM(-p.resto)); }).join('<br>'):'Nadie llega al 90 % del tope ni se pasa al ritmo actual.')+'</small></div></div>';
+    if (!sel) body+=fcRamas(d);
     var eje=d.categorias.filter(function(c){ return c.hasta<=T.limite+1; }).map(function(c){ return '<i style="left:'+(c.desde/T.limite*100).toFixed(2)+'%;width:'+((c.hasta-c.desde)/T.limite*100).toFixed(2)+'%">'+esc(c.cat)+'</i>'; }).join('');
-    body+='<h2 class="sec-t">Cuánto le queda a cada uno</h2><p class="sec-sub">Cada barra es lo facturado en '+d.anio+' contra el tope de la '+esc(T.cat)+' ('+fcM(T.limite)+'). Las divisiones marcan el tope de cada categoría. Tocá un nombre para ver el detalle.</p>'+
+    body+='<h2 class="sec-t">Cuánto le queda a cada uno</h2><p class="sec-sub">Cada barra es lo facturado en '+d.anio+' contra el tope de la '+esc(T.cat)+' ('+fcM(T.limite)+'); las divisiones marcan el tope de cada categoría. Tocá un nombre para ver el detalle.</p>'+
+      (d.corte<12?'<p class="fc-ley" aria-hidden="true"><span><i class="k"></i>Facturado</span><span><i class="k p"></i>Lo que sumaría hasta diciembre al ritmo del año</span></p>':'')+
       '<ul class="fc-list"><li class="fc-eje" aria-hidden="true"><span class="lbl">Categoría del monotributo</span><span class="ej">'+eje+'</span></li>'+ps.map(function(p){ return fcFila(p, d, state.fcOpen===p.nombre); }).join('')+'</ul>';
-    var partes=(d.grupos||[]).filter(function(g){ return porG[g.k]>0; }).map(function(g){ return {k:g.k, l:g.nombre, m:porG[g.k]}; });
-    if (partes.length>1) body+='<h2 class="sec-t">Por dónde se factura</h2><div class="fc-box">'+fcReparto(partes)+'</div>';
+    body+=fcEscalera(d, ps);
+    var partes=(d.reparto||[]).filter(function(c){ return porC[c.k] && porC[c.k].m>0; }).map(function(c){ return {ks:c.ramas, l:c.nombre, s:c.ramas.length>1 || /solo/.test(c.nombre) ? fcJunta(porC[c.k].q) : '', m:porC[c.k].m}; });
+    if (partes.length>1){
+      body+='<h2 class="sec-t">Por dónde se factura</h2><div class="fc-box">'+fcReparto(partes)+'</div>';
+      if (mixtos.length) body+='<p class="hint">Lo de '+fcJunta(mixtos.map(esc))+' va junto porque '+(mixtos.length>1?'facturan':'factura')+' para más de una rama con el mismo monotributo y la planilla no dice de qué rama es cada factura.</p>';
+    }
     var av=fcAvisos(d, sel?ps.map(function(p){ return p.nombre; }):null);
     if (av.length) body+='<h2 class="sec-t">Para revisar en la planilla</h2><ul class="fc-rev">'+av.map(function(t){ return '<li>'+t+'</li>'; }).join('')+'</ul>';
     body+='<div class="fc-acc"><button class="chip'+(state.fcTabla?' on':'')+'" data-fctabla aria-expanded="'+(!!state.fcTabla)+'">'+(state.fcTabla?'Ocultar la tabla':'Ver la tabla mes por mes')+'</button></div>';
     if (state.fcTabla) body+=fcTabla(d, ps);
-    body+='<p class="hint" style="margin-top:14px">Sale de la planilla de facturación que carga la contadora: la app la lee y no le cambia nada. Se suman los comprobantes de cada pestaña (las notas de crédito restan) y los topes son los de la pestaña CAT. MON.</p>'+
+    body+='<p class="hint" style="margin-top:14px">Sale de la planilla de facturación que carga la contadora: la app la lee y no le cambia nada. Se suman los comprobantes de cada pestaña (las notas de crédito restan). Los topes son los de la pestaña CAT. MON. y el tope del estudio'+(T.planilla?', el de la columna «LIMITE para quedar en la '+esc(T.cat)+'» de RESUMEN':' es la '+esc(T.cat))+'.</p>'+
       '<p class="hint">Leído el '+esc(d.act||'')+(C.cargando?' · actualizando…':'')+' · <button class="rt-lnk" data-fcfresco>Actualizar</button></p>';
     tit.body='<div'+(C.cargando?' style="opacity:.6"':'')+'>'+body+'</div>';
     return tit;
@@ -4178,7 +4339,7 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
   document.addEventListener('click', function(ev){
     var t=ev.target.closest && ev.target.closest('[data-fcopen],[data-fcgrupo],[data-fctabla],[data-fcfresco]'); if (!t) return;
     if (t.hasAttribute('data-fcopen')){ var n=t.getAttribute('data-fcopen'); state.fcOpen = state.fcOpen===n ? null : n; render(); return; }
-    if (t.hasAttribute('data-fcgrupo')){ state.fcGrupo=t.getAttribute('data-fcgrupo'); state.fcOpen=null; render(); return; }
+    if (t.hasAttribute('data-fcgrupo')){ state.fcGrupo=t.getAttribute('data-fcgrupo'); state.fcOpen=null; render(); if (t.classList.contains('fc-rama')) window.scrollTo(0, 0); return; }
     if (t.hasAttribute('data-fctabla')){ state.fcTabla=!state.fcTabla; render(); return; }
     if (t.hasAttribute('data-fcfresco')){ fcLoad(true); render(); }
   });
