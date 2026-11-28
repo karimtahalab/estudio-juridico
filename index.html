@@ -6355,13 +6355,20 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
   function f2Data(){ return (state.f2||{})[f2Key()]; }
   function f2Load(fresco, ramaX){
     // ramaX: precarga de otra rama (mismo período), sin tocar la pantalla
-    var r=ramaX||f2Rama(), k=r+'|'+(f2Per()==='semana' ? 's'+f2Sem() : f2Mes()), C=state.f2||(state.f2={}); if (C[k] && C[k].cargando) return;
+    var r=ramaX||f2Rama(), k=r+'|'+(f2Per()==='semana' ? 's'+f2Sem() : f2Mes()), C=state.f2||(state.f2={});
+    // Ya se está leyendo: si se pidió lo último (después de guardar), se vuelve a leer cuando llegue esta lectura
+    if (C[k] && C[k].cargando){ if (fresco && !ramaX) C[k].otra=true; return; }
     if (ramaX && C[k] && !C[k].error) return;
     var prev=C[k] && !C[k].error && !C[k].cargando ? C[k] : (C[k] && C[k].prev) || f2Guardado(k);
-    C[k]={cargando:true, prev:prev};
+    var ph={cargando:true, prev:prev}, t0=Date.now(); C[k]=ph;
     var arg={rama:r, fresco:!!fresco}; if (f2Per()==='semana') arg.semana=f2Sem(); else arg.mes=f2Mes();
-    call('getFin2', arg).then(function(d){ if (state.f2!==C) return; C[k]=d; if (k!==f2Key()) return; if (enFinanzas()) render(); if (state.sheet && state.sheet.type==='fin2' && !$('sheet').querySelector('[data-f2save]')) renderSheet(); })
-      .catch(function(e){ if (state.f2!==C) return; if (ramaX && k!==f2Key()){ delete C[k]; return; } C[k]={error:(e&&e.message)||'No se pudieron cargar las finanzas.', prev:prev}; if (enFinanzas()) render(); });
+    call('getFin2', arg).then(function(d){ if (state.f2!==C) return;
+      if (C[k]!==ph){ if (C[k] && C[k].cargando) C[k].prev=f2ConOps(C, k, d, t0); return; } // ya hay otra lectura en camino, o se descartó
+      d=f2ConOps(C, k, d, t0); C[k]=d;
+      // Lo que se guardó mientras se leía todavía no venía en esta lectura: se ve igual (marcado) y se vuelve a leer
+      if (ph.otra || f2OpsHechas(C, k)){ if (k===f2Key()) setTimeout(function(){ if (state.f2===C && C[k]===d) f2Load(true); }, 0); else delete C[k]; }
+      if (k!==f2Key()) return; if (enFinanzas()) render(); if (state.sheet && state.sheet.type==='fin2' && !$('sheet').querySelector('[data-f2save]')) renderSheet(); })
+      .catch(function(e){ if (state.f2!==C || C[k]!==ph) return; if (ramaX && k!==f2Key()){ delete C[k]; return; } C[k]={error:(e&&e.message)||'No se pudieron cargar las finanzas.', prev:prev}; if (enFinanzas()) render(); });
   }
   // Al abrir finanzas con el PIN: se piden ya el panel y las otras ramas, así al tocarlos están listos
   function f2Precargar(){
@@ -6792,13 +6799,13 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     t.body=body; return t;
   }
   function rsSacar(fila){
-    var rama=f2Rama(), kk=f2Key(), copia=f2Optimista(kk, 'cliente', {}, fila, true);
+    var rama=f2Rama(), kk=f2Key(), op=f2Optimista(kk, 'cliente', {}, fila, true);
     state.rsSacar=null; state.f2Pend=(state.f2Pend||0)+1; if (enFinanzas()) render(); toast('Sacando de la lista…');
     call('saveFin2', {rama:rama, tipo:'cliente', fila:fila, borrar:true}).then(function(){
-      state.f2Pend=Math.max(0,(state.f2Pend||1)-1); toast('Listo: salió de la lista de clientes');
-      var C2=state.f2||{}; Object.keys(C2).forEach(function(x){ if (x!==kk || (C2[x] && C2[x].cargando)) delete C2[x]; });
+      state.f2Pend=Math.max(0,(state.f2Pend||1)-1); f2OpListo(op); toast('Listo: salió de la lista de clientes');
+      var C2=state.f2||{}; Object.keys(C2).forEach(function(x){ if (x!==kk) delete C2[x]; });
       if (f2Key()===kk) f2Load(true); if (enFinanzas()) render();
-    }).catch(function(e){ state.f2Pend=Math.max(0,(state.f2Pend||1)-1); if (copia && state.f2) state.f2[kk]=copia; toast((e&&e.message)||'No se pudo sacar.', true); if (enFinanzas()) render(); });
+    }).catch(function(e){ state.f2Pend=Math.max(0,(state.f2Pend||1)-1); f2OpFallo(op); toast((e&&e.message)||'No se pudo sacar.', true); if (enFinanzas()) render(); });
   }
   document.addEventListener('click', function(ev){
     var t=ev.target.closest && ev.target.closest('[data-rsabrir],[data-rspaso],[data-rssalir],[data-rsconf],[data-rssacar],[data-rssacarok]'); if (!t) return;
@@ -6885,35 +6892,64 @@ body:has(#entorno-prueba) .sc-preg{bottom:calc(114px + env(safe-area-inset-botto
     if (!opts.borrar){ for (var i=0;i<cs.length;i++){ var c=cs[i]; if (c.req && !String(d.v[c.k]||'').trim()){ toast('Completá '+c.label.toLowerCase()+'.', true); return; } } }
     var shC=JSON.parse(JSON.stringify(sh)), dC=JSON.parse(JSON.stringify(d)), rama=f2Rama(), kk=f2Key();
     closeSheet(); toast(opts.borrar?'Borrando…':'Guardando…');
-    var copiaD=f2Optimista(kk, shC.tipo, shC.confirmar && !opts.borrar ? rsSinApp(dC.v) : dC.v, shC.fila||0, !!opts.borrar);
+    var opD=f2Optimista(kk, shC.tipo, shC.confirmar && !opts.borrar ? rsSinApp(dC.v) : dC.v, shC.fila||0, !!opts.borrar);
     state.f2Pend=(state.f2Pend||0)+1; if (enFinanzas()) render();
     var reabrir=function(dup){ state.f2Rama=rama; openSheet(shC); dC.borrar=false; if (dup) dC.dup=dup; state.draft=dC; renderSheet(); };
     call('saveFin2', {rama:rama, tipo:shC.tipo, datos:dC.v, orig:dC.orig||null, fila:shC.fila||0, borrar:!!opts.borrar, forzar:!!opts.forzar, confirmar:!!shC.confirmar}).then(function(r){
       state.f2Pend=Math.max(0,(state.f2Pend||1)-1);
-      if (r && r.duplicado){ reabrir(r.duplicado); if (enFinanzas()) render(); return; }
+      if (r && r.duplicado){ f2OpFallo(opD); reabrir(r.duplicado); if (enFinanzas()) render(); return; }
+      f2OpListo(opD);
       toast(opts.borrar?(shC.tipo==='cliente'?'Listo: salió de la lista de clientes':'Borrado de la planilla'):((shC.confirmar?'✔ Cliente confirmado':'✔ Guardado en la planilla')+(r && r.ramas && r.ramas.length>1?' de '+r.ramas.map(function(x){ return F2_RAMA[x]; }).join(', '):'')+(r && r.ingreso && !r.ingreso.error?(r.ingreso.estado==='nuevo'?' y anotado en '+r.ingreso.hoja+' (N° '+r.ingreso.n+')':(shC.confirmar?' y actualizado en '+r.ingreso.hoja:' (ya estaba en '+r.ingreso.hoja+')')):'')));
-      var C2=state.f2||{}, mira=f2Key()===kk; Object.keys(C2).forEach(function(x){ if (x!==kk || !mira || (C2[x] && C2[x].cargando)) delete C2[x]; });
+      var C2=state.f2||{}, mira=f2Key()===kk; Object.keys(C2).forEach(function(x){ if (x!==kk || !mira) delete C2[x]; });
       if (f2Key()===kk) f2Load(true); if (enFinanzas()) render();
-    }).catch(function(e){ state.f2Pend=Math.max(0,(state.f2Pend||1)-1); if (copiaD && state.f2) state.f2[kk]=copiaD; reabrir(null); toast((e&&e.message)||'No se pudo guardar.', true); if (enFinanzas()) render(); });
+    }).catch(function(e){ state.f2Pend=Math.max(0,(state.f2Pend||1)-1); f2OpFallo(opD); reabrir(null); toast((e&&e.message)||'No se pudo guardar.', true); if (enFinanzas()) render(); });
   }
   // Lo que se carga se ve al instante en la lista y en los totales (marcado "Guardando"); después llega lo de la planilla
+  /* Lo guardado se ve al instante (marcado "Guardando"), también si se guarda mientras se está leyendo la planilla.
+     Cada cambio queda anotado hasta que llega una lectura que empezó DESPUÉS de que se guardó: así una lectura
+     vieja (getFin2 tarda 9-15 s) no vuelve a mostrar "para confirmar" a alguien que ya se confirmó. */
   function f2Optimista(kk, tipo, v, fila, borrar){
+    var C=state.f2||{}, D=C[kk], T=D && D.cargando ? D.prev : D;
+    if (!T || T.cargando || T.error) return null;
+    var copia=JSON.parse(JSON.stringify(T));
+    if (!f2Aplicar(T, tipo, v, fila, borrar)) return null;
+    var op={C:C, kk:kk, tipo:tipo, v:JSON.parse(JSON.stringify(v||{})), fila:fila, borrar:borrar, copia:copia, enPrev:T!==D, seq:(state.f2Seq=(state.f2Seq||0)+1), tFin:0};
+    (state.f2Ops||(state.f2Ops=[])).push(op);
+    return op;
+  }
+  function f2OpListo(op){ if (op) op.tFin=Date.now(); }
+  function f2OpFallo(op){
+    if (!op) return; state.f2Ops=(state.f2Ops||[]).filter(function(x){ return x!==op; });
+    var C=op.C, D=C[op.kk]; if (state.f2!==C || !D) return;
+    var base=JSON.parse(JSON.stringify(op.copia));
+    (state.f2Ops||[]).forEach(function(x){ if (x.C===C && x.kk===op.kk && x.seq>op.seq) f2Aplicar(base, x.tipo, x.v, x.fila, x.borrar); });
+    if (D.cargando) D.prev=base; else if (!D.error) C[op.kk]=base;
+  }
+  // Una lectura que llega: lo que se guardó antes de que empezara ya viene; lo demás se vuelve a mostrar encima
+  function f2ConOps(C, k, d, t0){
+    if (!d || d.error) return d;
+    state.f2Ops=(state.f2Ops||[]).filter(function(x){ return x.C===state.f2 && !(x.C===C && x.kk===k && x.tFin && x.tFin<=t0); });
+    state.f2Ops.forEach(function(x){ if (x.C===C && x.kk===k) f2Aplicar(d, x.tipo, x.v, x.fila, x.borrar); });
+    return d;
+  }
+  function f2OpsHechas(C, k){ return (state.f2Ops||[]).some(function(x){ return x.C===C && x.kk===k && x.tFin; }); }
+  function f2Aplicar(D, tipo, v, fila, borrar){
     // Clientes también: lo corregido se ve al instante (con "Guardando"), así al volver a abrirlo no aparece lo de antes
-    var D=(state.f2||{})[kk], lista={cobro:'cobros', gasto:'gastos', factura:'facturas', retiro:'retiros', cliente:'clientes'}[tipo]; if (!D || D.cargando || D.error || !lista) return null;
-    var copia=JSON.parse(JSON.stringify(D)), xs=D[lista]||(D[lista]=[]), R=D.resumen||(D.resumen={}), rk={cobro:'cobrado', gasto:'gastado', factura:'facturado', retiro:'retirado'}[tipo];
+    var lista={cobro:'cobros', gasto:'gastos', factura:'facturas', retiro:'retiros', cliente:'clientes'}[tipo]; if (!D || !lista) return false;
+    var xs=D[lista]||(D[lista]=[]), R=D.resumen||(D.resumen={}), rk={cobro:'cobrado', gasto:'gastado', factura:'facturado', retiro:'retirado'}[tipo];
     var val=function(o){ return tipo==='gasto' ? (typeof o.propio==='number' ? o.propio : 0) : (+o.monto||0); };
     var i=-1; for (var j=0;j<xs.length;j++) if (fila && xs[j].fila===fila){ i=j; break; }
-    if (i!==-1){ if (rk) R[rk]=(R[rk]||0)-val(xs[i]); if (borrar){ xs.splice(i,1); return copia; } }
-    if (borrar) return copia;
+    if (i!==-1){ if (rk) R[rk]=(R[rk]||0)-val(xs[i]); if (borrar){ xs.splice(i,1); return true; } }
+    if (borrar) return true;
     var o=JSON.parse(JSON.stringify(i!==-1?xs[i]:{})); Object.keys(v||{}).forEach(function(k){ o[k]=v[k]; });
     if (tipo!=='cliente') o.monto=finNum(v.monto)||0;
     o.pend=true; o.fila=fila||0;
     if (tipo==='gasto') o.propio=(!o.reparto || /100%|^Solo/.test(o.reparto)) ? o.monto : null; // compartido: su parte llega con la planilla
     var pd=D.periodo, dentro=!pd || !o.fecha || (o.fecha>=pd.desde && o.fecha<=pd.hasta);
-    if (!dentro){ if (i!==-1) xs.splice(i,1); return copia; }
+    if (!dentro){ if (i!==-1) xs.splice(i,1); return true; }
     if (i!==-1) xs[i]=o; else xs.unshift(o);
     if (rk) R[rk]=(R[rk]||0)+val(o);
-    return copia;
+    return true;
   }
   document.addEventListener('click', function(ev){
     var t=ev.target.closest('[data-f2prama],[data-f2pfresco],[data-f2mes],[data-f2per],[data-f2rama],[data-f2retry],[data-f2nuevo],[data-f2edit],[data-f2cobrar],[data-f2mios],[data-f2pick],[data-f2save],[data-f2borrar],[data-f2forzar],[data-f2share],[data-f2completar],[data-f2rep]'); if (!t) return;
